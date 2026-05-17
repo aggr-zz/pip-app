@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { addChild, AVATAR_COLORS, type AvatarColor } from '../actions';
+import { addChild } from '../actions';
+import { AVATAR_COLORS, type AvatarColor } from '../constants';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 

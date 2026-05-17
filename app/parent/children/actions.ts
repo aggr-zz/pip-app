@@ -3,13 +3,13 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import type { AvatarColor } from './constants';
 
 // ─── Константы ────────────────────────────────────────────────────────
 const COOKIE_NAME = 'pip_active_child';
 const COOKIE_TTL_SEC = 60 * 60; // 1 час, потом снова PIN
 
-export const AVATAR_COLORS = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'] as const;
-export type AvatarColor = typeof AVATAR_COLORS[number];
+const AVATAR_COLORS_VALID = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'] as const;
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -28,7 +28,7 @@ export async function addChild(input: {
   const name = (input.name ?? '').trim();
   if (!name) return { ok: false, error: 'Введи имя' };
   if (name.length > 50) return { ok: false, error: 'Имя слишком длинное (макс 50 символов)' };
-  if (!AVATAR_COLORS.includes(input.color)) return { ok: false, error: 'Неверный цвет' };
+  if (!AVATAR_COLORS_VALID.includes(input.color as typeof AVATAR_COLORS_VALID[number])) return { ok: false, error: 'Неверный цвет' };
   if (!/^\d{4}$/.test(input.pin)) return { ok: false, error: 'PIN должен быть из 4 цифр' };
   if (input.age !== null && (input.age < 1 || input.age > 17)) {
     return { ok: false, error: 'Возраст должен быть от 1 до 17' };
