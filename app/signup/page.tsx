@@ -1,0 +1,266 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { PipLogo } from '@/components/ui/PipLogo';
+import { Button } from '@/components/ui/Button';
+
+export default function SignupPage() {
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (password.length < 8) {
+      setError('Пароль слишком короткий — минимум 8 символов');
+      return;
+    }
+
+    startTransition(async () => {
+      const supabase = createClient();
+      // Триггер handle_new_user в БД создаёт family + profile родителя автоматически
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        },
+      });
+
+      if (error) {
+        setError(translateSignupError(error.message));
+        return;
+      }
+
+      // Если Supabase настроен на email-подтверждение — показываем сообщение
+      // и НЕ редиректим. Иначе сессия активна и можно идти на /parent.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setNeedsConfirm(true);
+        return;
+      }
+      router.push(isJoining ? '/child' : '/parent');
+      router.refresh();
+    });
+  }
+
+  if (needsConfirm) {
+    return (
+      <main className="auth">
+        <div className="auth__card auth__card--confirm">
+          <div className="auth__icon">📬</div>
+          <h1 className="auth__title">Проверь почту</h1>
+          <p className="auth__sub">
+            Мы отправили письмо на <strong>{email}</strong>. Кликни на ссылку,
+            чтобы подтвердить email и зайти.
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 24 }}>
+            Не пришло? Проверь спам или <a href="/login" style={{ color: 'var(--color-coral)', fontWeight: 600 }}>попробуй войти</a>.
+          </p>
+        </div>
+        <style>{authStyles}</style>
+      </main>
+    );
+  }
+
+  return (
+    <main className="auth">
+      <div className="auth__card">
+        <a href="/" className="auth__logo" aria-label="pip">
+          <PipLogo size={48} />
+        </a>
+
+        <h1 className="auth__title">Создать семью</h1>
+        <p className="auth__sub">
+          Один email на семью. Детей добавишь после регистрации — каждому
+          задашь PIN, и они смогут входить в свой режим.
+        </p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <Field
+            label="Как тебя зовут"
+            type="text"
+            value={name}
+            onChange={setName}
+            placeholder="Анна"
+            disabled={isPending}
+          />
+          <Field
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="parent@example.com"
+            disabled={isPending}
+          />
+          <Field
+            label="Пароль"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            placeholder="Минимум 8 символов"
+            disabled={isPending}
+          />
+
+          {error && <div className="auth__error" role="alert">{error}</div>}
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={isPending}
+            style={{ marginTop: 8 }}
+          >
+            {isPending ? 'Создаём…' : 'Зарегистрироваться'}
+          </Button>
+        </form>
+
+        <p className="auth__terms">
+          Регистрируясь, ты соглашаешься с <a href="/terms">условиями</a> и <a href="/privacy">политикой конфиденциальности</a>.
+        </p>
+
+        <p className="auth__footer">
+          Уже есть аккаунт? <a href="/login">Войти</a>
+        </p>
+      </div>
+
+      <style>{authStyles}</style>
+    </main>
+  );
+}
+
+function Field({ label, type, value, onChange, placeholder, disabled }: {
+  label: string;
+  type: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="field">
+      <span className="field__label">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        required
+        className="field__input"
+      />
+    </label>
+  );
+}
+
+function translateSignupError(msg: string): string {
+  if (msg.includes('already registered')) return 'Этот email уже зарегистрирован — попробуй войти';
+  if (msg.includes('Password')) return 'С паролем что-то не так — попробуй другой';
+  if (msg.includes('email')) return 'Email выглядит странно — проверь';
+  return 'Что-то пошло не так. Попробуй ещё раз.';
+}
+
+const authStyles = `
+  .auth {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  .auth__card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-2xl);
+    padding: 40px 36px;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-lg);
+  }
+  .auth__card--confirm {
+    text-align: center;
+  }
+  .auth__icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  .auth__logo { display: inline-block; margin-bottom: 28px; }
+  .auth__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+    line-height: 1.05;
+  }
+  .auth__sub {
+    color: var(--text-soft);
+    font-size: 14.5px;
+    margin: 0 0 28px;
+    line-height: 1.5;
+  }
+  .field { display: block; margin-bottom: 14px; }
+  .field__label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .field__input {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14.5px;
+    color: var(--text-primary);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field__input:focus {
+    outline: none;
+    border-color: var(--color-coral);
+    box-shadow: 0 0 0 3px var(--color-coral-soft);
+  }
+  .auth__error {
+    background: var(--status-danger-soft);
+    color: var(--status-danger);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 13.5px;
+    margin: 14px 0 4px;
+  }
+  .auth__terms {
+    margin: 16px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    text-align: center;
+  }
+  .auth__terms a {
+    color: var(--text-soft);
+    text-decoration: underline;
+  }
+  .auth__footer {
+    margin: 24px 0 0;
+    font-size: 14px;
+    text-align: center;
+    color: var(--text-soft);
+  }
+  .auth__footer a {
+    color: var(--color-coral);
+    font-weight: 600;
+  }
+`;

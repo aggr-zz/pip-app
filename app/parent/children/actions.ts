@@ -1,0 +1,144 @@
+'use server';
+
+import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
+
+// ─── Константы ────────────────────────────────────────────────────────
+const COOKIE_NAME = 'pip_active_child';
+const COOKIE_TTL_SEC = 60 * 60; // 1 час, потом снова PIN
+
+export const AVATAR_COLORS = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'] as const;
+export type AvatarColor = typeof AVATAR_COLORS[number];
+
+type Result<T = Record<string, never>> =
+  | ({ ok: true } & T)
+  | { ok: false; error: string };
+
+
+// ─── ADD CHILD ────────────────────────────────────────────────────────
+// Создаёт детский профиль в семье родителя.
+// В MVP ребёнок = PIN-профиль без своего auth.user (решение A3).
+export async function addChild(input: {
+  name: string;
+  age: number | null;
+  color: AvatarColor;
+  pin: string;
+}): Promise<Result<{ id: string }>> {
+  const name = (input.name ?? '').trim();
+  if (!name) return { ok: false, error: 'Введи имя' };
+  if (name.length > 50) return { ok: false, error: 'Имя слишком длинное (макс 50 символов)' };
+  if (!AVATAR_COLORS.includes(input.color)) return { ok: false, error: 'Неверный цвет' };
+  if (!/^\d{4}$/.test(input.pin)) return { ok: false, error: 'PIN должен быть из 4 цифр' };
+  if (input.age !== null && (input.age < 1 || input.age > 17)) {
+    return { ok: false, error: 'Возраст должен быть от 1 до 17' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Не авторизован' };
+
+  // Проверка что текущий пользователь — родитель
+  const { data: parent } = await supabase
+    .from('profiles')
+    .select('family_id, role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!parent || parent.role !== 'parent') {
+    return { ok: false, error: 'Только родитель может добавлять детей' };
+  }
+
+  const birthYear = input.age !== null ? new Date().getFullYear() - input.age : null;
+
+  const { data: newChild, error } = await supabase
+    .from('profiles')
+    .insert({
+      family_id: parent.family_id,
+      user_id: null, // важно: у ребёнка нет своего auth.user
+      role: 'child',
+      name,
+      birth_year: birthYear,
+      avatar_color: input.color,
+      pin: input.pin,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('[addChild]', error);
+    return { ok: false, error: 'Не получилось добавить ребёнка' };
+  }
+
+  revalidatePath('/parent');
+  return { ok: true, id: newChild.id };
+}
+
+
+// ─── ENTER CHILD MODE ─────────────────────────────────────────────────
+// Проверяет PIN, ставит cookie. На час открывает доступ к /child/[id].
+// Auth-сессия Supabase остаётся родительской.
+export async function enterChildMode(input: {
+  childId: string;
+  pin: string;
+}): Promise<Result> {
+  if (!/^\d{4}$/.test(input.pin)) {
+    return { ok: false, error: 'PIN должен быть из 4 цифр' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Не авторизован' };
+
+  const { data: parent } = await supabase
+    .from('profiles')
+    .select('family_id, role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!parent || parent.role !== 'parent') {
+    return { ok: false, error: 'Только родитель' };
+  }
+
+  const { data: child } = await supabase
+    .from('profiles')
+    .select('id, family_id, pin')
+    .eq('id', input.childId)
+    .single();
+
+  if (!child || child.family_id !== parent.family_id) {
+    return { ok: false, error: 'Профиль не найден' };
+  }
+
+  if (child.pin !== input.pin) {
+    // TODO Sprint 7: rate-limit неудачных попыток через Redis/БД
+    return { ok: false, error: 'Неверный PIN' };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, input.childId, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: COOKIE_TTL_SEC,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  });
+
+  return { ok: true };
+}
+
+
+// ─── EXIT CHILD MODE ──────────────────────────────────────────────────
+export async function exitChildMode(): Promise<Result> {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_NAME);
+  return { ok: true };
+}
+
+
+// ─── GET ACTIVE CHILD ID ──────────────────────────────────────────────
+// Для server-компонентов в /child/[id].
+export async function getActiveChildId(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+}
