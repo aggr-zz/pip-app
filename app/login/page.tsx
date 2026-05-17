@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PipLogo } from '@/components/ui/PipLogo';
 import { Button } from '@/components/ui/Button';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/parent';
@@ -104,7 +112,7 @@ export default function LoginPage() {
       <style>{authStyles}</style>
     </main>
   );
-}
+}  // end LoginContent
 
 function Field({
   label,
