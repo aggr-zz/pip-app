@@ -108,6 +108,10 @@ export default async function ChildHomePage({
   ).length;
   const totalCount = todayTasks.length;
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+  const availableCount = todayTasks.filter((t) => {
+    const s = statusByTaskId.get(t.id);
+    return !s || s === 'rejected';
+  }).length;
 
   // Achievements count (для бейджа в навигации)
   const { count: achievementsCount = 0 } = await supabase
@@ -238,6 +242,9 @@ export default async function ChildHomePage({
                     taskId={task.id}
                     childId={child.id}
                     familyId={child.family_id}
+                    childName={child.name}
+                    currentStreak={child.current_streak}
+                    availableCount={availableCount}
                     title={task.title}
                     icon={task.icon}
                     coinValue={task.coin_value}

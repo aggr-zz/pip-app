@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './../styles/globals.css';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 export const metadata: Metadata = {
   title: 'pip — копилка хороших привычек',
@@ -37,7 +38,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <PageTransition>{children}</PageTransition>
+      </body>
     </html>
   );
 }

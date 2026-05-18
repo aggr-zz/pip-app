@@ -123,7 +123,13 @@ export function TaskForm({ mode, taskId, children, defaults }: Props) {
       {/* Иконка */}
       <Field>
         <Label>Иконка</Label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, 1fr)',
+            gap: 8,
+          }}
+        >
           {TASK_ICONS.map((i) => (
             <button
               key={i}
@@ -132,20 +138,34 @@ export function TaskForm({ mode, taskId, children, defaults }: Props) {
               aria-pressed={i === icon}
               aria-label={ICON_LABELS[i]}
               disabled={isPending}
+              title={ICON_LABELS[i]}
               style={{
-                background: 'transparent',
+                background: i === icon ? 'var(--bg-surface-2)' : 'transparent',
                 border: 'none',
-                padding: 0,
+                padding: '6px 0 4px',
                 cursor: 'pointer',
                 borderRadius: 'var(--radius-md)',
                 boxShadow:
                   i === icon
-                    ? '0 0 0 3px var(--color-coral)'
-                    : '0 0 0 1px var(--border-default)',
-                transition: 'box-shadow 0.15s',
+                    ? '0 0 0 2px var(--color-coral)'
+                    : '0 0 0 1px var(--border-soft)',
+                transition: 'box-shadow 0.15s, background 0.15s',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
               }}
             >
-              <TaskIcon name={i} size={44} />
+              <TaskIcon name={i} size={36} />
+              <span style={{
+                fontSize: 9.5,
+                color: i === icon ? 'var(--color-coral-deep)' : 'var(--text-muted)',
+                fontWeight: i === icon ? 600 : 400,
+                lineHeight: 1,
+                letterSpacing: '-0.01em',
+              }}>
+                {ICON_LABELS[i]}
+              </span>
             </button>
           ))}
         </div>

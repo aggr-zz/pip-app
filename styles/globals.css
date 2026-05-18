@@ -62,3 +62,77 @@ button {
   background: rgba(255, 255, 255, 0.6);
   border-radius: 100px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Page Transitions
+   ───────────────────────────────────────────────────────────────────────── */
+
+/*
+ * Layer 1: Native View Transitions API — Chrome 111+, Safari 18+
+ * Автоматически перехватывает навигацию без JS.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+/* Новая страница заезжает справа */
+@keyframes vt-slide-in {
+  from { opacity: 0.5; transform: translateX(30px); }
+  to   { opacity: 1;   transform: translateX(0); }
+}
+
+/* Старая страница уезжает влево и чуть уменьшается — iOS-эффект */
+@keyframes vt-slide-out {
+  from { opacity: 1;   transform: translateX(0)    scale(1); }
+  to   { opacity: 0;   transform: translateX(-18px) scale(0.96); }
+}
+
+::view-transition-new(root) {
+  animation: 280ms cubic-bezier(0.22, 1, 0.36, 1) both vt-slide-in;
+}
+
+::view-transition-old(root) {
+  animation: 220ms cubic-bezier(0.4, 0, 1, 1) both vt-slide-out;
+}
+
+/*
+ * Layer 2: JS-based CSS class animations — fallback для всех браузеров.
+ * PageTransition компонент добавляет класс на div с key=animKey.
+ */
+
+@keyframes page-slide-right {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes page-slide-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Открытие иммерсивного экрана ребёнка — снизу вверх */
+@keyframes page-slide-up {
+  from { opacity: 0; transform: translateY(36px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Лёгкий fade со scale — для lateral переходов */
+@keyframes page-fade-scale {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.page-enter-right { animation: 280ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide-right; }
+.page-enter-left  { animation: 280ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide-left; }
+.page-enter-up    { animation: 340ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide-up; }
+.page-enter-fade  { animation: 220ms cubic-bezier(0.22, 1, 0.36, 1) both page-fade-scale; }
+
+/* Уважаем prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(root),
+  ::view-transition-old(root) { animation: none; }
+  .page-enter-right,
+  .page-enter-left,
+  .page-enter-up,
+  .page-enter-fade { animation: none; }
+}
