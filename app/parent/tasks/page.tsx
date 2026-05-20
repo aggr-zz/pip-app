@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { CoinPill } from '@/components/ui/Coin';
 import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
 import { describeSchedule, type ScheduleType } from '@/lib/schedule';
+import { HintBanner } from '@/components/ui/HintBanner';
 
 type Profile = {
   id: string;
@@ -109,6 +110,18 @@ export default async function TasksPage({
         <p style={subtitleStyle}>
           {filter === 'archived' ? 'В архиве' : `${filteredTasks?.length ?? 0} активных`}
         </p>
+        {filter !== 'archived' && (
+          <div style={{ marginTop: 12 }}>
+            <HintBanner
+              id="hint-tasks-approval"
+              emoji="✅"
+              title="Как работает подтверждение?"
+              body='Задания с флагом "требует подтверждения" — родитель одобряет, и только потом ребёнок получает монеты. Без флага — монеты зачисляются сразу.'
+              variant="neutral"
+              show={(allTasks?.length ?? 0) > 0}
+            />
+          </div>
+        )}
 
         {/* Фильтры */}
         <div style={filtersStyle}>

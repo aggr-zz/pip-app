@@ -7,6 +7,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { CoinBalance } from '@/components/ui/Coin';
 import { ExitChildButton } from './ExitChildButton';
 import { TaskRow } from './TaskRow';
+import { HintBanner } from '@/components/ui/HintBanner';
+import { StreakBadge } from '@/components/ui/StreakBadge';
 import { isTaskScheduledFor, nowInTimezone, todayInTimezone, type ScheduleType } from '@/lib/schedule';
 import { ALL_ACHIEVEMENT_TYPES } from '@/lib/achievements';
 import type { TaskIconName } from '@/components/ui/TaskIcon';
@@ -155,15 +157,8 @@ export default async function ChildHomePage({
           amount={child.balance}
           label="Твой баланс"
           extra={
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: 13,
-                opacity: 0.85,
-              }}
-            >
-              <span>🔥 Стрик {child.current_streak} {streakWord(child.current_streak)}</span>
+            <div style={{ fontSize: 13, opacity: 0.85 }}>
+              <StreakBadge streak={child.current_streak} />
             </div>
           }
         />
@@ -257,6 +252,43 @@ export default async function ChildHomePage({
             </div>
           )}
         </section>
+
+        {/* Подсказки для детей */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+          <HintBanner
+            id={`hint-child-welcome-${child.id}`}
+            emoji="👋"
+            title="Добро пожаловать в pip!"
+            body="Выполняй задания каждый день и копи PIP-монеты. Потом трать их в магазине на что-то классное!"
+            variant="gold"
+            show={child.balance === 0 && child.current_streak === 0}
+          />
+          <HintBanner
+            id={`hint-child-deadline-${child.id}`}
+            emoji="⏰"
+            title="Успей до конца дня"
+            body="Задания обновляются каждый день. Не откладывай — сделай сегодня, чтобы не потерять стрик!"
+            variant="mint"
+            show={availableCount > 0}
+          />
+          <HintBanner
+            id={`hint-child-nocheat-${child.id}`}
+            emoji="👀"
+            title="Не пытайся жульничать!"
+            body="Родители видят всё и могут вычесть монеты или поставить штраф. Делай честно — это выгоднее 😄"
+            variant="coral"
+            show={child.balance > 0}
+          />
+          <HintBanner
+            id={`hint-child-shop-${child.id}`}
+            emoji="🛍️"
+            title="Загляни в магазин"
+            body="У тебя уже есть монеты! Открой магазин и посмотри на что можно их потратить."
+            variant="gold"
+            cta={{ label: 'Открыть магазин', href: `/child/${child.id}/shop` }}
+            show={child.balance >= 10}
+          />
+        </div>
 
         {/* Shop link */}
         <Link

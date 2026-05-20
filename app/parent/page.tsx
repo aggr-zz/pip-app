@@ -6,6 +6,7 @@ import { CoinPill } from '@/components/ui/Coin';
 import { Button } from '@/components/ui/Button';
 import { SignOutButton } from './SignOutButton';
 import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
+import { HintBanner } from '@/components/ui/HintBanner';
 
 type Profile = {
   id: string;
@@ -68,8 +69,22 @@ export default async function ParentDashboardPage() {
     .order('name')
     .returns<Profile[]>();
 
-  // Считаем количество задач на подтверждение
+  // Считаем количество задач/наград для подсказок
   const childIds = (children ?? []).map((c) => c.id);
+  let tasksCount = 0;
+  let rewardsCount = 0;
+  if (childIds.length > 0) {
+    const { count: tc } = await supabase
+      .from('tasks').select('id', { count: 'exact', head: true })
+      .eq('family_id', me.family_id).is('archived_at', null);
+    tasksCount = tc || 0;
+    const { count: rc } = await supabase
+      .from('rewards').select('id', { count: 'exact', head: true })
+      .eq('family_id', me.family_id).is('archived_at', null);
+    rewardsCount = rc || 0;
+  }
+
+  // Считаем количество задач на подтверждение
   let pendingCount = 0;
   let pendingOrdersCount = 0;
   if (childIds.length > 0) {
@@ -178,6 +193,44 @@ export default async function ParentDashboardPage() {
                   </div>
                 </a>
               ))}
+            </div>
+
+            {/* Подсказки для новых родителей */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 4 }}>
+              <HintBanner
+                id="hint-parent-add-task"
+                emoji="✏️"
+                title="Добавь первое задание"
+                body="Задания — основа pip. Дай ребёнку миссию и позволь заработать первые монеты. Даже «Почистить зубы» уже работает!"
+                variant="gold"
+                cta={{ label: 'Создать задание', href: '/parent/tasks/new' }}
+                show={tasksCount === 0}
+              />
+              <HintBanner
+                id="hint-parent-add-reward"
+                emoji="🎁"
+                title="Создай первую награду"
+                body="Без цели неинтересно копить. Добавь что-то, чего ребёнок давно хочет — время с тобой, сладкое, игра или прогулка."
+                variant="coral"
+                cta={{ label: 'Добавить награду', href: '/parent/rewards/new' }}
+                show={rewardsCount === 0 && tasksCount > 0}
+              />
+              <HintBanner
+                id="hint-parent-streak"
+                emoji="🔥"
+                title="Следи за стриком"
+                body="Стрик — это сколько дней подряд ребёнок выполняет задания. Чем дольше серия, тем круче достижения. Главное — не прерывать!"
+                variant="neutral"
+                show={tasksCount > 0 && rewardsCount > 0}
+              />
+              <HintBanner
+                id="hint-parent-photo"
+                emoji="📸"
+                title="Задания с фото"
+                body='При создании задания включи "требует фото" — ребёнок загрузит доказательство выполнения. Больше никаких «я уже сделал»!'
+                variant="mint"
+                show={tasksCount > 0}
+              />
             </div>
 
             <div className="actions actions--2col">

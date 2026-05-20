@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { CoinBalance } from '@/components/ui/Coin';
 import { ExitChildButton } from '../ExitChildButton';
 import { RewardCard } from './RewardCard';
+import { HintBanner } from '@/components/ui/HintBanner';
 
 type Profile = {
   id: string;
@@ -134,6 +135,25 @@ export default async function ShopPage({
         </h1>
 
         <CoinBalance amount={child.balance} label="У тебя есть" />
+
+        <div style={{ marginTop: 16 }}>
+          <HintBanner
+            id={`hint-shop-save-${child.id}`}
+            emoji="💰"
+            title="Копи на мечту"
+            body="Не трать всё сразу! Копи PIP на что-то по-настоящему крутое. Чем больше накопишь — тем круче приз."
+            variant="gold"
+            show={child.balance > 0 && child.balance < 50}
+          />
+          <HintBanner
+            id={`hint-shop-ask-${child.id}`}
+            emoji="💬"
+            title="Нет нужной награды?"
+            body="Попроси родителей добавить что-то особенное. Может, они и не знали, чего ты хочешь!"
+            variant="mint"
+            show={visibleRewards.length < 3}
+          />
+        </div>
 
         <section style={{ marginTop: 28 }}>
           {visibleRewards.length === 0 ? (
