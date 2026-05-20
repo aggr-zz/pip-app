@@ -175,6 +175,7 @@ export default async function ShopPage({
                     description={r.description}
                     icon={r.icon}
                     coinCost={r.coin_cost}
+                    balance={child.balance}
                     canAfford={canAfford}
                     alreadyOrdered={isBlocked}
                   />

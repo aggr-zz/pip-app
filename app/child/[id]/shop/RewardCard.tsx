@@ -12,6 +12,7 @@ interface RewardCardProps {
   description: string | null;
   icon: string;
   coinCost: number;
+  balance: number;
   canAfford: boolean;
   alreadyOrdered: boolean;
 }
@@ -25,6 +26,7 @@ export function RewardCard({
   description,
   icon,
   coinCost,
+  balance,
   canAfford,
   alreadyOrdered,
 }: RewardCardProps) {
@@ -269,11 +271,38 @@ export function RewardCard({
             {description}
           </div>
         )}
-        {!canAfford && !alreadyOrdered && (
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-            Ещё не хватает монет
-          </div>
-        )}
+        {!canAfford && !alreadyOrdered && (() => {
+          const pct = Math.min(100, Math.round((balance / coinCost) * 100));
+          const need = coinCost - balance;
+          return (
+            <div style={{ marginTop: 6 }}>
+              {/* Прогресс-бар */}
+              <div
+                style={{
+                  height: 5,
+                  background: 'var(--border-soft)',
+                  borderRadius: 100,
+                  overflow: 'hidden',
+                  marginBottom: 4,
+                }}
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${pct}%`,
+                    background: 'linear-gradient(90deg, var(--color-coral), var(--color-gold))',
+                    borderRadius: 100,
+                    transition: 'width 0.4s ease',
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>ещё {need} pip</span>
+                <span>{pct}%</span>
+              </div>
+            </div>
+          );
+        })()}
         {alreadyOrdered && (
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
             Уже получал(а) — больше нельзя
