@@ -1,7 +1,6 @@
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { getActiveChildId } from '@/app/parent/children/actions';
+import { getChildContext } from '@/lib/getChildContext';
 import { PipLogo } from '@/components/ui/PipLogo';
 import { Avatar } from '@/components/ui/Avatar';
 import { CoinBalance } from '@/components/ui/Coin';
@@ -34,29 +33,14 @@ export default async function ShopPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const activeChildId = await getActiveChildId();
-  if (activeChildId !== id) {
-    redirect(`/parent/children/${id}`);
-  }
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('family_id')
-    .eq('user_id', user.id)
-    .single();
-  if (!me) redirect('/');
+  const { db: supabase, familyId } = await getChildContext(id);
 
   const { data: child } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', id)
     .single<Profile>();
-  if (!child || child.family_id !== me.family_id || child.role !== 'child') notFound();
+  if (!child || child.family_id !== familyId || child.role !== 'child') notFound();
 
   // Все награды семьи
   const { data: allRewards = [] } = await supabase

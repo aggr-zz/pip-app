@@ -1,7 +1,8 @@
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
+import { getChildContext } from '@/lib/getChildContext';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { getActiveChildId } from '@/app/parent/children/actions';
+
+
 import { PipLogo } from '@/components/ui/PipLogo';
 import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
 import { isTaskScheduledFor, nowInTimezone, todayInTimezone, type ScheduleType } from '@/lib/schedule';
@@ -40,43 +41,28 @@ export default async function TaskDetailPage({
   params: Promise<{ id: string; taskId: string }>;
 }) {
   const { id: childId, taskId } = await params;
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const activeChildId = await getActiveChildId();
-  if (activeChildId !== childId) redirect(`/parent/children/${childId}`);
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('family_id')
-    .eq('user_id', user.id)
-    .single();
-  if (!me) redirect('/');
+  const { db: supabase, familyId } = await getChildContext(childId);
 
   const { data: child } = await supabase
     .from('profiles')
     .select('id, family_id, role, name, current_streak, balance')
     .eq('id', childId)
     .single<Profile>();
-  if (!child || child.family_id !== me.family_id || child.role !== 'child') notFound();
+  if (!child || child.family_id !== familyId || child.role !== 'child') notFound();
 
   const { data: task } = await supabase
     .from('tasks')
     .select('id, title, description, icon, coin_value, schedule_type, schedule_days, requires_approval, requires_photo, assigned_to')
     .eq('id', taskId)
-    .eq('family_id', me.family_id)
+    .eq('family_id', familyId)
     .is('archived_at', null)
     .single<Task>();
 
   if (!task) notFound();
-
-  // Проверяем что задание назначено этому ребёнку
   if (!task.assigned_to.includes(childId)) notFound();
 
   const { data: family } = await supabase
-    .from('families').select('timezone').eq('id', me.family_id).single();
+    .from('families').select('timezone').eq('id', familyId).single();
   const tz = family?.timezone || 'Europe/Moscow';
   const today = todayInTimezone(tz);
   const dateInTz = nowInTimezone(tz);

@@ -1,11 +1,35 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
+import { verifyChildSession } from '@/lib/childSession';
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // /join/* — публичные страницы, не требуют никакой авторизации
+  if (pathname.startsWith('/join/')) {
+    return NextResponse.next();
+  }
+
+  // /child/* — разрешаем если есть валидный pip_child_direct токен
+  if (pathname.startsWith('/child/')) {
+    const token = request.cookies.get('pip_child_direct')?.value;
+    if (token) {
+      const session = verifyChildSession(token);
+      if (session) {
+        // Дополнительная проверка: childId в URL должен совпадать с токеном
+        const segments = pathname.split('/'); // ['', 'child', '<id>', ...]
+        const childIdInUrl = segments[2];
+        if (childIdInUrl === session.childId) {
+          return NextResponse.next();
+        }
+      }
+    }
+  }
+
+  // Для всех остальных маршрутов — стандартная Supabase-авторизация
   try {
     return await updateSession(request);
   } catch (e) {
-    // Fallback: пропускаем запрос если middleware упал
     console.error('[middleware] error:', e);
     return NextResponse.next();
   }
@@ -13,13 +37,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Применять middleware ко всем путям, кроме:
-     * - _next/static (статика Next.js)
-     * - _next/image (оптимизация картинок)
-     * - favicon.ico
-     * - картинки в public (svg, png, jpg, jpeg, gif, webp)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

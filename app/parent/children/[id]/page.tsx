@@ -1,10 +1,12 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { PipLogo } from '@/components/ui/PipLogo';
 import { Avatar } from '@/components/ui/Avatar';
 import { EnterChildMode } from './EnterChildMode';
 import { EditAvatarButton } from './EditAvatarButton';
+import { JoinLinkCard } from './JoinLinkCard';
 
 type Profile = {
   id: string;
@@ -52,6 +54,12 @@ export default async function ChildDetailPage({
   }
 
   const age = child.birth_year ? new Date().getFullYear() - child.birth_year : null;
+
+  // Build absolute join URL using request host header
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const proto = host.startsWith('localhost') ? 'http' : 'https';
+  const joinUrl = `${proto}://${host}/join/${child.id}`;
 
   return (
     <main style={{ minHeight: '100vh', padding: '40px 24px' }}>
@@ -267,21 +275,8 @@ export default async function ChildDetailPage({
             <path d="M9 6l6 6-6 6" />
           </svg>
         </Link>
-        <section
-          style={{
-            marginTop: 24,
-            padding: '20px',
-            background: 'var(--bg-surface-2)',
-            border: '1px dashed var(--border-default)',
-            borderRadius: 'var(--radius-lg)',
-            fontSize: 13,
-            color: 'var(--text-soft)',
-            lineHeight: 1.55,
-          }}
-        >
-          <strong style={{ color: 'var(--text-primary)' }}>Скоро:</strong> вкладки
-          с историей задач, заказов и достижений (Sprint 7).
-        </section>
+        {/* Join link + QR code */}
+        <JoinLinkCard joinUrl={joinUrl} childName={child.name} />
       </div>
     </main>
   );
