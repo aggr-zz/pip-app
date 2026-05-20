@@ -7,6 +7,7 @@ import { CoinPill } from '@/components/ui/Coin';
 import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
 import { describeSchedule, type ScheduleType } from '@/lib/schedule';
 import { HintBanner } from '@/components/ui/HintBanner';
+import { QuickStartTasks } from './QuickStartTasks';
 
 type Profile = {
   id: string;
@@ -143,7 +144,11 @@ export default async function TasksPage({
         </div>
 
         {filteredTasks?.length === 0 ? (
-          <EmptyState filter={filter} childrenCount={children?.length ?? 0} />
+          <EmptyState
+            filter={filter}
+            childrenCount={children?.length ?? 0}
+            childIds={(children ?? []).map((c) => c.id)}
+          />
         ) : (
           <>
             {groups.daily.length > 0 && (
@@ -268,7 +273,15 @@ function TaskRow({ task, childMap }: { task: Task; childMap: Map<string, Profile
   );
 }
 
-function EmptyState({ filter, childrenCount }: { filter: string; childrenCount: number }) {
+function EmptyState({
+  filter,
+  childrenCount,
+  childIds,
+}: {
+  filter: string;
+  childrenCount: number;
+  childIds: string[];
+}) {
   if (childrenCount === 0) {
     return (
       <div style={emptyStyle}>
@@ -296,33 +309,50 @@ function EmptyState({ filter, childrenCount }: { filter: string; childrenCount: 
   }
 
   return (
-    <div style={emptyStyle}>
-      <div style={emptyIconStyle}>📝</div>
-      <h2 style={emptyTitleStyle}>
-        {filter === 'archived' ? 'Архив пуст' : 'Пока нет задач'}
-      </h2>
-      <p style={emptyTextStyle}>
-        {filter === 'archived'
-          ? 'Архивированные задачи будут здесь'
-          : 'Создай первую задачу: что-то простое, что ребёнок делает каждый день'}
-      </p>
-      {filter !== 'archived' && (
-        <Link
-          href="/parent/tasks/new"
+    <>
+      <div style={emptyStyle}>
+        <div style={emptyIconStyle}>📝</div>
+        <h2 style={emptyTitleStyle}>
+          {filter === 'archived' ? 'Архив пуст' : 'Пока нет задач'}
+        </h2>
+        <p style={emptyTextStyle}>
+          {filter === 'archived'
+            ? 'Архивированные задачи будут здесь'
+            : 'Создай первую задачу: что-то простое, что ребёнок делает каждый день'}
+        </p>
+        {filter !== 'archived' && (
+          <Link
+            href="/parent/tasks/new"
+            style={{
+              display: 'inline-flex',
+              background: 'var(--color-ink)',
+              color: 'white',
+              padding: '12px 22px',
+              borderRadius: 'var(--radius-md)',
+              fontWeight: 600,
+              fontSize: 14,
+            }}
+          >
+            + Новая задача
+          </Link>
+        )}
+      </div>
+
+      {/* Quick-start templates shown when there are children but no tasks yet */}
+      {filter !== 'archived' && childIds.length > 0 && (
+        <div
           style={{
-            display: 'inline-flex',
-            background: 'var(--color-ink)',
-            color: 'white',
-            padding: '12px 22px',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 600,
-            fontSize: 14,
+            marginTop: 24,
+            padding: '20px 20px 24px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-soft)',
+            borderRadius: 'var(--radius-xl)',
           }}
         >
-          + Новая задача
-        </Link>
+          <QuickStartTasks childIds={childIds} />
+        </div>
       )}
-    </div>
+    </>
   );
 }
 

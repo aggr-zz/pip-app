@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { SignOutButton } from './SignOutButton';
 import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 import { HintBanner } from '@/components/ui/HintBanner';
+import { PulsingIcon } from '@/components/ui/PulsingIcon';
 
 type Profile = {
   id: string;
@@ -128,7 +129,7 @@ export default async function ParentDashboardPage() {
         {/* ─── Urgent banner ─── */}
         {pendingCount > 0 && (
           <a href="/parent/approvals" className="urgent">
-            <div className="urgent__icon">⚡</div>
+            <div className="urgent__icon"><PulsingIcon>⚡</PulsingIcon></div>
             <div className="urgent__body">
               <div className="urgent__title">
                 {pendingCount} {wordForm(pendingCount, 'задание', 'задания', 'заданий')} на подтверждение
