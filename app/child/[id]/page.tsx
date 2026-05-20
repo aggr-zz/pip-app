@@ -70,7 +70,7 @@ export default async function ChildHomePage({
   const { data: allTasks = [] } = await supabase
     .from('tasks')
     .select('id, title, icon, coin_value, schedule_type, schedule_days, requires_approval, requires_photo, assigned_to')
-    .eq('family_id', me.family_id)
+    .eq('family_id', familyId)
     .is('archived_at', null)
     .contains('assigned_to', [child.id])
     .returns<Task[]>();
