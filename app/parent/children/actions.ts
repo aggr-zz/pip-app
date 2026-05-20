@@ -3,6 +3,8 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyChildSession } from '@/lib/childSession';
 import type { AvatarColor } from './constants';
 
 // ─── Константы ────────────────────────────────────────────────────────
@@ -148,18 +150,53 @@ export async function getActiveChildId(): Promise<string | null> {
 
 // ─── UPDATE CHILD AVATAR ──────────────────────────────────────────────
 // Меняет аватар ребёнка: фото / эмодзи / цвет.
-// Используется и из родительского, и из детского интерфейса.
+// Поддерживает два режима:
+//   1. Родитель (Supabase-сессия) — может менять аватар любого ребёнка семьи
+//   2. Ребёнок напрямую (pip_child_direct) — только свой профиль
 export async function updateChildAvatar(input: {
   profileId: string;
   avatarUrl: string | null;
   avatarEmoji: string | null;
   avatarColor: string;
 }): Promise<Result> {
+  const validColors = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'];
+  if (!validColors.includes(input.avatarColor)) {
+    return { ok: false, error: 'Неверный цвет' };
+  }
+
+  const cookieStore = await cookies();
+
+  // ── Режим 2: прямая сессия ребёнка ────────────────────────────────────
+  const directToken = cookieStore.get('pip_child_direct')?.value;
+  if (directToken) {
+    const session = verifyChildSession(directToken);
+    if (!session || session.childId !== input.profileId) {
+      return { ok: false, error: 'Сессия недействительна' };
+    }
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from('profiles')
+      .update({
+        avatar_url:   input.avatarUrl,
+        avatar_emoji: input.avatarEmoji,
+        avatar_color: input.avatarColor,
+      })
+      .eq('id', input.profileId);
+
+    if (error) {
+      console.error('[updateChildAvatar direct]', error);
+      return { ok: false, error: 'Не получилось обновить аватар' };
+    }
+
+    revalidatePath(`/child/${input.profileId}`);
+    return { ok: true };
+  }
+
+  // ── Режим 1: родительская Supabase-сессия ─────────────────────────────
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Не авторизован' };
 
-  // Текущий пользователь должен быть родителем из той же семьи
   const { data: me } = await supabase
     .from('profiles')
     .select('family_id, role')
@@ -170,7 +207,6 @@ export async function updateChildAvatar(input: {
     return { ok: false, error: 'Только родитель может менять аватар' };
   }
 
-  // Профиль ребёнка должен быть в той же семье
   const { data: child } = await supabase
     .from('profiles')
     .select('id, family_id, role')
@@ -179,11 +215,6 @@ export async function updateChildAvatar(input: {
 
   if (!child || child.family_id !== me.family_id || child.role !== 'child') {
     return { ok: false, error: 'Профиль не найден' };
-  }
-
-  const validColors = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'];
-  if (!validColors.includes(input.avatarColor)) {
-    return { ok: false, error: 'Неверный цвет' };
   }
 
   const { error } = await supabase
