@@ -129,15 +129,12 @@ export function TaskRow({
     }
   }
 
-  // ── Tap handler (desktop + tap on mobile) ────────────────────────────────
+  // ── Tap handler → переходим на экран задания ─────────────────────────────
   function handleClick() {
-    if (status !== 'available' || isPending) return;
+    if (isPending) return;
     if (swipeTriggered) return; // already triggered by swipe
-    if (requiresPhoto) {
-      setShowPhotoModal(true);
-      return;
-    }
-    submitCompletion(null);
+    // Для любого задания тап = переход на детальный экран
+    router.push(`/child/${childId}/task/${taskId}`);
   }
 
   // ── Core submit ──────────────────────────────────────────────────────────
