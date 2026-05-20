@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { addChild } from '../actions';
 import { AVATAR_COLORS, type AvatarColor } from '../constants';
 import { Avatar } from '@/components/ui/Avatar';
+import { EMOJI_AVATARS } from '@/components/ui/AvatarPicker';
 import { Button } from '@/components/ui/Button';
 
 export function AddChildForm() {
@@ -13,6 +14,8 @@ export function AddChildForm() {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [color, setColor] = useState<AvatarColor>('coral');
+  const [emoji, setEmoji] = useState<string | null>(null);
+  const [avatarTab, setAvatarTab] = useState<'emoji' | 'color'>('emoji');
   const [pin, setPin] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,7 @@ export function AddChildForm() {
         name: name.trim(),
         age: ageNum && !isNaN(ageNum) ? ageNum : null,
         color,
+        emoji: emoji ?? undefined,
         pin,
       });
 
@@ -74,35 +78,108 @@ export function AddChildForm() {
         <Hint>Помогает подбирать сложность задач</Hint>
       </Field>
 
-      {/* Цвет аватара */}
+      {/* Аватар */}
       <Field>
-        <Label>Цвет аватара</Label>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {AVATAR_COLORS.map((c) => (
+        <Label>Аватар</Label>
+
+        {/* Превью */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+          <Avatar name={name || '?'} color={color} avatarEmoji={emoji} size="xl" />
+        </div>
+
+        {/* Табы */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+          {(['emoji', 'color'] as const).map((t) => (
             <button
-              key={c}
+              key={t}
               type="button"
-              onClick={() => setColor(c)}
-              aria-label={c}
-              aria-pressed={c === color}
+              onClick={() => setAvatarTab(t)}
               disabled={isPending}
               style={{
-                background: 'transparent',
+                flex: 1, padding: '7px 0',
+                borderRadius: 'var(--radius-md)',
                 border: 'none',
+                background: avatarTab === t ? 'var(--color-ink)' : 'var(--bg-surface)',
+                color: avatarTab === t ? 'white' : 'var(--text-soft)',
+                fontFamily: 'inherit', fontWeight: 600, fontSize: 12.5,
                 cursor: 'pointer',
-                padding: 3,
-                borderRadius: '100px',
-                boxShadow:
-                  c === color
-                    ? `0 0 0 3px var(--color-coral)`
-                    : '0 0 0 1px var(--border-default)',
-                transition: 'box-shadow 0.15s',
               }}
             >
-              <Avatar name={name || '?'} color={c} size="md" />
+              {t === 'emoji' ? '😊 Эмодзи' : '🎨 Цвет'}
             </button>
           ))}
         </div>
+
+        {/* Эмодзи-сетка */}
+        {avatarTab === 'emoji' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+            {/* Нет эмодзи — показываем инициал */}
+            <button
+              type="button"
+              onClick={() => setEmoji(null)}
+              aria-label="Инициал"
+              aria-pressed={!emoji}
+              disabled={isPending}
+              style={{
+                aspectRatio: '1',
+                borderRadius: 'var(--radius-md)',
+                border: `2px solid ${!emoji ? 'var(--color-coral)' : 'transparent'}`,
+                background: !emoji ? 'var(--color-coral-soft)' : 'var(--bg-surface)',
+                cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <Avatar name={name || '?'} color={color} size="sm" />
+            </button>
+            {EMOJI_AVATARS.map((em) => (
+              <button
+                key={em}
+                type="button"
+                onClick={() => setEmoji(em)}
+                aria-label={em}
+                aria-pressed={emoji === em}
+                disabled={isPending}
+                style={{
+                  aspectRatio: '1',
+                  borderRadius: 'var(--radius-md)',
+                  border: `2px solid ${emoji === em ? 'var(--color-coral)' : 'transparent'}`,
+                  background: emoji === em ? 'var(--color-coral-soft)' : 'var(--bg-surface)',
+                  fontSize: 24, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                {em}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Цвета */}
+        {avatarTab === 'color' && (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {AVATAR_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setColor(c)}
+                aria-label={c}
+                aria-pressed={c === color}
+                disabled={isPending}
+                style={{
+                  background: 'transparent', border: 'none',
+                  cursor: 'pointer', padding: 3,
+                  borderRadius: '100px',
+                  boxShadow: c === color
+                    ? '0 0 0 3px var(--color-coral)'
+                    : '0 0 0 1px var(--border-default)',
+                  transition: 'box-shadow 0.15s',
+                }}
+              >
+                <Avatar name={name || '?'} color={c} size="md" />
+              </button>
+            ))}
+          </div>
+        )}
       </Field>
 
       {/* PIN */}

@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getActiveChildId } from '@/app/parent/children/actions';
 import { PipLogo } from '@/components/ui/PipLogo';
-import { Avatar } from '@/components/ui/Avatar';
 import { CoinBalance } from '@/components/ui/Coin';
 import { ExitChildButton } from './ExitChildButton';
+import { ChildAvatarButton } from './ChildAvatarButton';
 import { TaskRow } from './TaskRow';
 import { HintBanner } from '@/components/ui/HintBanner';
 import { StreakBadge } from '@/components/ui/StreakBadge';
@@ -20,6 +20,8 @@ type Profile = {
   name: string;
   birth_year: number | null;
   avatar_color: 'coral' | 'mint' | 'ink' | 'gold' | 'rose' | 'sky';
+  avatar_emoji: string | null;
+  avatar_url: string | null;
   balance: number;
   current_streak: number;
 };
@@ -135,7 +137,14 @@ export default async function ChildHomePage({
         >
           <PipLogo size={28} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Avatar name={child.name} color={child.avatar_color} size="md" />
+            <ChildAvatarButton
+                profileId={child.id}
+                familyId={child.family_id}
+                name={child.name}
+                avatarColor={child.avatar_color}
+                avatarEmoji={child.avatar_emoji}
+                avatarUrl={child.avatar_url}
+              />
             <ExitChildButton />
           </div>
         </header>

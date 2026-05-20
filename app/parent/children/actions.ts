@@ -23,6 +23,7 @@ export async function addChild(input: {
   name: string;
   age: number | null;
   color: AvatarColor;
+  emoji?: string;
   pin: string;
 }): Promise<Result<{ id: string }>> {
   const name = (input.name ?? '').trim();
@@ -60,6 +61,7 @@ export async function addChild(input: {
       name,
       birth_year: birthYear,
       avatar_color: input.color,
+      avatar_emoji: input.emoji ?? null,
       pin: input.pin,
     })
     .select('id')
@@ -141,4 +143,65 @@ export async function exitChildMode(): Promise<Result> {
 export async function getActiveChildId(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(COOKIE_NAME)?.value ?? null;
+}
+
+
+// ─── UPDATE CHILD AVATAR ──────────────────────────────────────────────
+// Меняет аватар ребёнка: фото / эмодзи / цвет.
+// Используется и из родительского, и из детского интерфейса.
+export async function updateChildAvatar(input: {
+  profileId: string;
+  avatarUrl: string | null;
+  avatarEmoji: string | null;
+  avatarColor: string;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Не авторизован' };
+
+  // Текущий пользователь должен быть родителем из той же семьи
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('family_id, role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!me || me.role !== 'parent') {
+    return { ok: false, error: 'Только родитель может менять аватар' };
+  }
+
+  // Профиль ребёнка должен быть в той же семье
+  const { data: child } = await supabase
+    .from('profiles')
+    .select('id, family_id, role')
+    .eq('id', input.profileId)
+    .single();
+
+  if (!child || child.family_id !== me.family_id || child.role !== 'child') {
+    return { ok: false, error: 'Профиль не найден' };
+  }
+
+  const validColors = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'];
+  if (!validColors.includes(input.avatarColor)) {
+    return { ok: false, error: 'Неверный цвет' };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      avatar_url:   input.avatarUrl,
+      avatar_emoji: input.avatarEmoji,
+      avatar_color: input.avatarColor,
+    })
+    .eq('id', input.profileId);
+
+  if (error) {
+    console.error('[updateChildAvatar]', error);
+    return { ok: false, error: 'Не получилось обновить аватар' };
+  }
+
+  revalidatePath('/parent');
+  revalidatePath(`/parent/children/${input.profileId}`);
+  revalidatePath(`/child/${input.profileId}`);
+  return { ok: true };
 }

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PipLogo } from '@/components/ui/PipLogo';
 import { Avatar } from '@/components/ui/Avatar';
 import { EnterChildMode } from './EnterChildMode';
+import { EditAvatarButton } from './EditAvatarButton';
 
 type Profile = {
   id: string;
@@ -12,6 +13,8 @@ type Profile = {
   name: string;
   birth_year: number | null;
   avatar_color: 'coral' | 'mint' | 'ink' | 'gold' | 'rose' | 'sky';
+  avatar_emoji: string | null;
+  avatar_url: string | null;
   balance: number;
   current_streak: number;
   longest_streak: number;
@@ -88,7 +91,23 @@ export default async function ChildDetailPage({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
-            <Avatar name={child.name} color={child.avatar_color} size="xl" />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+              <Avatar
+                name={child.name}
+                color={child.avatar_color}
+                avatarEmoji={child.avatar_emoji}
+                avatarUrl={child.avatar_url}
+                size="xl"
+              />
+              <EditAvatarButton
+                profileId={child.id}
+                familyId={child.family_id}
+                name={child.name}
+                avatarColor={child.avatar_color}
+                avatarEmoji={child.avatar_emoji}
+                avatarUrl={child.avatar_url}
+              />
+            </div>
             <div style={{ flex: 1 }}>
               <div
                 style={{
