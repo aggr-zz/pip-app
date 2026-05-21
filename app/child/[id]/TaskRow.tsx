@@ -48,6 +48,7 @@ export function TaskRow({
   const [status, setStatus] = useState(initialStatus);
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Swipe state
@@ -153,6 +154,8 @@ export function TaskRow({
       if (!result.ok) {
         setStatus('available');
         setSwipeTriggered(false);
+        setErrorMsg(result.error);
+        setTimeout(() => setErrorMsg(null), 5000);
         return;
       }
 
@@ -354,6 +357,21 @@ export function TaskRow({
           )}
         </button>
       </div>
+
+      {/* Error message */}
+      {errorMsg && (
+        <div style={{
+          marginTop: 6,
+          padding: '8px 12px',
+          background: 'var(--status-danger-soft)',
+          color: 'var(--status-danger)',
+          borderRadius: 'var(--radius-md)',
+          fontSize: 12.5,
+          lineHeight: 1.4,
+        }}>
+          ⚠️ {errorMsg}
+        </div>
+      )}
 
       {/* Photo upload modal */}
       {showPhotoModal && (
