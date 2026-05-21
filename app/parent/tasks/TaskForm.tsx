@@ -14,11 +14,36 @@ interface Child {
   avatar_color: 'coral' | 'mint' | 'ink' | 'gold' | 'rose' | 'sky';
 }
 
+interface ExistingTask {
+  id?: string;
+  coin_value: number;
+  schedule_type: string;
+  schedule_days: number[] | null;
+}
+
 interface Props {
   mode: 'create' | 'edit';
   taskId?: string;
   children: Child[];
   defaults?: Partial<TaskInput>;
+  existingTasks?: ExistingTask[];
+}
+
+// Сколько раз в неделю выполняется задание
+function timesPerWeek(t: { schedule_type: string; schedule_days: number[] | null }): number {
+  if (t.schedule_type === 'daily') return 7;
+  if (t.schedule_type === 'weekdays') return 5;
+  if (t.schedule_type === 'custom') return (t.schedule_days ?? []).length;
+  return 0; // once — разово, не учитываем в регулярном доходе
+}
+
+function earnPerWeek(coinValue: number, scheduleType: string, scheduleDays: number[]): number {
+  return coinValue * timesPerWeek({ schedule_type: scheduleType, schedule_days: scheduleDays });
+}
+
+function earnPerMonth(coinValue: number, scheduleType: string, scheduleDays: number[]): number {
+  const perWeek = earnPerWeek(coinValue, scheduleType, scheduleDays);
+  return Math.round(perWeek * 4.3);
 }
 
 const COIN_PRESETS = [5, 10, 20, 30, 50, 100];
@@ -32,7 +57,7 @@ const DAYS = [
   { value: 6, label: 'Вс' },
 ];
 
-export function TaskForm({ mode, taskId, children, defaults }: Props) {
+export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] }: Props) {
   const router = useRouter();
 
   const [title, setTitle] = useState(defaults?.title ?? '');
@@ -208,6 +233,43 @@ export function TaskForm({ mode, taskId, children, defaults }: Props) {
             </Chip>
           ))}
         </div>
+
+        {/* Подсказка — сколько можно заработать */}
+        {scheduleType !== 'once' && (() => {
+          const thisWeek = earnPerWeek(coinValue, scheduleType, scheduleDays);
+          const thisMonth = earnPerMonth(coinValue, scheduleType, scheduleDays);
+          const otherTasks = existingTasks.filter((t) => t.id !== taskId && t.schedule_type !== 'once');
+          const otherWeek = otherTasks.reduce((sum, t) => sum + t.coin_value * timesPerWeek(t), 0);
+          const totalWeek = otherWeek + thisWeek;
+          const totalMonth = Math.round(totalWeek * 4.3);
+          return (
+            <div style={{
+              marginTop: 12,
+              padding: '10px 14px',
+              background: 'var(--color-gold-soft)',
+              border: '1px solid var(--color-gold)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 13,
+              color: 'var(--color-ink-2)',
+              lineHeight: 1.5,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span>Это задание:</span>
+                <span style={{ fontWeight: 600 }}>
+                  {thisWeek} pip/нед · {thisMonth} pip/мес
+                </span>
+              </div>
+              {totalWeek !== thisWeek && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 4, paddingTop: 6, borderTop: '1px solid var(--color-gold)' }}>
+                  <span>Всего (все задания):</span>
+                  <span style={{ fontWeight: 700, color: 'var(--color-gold-deep)' }}>
+                    {totalWeek} pip/нед · {totalMonth} pip/мес
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </Field>
 
       {/* Расписание */}

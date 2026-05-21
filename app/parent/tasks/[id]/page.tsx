@@ -64,6 +64,12 @@ export default async function EditTaskPage({
     .order('name')
     .returns<Child[]>();
 
+  const { data: existingTasks = [] } = await supabase
+    .from('tasks')
+    .select('id, coin_value, schedule_type, schedule_days')
+    .eq('family_id', me.family_id)
+    .is('archived_at', null);
+
   return (
     <main style={{ minHeight: '100vh', padding: '40px 24px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
@@ -117,6 +123,7 @@ export default async function EditTaskPage({
           mode="edit"
           taskId={task.id}
           children={children ?? []}
+          existingTasks={existingTasks ?? []}
           defaults={{
             title: task.title,
             description: task.description,
