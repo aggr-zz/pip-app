@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { CoinPill } from '@/components/ui/Coin';
 import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
 import { autoApproveSweep } from './actions';
+import { ApproveAllButton } from './ApproveAllButton';
 import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 
 type PendingCompletion = {
@@ -122,18 +123,23 @@ export default async function ApprovalsPage() {
           <PipLogo size={28} />
         </header>
 
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 600,
-            fontSize: 32,
-            letterSpacing: '-0.02em',
-            margin: '0 0 8px',
-            lineHeight: 1.05,
-          }}
-        >
-          Подтверждения
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 600,
+              fontSize: 32,
+              letterSpacing: '-0.02em',
+              margin: 0,
+              lineHeight: 1.05,
+            }}
+          >
+            Подтверждения
+          </h1>
+          {pending.length > 1 && (
+            <ApproveAllButton completionIds={pending.map((c) => c.id)} />
+          )}
+        </div>
         <p style={{ color: 'var(--text-soft)', fontSize: 14.5, margin: '0 0 24px', lineHeight: 1.5 }}>
           Задачи, которые дети отметили как сделанные. Подтверди, чтобы зачислить монеты, или отклони с комментарием.
         </p>

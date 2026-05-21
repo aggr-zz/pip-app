@@ -133,6 +133,35 @@ export async function rejectCompletion(input: {
 }
 
 
+// ─── APPROVE ALL ──────────────────────────────────────────────────────
+/**
+ * Подтверждает все pending completions сразу (полная сумма).
+ */
+export async function approveAllCompletions(input: {
+  completionIds: string[];
+}): Promise<Result<{ count: number }>> {
+  if (!input.completionIds.length) return { ok: true, count: 0 };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Не авторизован' };
+
+  let approved = 0;
+  for (const completionId of input.completionIds) {
+    const { error } = await supabase.rpc('approve_task_completion', {
+      p_completion_id: completionId,
+      p_awarded: null, // полная сумма
+    });
+    if (!error) approved++;
+  }
+
+  revalidatePath('/parent/approvals');
+  revalidatePath('/parent');
+
+  return { ok: true, count: approved };
+}
+
+
 // ─── AUTO-APPROVE SWEEP ───────────────────────────────────────────────
 /**
  * Лениво автоаппрувит pending старше families.auto_approve_hours.
