@@ -101,6 +101,15 @@ export default async function ChildHomePage({
     return !s || s === 'rejected';
   }).length;
 
+  // Потенциальный заработок в неделю/месяц по всем заданиям
+  const weeklyPotential = (allTasks ?? []).reduce((sum, t) => {
+    if (t.schedule_type === 'daily') return sum + t.coin_value * 7;
+    if (t.schedule_type === 'weekdays') return sum + t.coin_value * 5;
+    if (t.schedule_type === 'custom') return sum + t.coin_value * (t.schedule_days?.length ?? 0);
+    return sum; // once — не считаем
+  }, 0);
+  const monthlyPotential = Math.round(weeklyPotential * 4.3);
+
   // Achievements count (для бейджа в навигации)
   const { count: achievementsCount = 0 } = await supabase
     .from('achievements')
@@ -248,6 +257,17 @@ export default async function ChildHomePage({
 
         {/* Подсказки для детей */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+          <HintBanner
+            id={`hint-child-potential-${child.id}`}
+            emoji="💰"
+            title="Сколько можно заработать?"
+            body={weeklyPotential > 0
+              ? `Если выполнять все задания без пропусков — ${weeklyPotential} pip в неделю и ${monthlyPotential} pip в месяц. Регулярность — это деньги!`
+              : 'Выполняй задания каждый день — монетки будут копиться быстрее!'
+            }
+            variant="gold"
+            show={weeklyPotential > 0 && child.current_streak < 3}
+          />
           <HintBanner
             id={`hint-child-welcome-${child.id}`}
             emoji="👋"
