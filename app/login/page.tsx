@@ -39,10 +39,10 @@ function LoginContent() {
     });
   }
 
-  async function handleGoogleLogin() {
+  async function handleYandexLogin() {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: 'yandex',
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
       },
@@ -98,10 +98,10 @@ function LoginContent() {
           variant="ghost"
           size="lg"
           fullWidth
-          onClick={handleGoogleLogin}
+          onClick={handleYandexLogin}
           disabled={isPending}
         >
-          <GoogleIcon /> Войти через Google
+          <YandexIcon /> Войти через Яндекс
         </Button>
 
         <p className="auth__footer">
@@ -145,13 +145,10 @@ function Field({
   );
 }
 
-function GoogleIcon() {
+function YandexIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24">
-      <path
-        fill="currentColor"
-        d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44-3.36 0-6.5-2.65-6.5-6.27 0-3.6 2.95-6.27 6.5-6.27 2.75 0 4.4 1.78 4.4 1.78l1.92-1.99S15.65 4 12.18 4C7.34 4 3.6 8.05 3.6 12.95c0 4.8 3.49 9.05 8.66 9.05 4.55 0 7.88-3.11 7.88-7.74 0-.97-.13-1.55-.13-1.55z"
-      />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M13.4 2H10.6C7.4 2 5 4.4 5 7.5c0 2.4 1.3 4.1 3.6 5L5 22h3l3.4-9h1.2v9h2.8V2h-2zm0 8.8h-1.1c-1.6 0-2.5-1-2.5-2.5 0-1.6.9-2.5 2.5-2.5h1.1v5z"/>
     </svg>
   );
 }
