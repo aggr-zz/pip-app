@@ -73,7 +73,7 @@ export default async function RewardsPage({
           </Link>
         </div>
         <p style={subtitleStyle}>
-          Каталог того, на что ребёнок может потратить pip. Деньги или предметы из реального мира — выдаются вне приложения.
+          Каталог того, на что ребёнок может потратить PIP. Деньги или предметы из реального мира — выдаются вне приложения.
         </p>
 
         {/* Фильтр архив / активные */}
@@ -101,7 +101,7 @@ export default async function RewardsPage({
             <p style={{ margin: '0 0 20px', fontSize: 14, color: 'var(--text-soft)', lineHeight: 1.5 }}>
               {showArchived
                 ? 'Архивированные награды появятся тут'
-                : 'Создай первую — например, «Выбор фильма на вечер» за 50 pip или «Велосипед» за 5000 pip как большая цель'}
+                : 'Создай первую — например, «Выбор фильма на вечер» за 50 PIP или «Велосипед» за 5000 PIP как большая цель'}
             </p>
             {!showArchived && (
               <Link href="/parent/rewards/new" style={{ textDecoration: 'none' }}>

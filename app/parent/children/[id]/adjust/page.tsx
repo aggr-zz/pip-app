@@ -109,7 +109,7 @@ export default async function AdjustPage({
               }}
             >
               <CoinDot size={10} />
-              Баланс {child.name}: <strong style={{ color: 'var(--text-primary)' }}>{child.balance} pip</strong>
+              Баланс {child.name}: <strong style={{ color: 'var(--text-primary)' }}>{child.balance} PIP</strong>
             </div>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default async function AdjustPage({
           <strong style={{ color: 'var(--text-primary)' }}>Когда использовать:</strong> бонус за то,
           что выходит за рамки задач («помог соседке»), штраф за поведение,
           или исправление ошибки. Запись остаётся в истории — ребёнок видит её и причину.
-          Лимит — ±500 pip за раз.
+          Лимит — ±500 PIP за раз.
         </div>
 
         {/* Form */}

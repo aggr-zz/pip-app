@@ -101,7 +101,7 @@ export function RewardCard({
             Заказано! Жди когда родитель выдаст
           </div>
           <div style={{ fontSize: 12, color: 'var(--color-mint-deep)', opacity: 0.8, marginTop: 2 }}>
-            Списано {coinCost} pip
+            Списано {coinCost} PIP
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ export function RewardCard({
               Купить «{title}»?
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 2 }}>
-              Спишется {coinCost} pip
+              Спишется {coinCost} PIP
             </div>
           </div>
         </div>
@@ -297,7 +297,7 @@ export function RewardCard({
                 />
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                <span>ещё {need} pip</span>
+                <span>ещё {need} PIP</span>
                 <span>{pct}%</span>
               </div>
             </div>

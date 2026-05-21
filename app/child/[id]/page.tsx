@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getChildContext } from '@/lib/getChildContext';
-import { PipLogo } from '@/components/ui/PipLogo';
 import { CoinBalance } from '@/components/ui/Coin';
 import { ExitChildButton } from './ExitChildButton';
 import { ChildAvatarButton } from './ChildAvatarButton';
@@ -128,16 +127,61 @@ export default async function ChildHomePage({
             marginBottom: 24,
           }}
         >
-          <PipLogo size={28} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Achievements trophy button */}
+          <Link
+            href={`/child/${child.id}/achievements`}
+            aria-label="Достижения"
+            title="Достижения"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 18,
+              textDecoration: 'none',
+              flexShrink: 0,
+              position: 'relative',
+            }}
+          >
+            🏆
+            {achievementsCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -3,
+                  right: -3,
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  background: 'var(--color-coral)',
+                  color: 'white',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1.5px solid var(--bg-main)',
+                }}
+              >
+                {achievementsCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Right: avatar + exit */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <ChildAvatarButton
-                profileId={child.id}
-                familyId={child.family_id}
-                name={child.name}
-                avatarColor={child.avatar_color}
-                avatarEmoji={child.avatar_emoji}
-                avatarUrl={child.avatar_url}
-              />
+              profileId={child.id}
+              familyId={child.family_id}
+              name={child.name}
+              avatarColor={child.avatar_color}
+              avatarEmoji={child.avatar_emoji}
+              avatarUrl={child.avatar_url}
+            />
             <ExitChildButton />
           </div>
         </header>
@@ -262,7 +306,7 @@ export default async function ChildHomePage({
             emoji="💰"
             title="Сколько можно заработать?"
             body={weeklyPotential > 0
-              ? `Если выполнять все задания без пропусков — ${weeklyPotential} pip в неделю и ${monthlyPotential} pip в месяц. Регулярность — это деньги!`
+              ? `Если выполнять все задания без пропусков — ${weeklyPotential} PIP в неделю и ${monthlyPotential} PIP в месяц. Регулярность — это деньги!`
               : 'Выполняй задания каждый день — монетки будут копиться быстрее!'
             }
             variant="gold"
@@ -271,8 +315,8 @@ export default async function ChildHomePage({
           <HintBanner
             id={`hint-child-welcome-${child.id}`}
             emoji="👋"
-            title="Добро пожаловать в pip!"
-            body="Выполняй задания каждый день и копи PIP-монеты. Потом трать их в магазине на что-то классное!"
+            title="Добро пожаловать в PIP!"
+            body="Выполняй задания каждый день и копи pip-монеты. Потом трать их в магазине на что-то классное!"
             variant="gold"
             show={child.balance === 0 && child.current_streak === 0}
           />
@@ -335,7 +379,7 @@ export default async function ChildHomePage({
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 14 }}>Магазин</div>
             <div style={{ fontSize: 12, opacity: 0.7, marginTop: 1 }}>
-              Купи награду за свои pip
+              Купи награду за свои PIP
             </div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

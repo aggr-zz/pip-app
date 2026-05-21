@@ -134,7 +134,7 @@ export default async function ChildHistoryPage({
           История
         </h1>
         <p style={{ color: 'var(--text-soft)', fontSize: 13, margin: '0 0 20px' }}>
-          Что у тебя происходило с pip
+          Что у тебя происходило с PIP
         </p>
 
         {/* Streak highlight */}
@@ -203,7 +203,7 @@ export default async function ChildHistoryPage({
 
         {/* Transactions feed */}
         <section>
-          <h2 style={sectionTitleStyle}>Движение pip</h2>
+          <h2 style={sectionTitleStyle}>Движение PIP</h2>
 
           {transactions.length === 0 ? (
             <div

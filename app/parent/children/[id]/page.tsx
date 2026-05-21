@@ -163,7 +163,7 @@ export default async function ChildDetailPage({
                   marginTop: 2,
                 }}
               >
-                Баланс pip
+                Баланс PIP
               </div>
             </div>
             <div>
@@ -224,7 +224,7 @@ export default async function ChildDetailPage({
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 14.5 }}>Выдача наличных</div>
             <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 2 }}>
-              Записать обмен pip на ₽
+              Записать обмен PIP на ₽
             </div>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--text-muted)' }}>
@@ -268,7 +268,7 @@ export default async function ChildDetailPage({
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 14.5 }}>Корректировка баланса</div>
             <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 2 }}>
-              Бонус или штраф, ±500 pip
+              Бонус или штраф, ±500 PIP
             </div>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--text-muted)' }}>

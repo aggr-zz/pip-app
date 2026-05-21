@@ -52,7 +52,7 @@ function LoginContent() {
   return (
     <main className="auth">
       <div className="auth__card">
-        <a href="/" className="auth__logo" aria-label="pip">
+        <a href="/" className="auth__logo" aria-label="PIP">
           <PipLogo size={48} />
         </a>
 

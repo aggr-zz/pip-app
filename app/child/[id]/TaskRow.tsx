@@ -7,6 +7,8 @@ import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
 import { CoinPill } from '@/components/ui/Coin';
 import { PhotoUpload } from './PhotoUpload';
 import { CelebrationModal, type CelebrationData } from './CelebrationModal';
+import { AchievementCelebrationModal } from './AchievementCelebrationModal';
+import type { AchievementType } from '@/lib/achievements';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -47,6 +49,7 @@ export function TaskRow({
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
+  const [achievementQueue, setAchievementQueue] = useState<AchievementType[]>([]);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -159,7 +162,12 @@ export function TaskRow({
         return;
       }
 
-      // Show celebration screen
+      // Queue any newly unlocked achievements (shown after task celebration)
+      if (result.newlyUnlocked?.length) {
+        setAchievementQueue(result.newlyUnlocked as AchievementType[]);
+      }
+
+      // Show task celebration screen
       setCelebration({
         childName,
         taskTitle: title,
@@ -180,6 +188,13 @@ export function TaskRow({
 
   function handleCelebrationClose() {
     setCelebration(null);
+    // Achievement queue will show after task celebration closes
+    // (rendered below — first item in queue shows automatically)
+  }
+
+  function handleAchievementClose() {
+    // Pop the first achievement from the queue
+    setAchievementQueue((q) => q.slice(1));
   }
 
   // ── Derived display state ────────────────────────────────────────────────
@@ -320,7 +335,7 @@ export function TaskRow({
                       <path d="M7 5l2-2h6l2 2" />
                     </svg>
                   )}
-                  {coinValue} pip
+                  {coinValue} PIP
                 </>
               )}
             </div>
@@ -387,9 +402,19 @@ export function TaskRow({
         </div>
       )}
 
-      {/* Celebration modal */}
+      {/* Task celebration modal */}
       {celebration && (
         <CelebrationModal data={celebration} onClose={handleCelebrationClose} />
+      )}
+
+      {/* Achievement celebration modal — shown after task celebration, one at a time */}
+      {!celebration && achievementQueue.length > 0 && (
+        <AchievementCelebrationModal
+          key={achievementQueue[0]}
+          type={achievementQueue[0]}
+          childName={childName}
+          onClose={handleAchievementClose}
+        />
       )}
     </>
   );

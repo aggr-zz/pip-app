@@ -85,7 +85,7 @@ export function AdjustForm({
           <span style={{ fontSize: 18 }}>✓</span>
           <span>
             Записано: {success.amount > 0 ? '+' : ''}
-            <strong>{success.amount} pip</strong> для {childName}. Баланс: {success.newBalance}
+            <strong>{success.amount} PIP</strong> для {childName}. Баланс: {success.newBalance}
           </span>
         </div>
       )}
@@ -126,7 +126,7 @@ export function AdjustForm({
 
       {/* Amount slider */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <Label asInline>Сколько pip</Label>
+        <Label asInline>Сколько PIP</Label>
         <div
           style={{
             fontFamily: 'var(--font-display)',
@@ -224,7 +224,7 @@ export function AdjustForm({
         ) : (
           <>
             После: {currentBalance} {direction === 'plus' ? '+' : '−'} {amount} ={' '}
-            <strong style={{ color: 'var(--text-primary)' }}>{balanceAfter} pip</strong>
+            <strong style={{ color: 'var(--text-primary)' }}>{balanceAfter} PIP</strong>
           </>
         )}
       </div>
@@ -252,7 +252,7 @@ export function AdjustForm({
         fullWidth
         disabled={isPending || wouldBeNegative || !reason.trim()}
       >
-        {isPending ? 'Применяем…' : `${direction === 'plus' ? 'Начислить' : 'Списать'} ${amount} pip`}
+        {isPending ? 'Применяем…' : `${direction === 'plus' ? 'Начислить' : 'Списать'} ${amount} PIP`}
       </Button>
     </form>
   );

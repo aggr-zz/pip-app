@@ -130,7 +130,7 @@ export function QuickStartTasks({ childIds }: QuickStartTasksProps) {
                     {t.title}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-soft)', marginTop: 2 }}>
-                    {t.schedule_type === 'daily' ? 'Каждый день' : 'Пн–Пт'} · {t.coin_value} pip
+                    {t.schedule_type === 'daily' ? 'Каждый день' : 'Пн–Пт'} · {t.coin_value} PIP
                   </div>
                 </div>
 

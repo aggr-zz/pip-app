@@ -78,7 +78,7 @@ export default async function AdminFamiliesPage() {
             <div>Род.</div>
             <div>Дети</div>
             <div>Задач</div>
-            <div>pip</div>
+            <div>PIP</div>
             <div>Активность</div>
             <div />
           </div>

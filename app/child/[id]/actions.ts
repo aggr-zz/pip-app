@@ -11,6 +11,14 @@ type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
   | { ok: false; error: string };
 
+export type MarkTaskCompleteResult = Result<{
+  status: string;
+  awarded: number;
+  balance: number;
+  /** Типы достижений, разблокированных прямо сейчас */
+  newlyUnlocked: string[];
+}>;
+
 const ACTIVE_CHILD_COOKIE = 'pip_active_child';
 
 /**
@@ -31,7 +39,7 @@ export async function markTaskComplete(input: {
   taskId: string;
   childId: string;
   photoPath?: string | null;
-}): Promise<Result<{ status: string; awarded: number; balance: number }>> {
+}): Promise<MarkTaskCompleteResult> {
   const cookieStore = await cookies();
 
   // ── Auth mode 1: parent session + pip_active_child cookie ────────────────
@@ -112,9 +120,14 @@ export async function markTaskComplete(input: {
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { ok: false, error: 'Пустой ответ от БД' };
 
-  // Проверяем достижения (не критично, ошибки молча игнорируем)
+  // Проверяем достижения — возвращаем только что разблокированные
+  let newlyUnlocked: string[] = [];
   try {
-    await supabase.rpc('check_achievements', { p_profile_id: input.childId });
+    const { data: achData } = await supabase.rpc('check_achievements', {
+      p_profile_id: input.childId,
+    });
+    // RPC returns array of rows; each row has newly_unlocked (text[])
+    newlyUnlocked = achData?.[0]?.newly_unlocked ?? [];
   } catch (e) {
     console.warn('[markTaskComplete] check_achievements failed:', e);
   }
@@ -127,5 +140,6 @@ export async function markTaskComplete(input: {
     status: row.status,
     awarded: row.awarded ?? 0,
     balance: row.new_balance ?? 0,
+    newlyUnlocked,
   };
 }

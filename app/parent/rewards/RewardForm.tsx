@@ -125,7 +125,7 @@ export function RewardForm({ children }: { children: Child[] }) {
 
       {/* Цена */}
       <Field>
-        <Label>Цена в pip</Label>
+        <Label>Цена в PIP</Label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
           <input
             type="number"
@@ -137,7 +137,7 @@ export function RewardForm({ children }: { children: Child[] }) {
             style={{ ...inputStyle, width: 110, fontSize: 18, fontWeight: 600, textAlign: 'right' }}
             inputMode="numeric"
           />
-          <span style={{ color: 'var(--text-soft)', fontSize: 14 }}>pip</span>
+          <span style={{ color: 'var(--text-soft)', fontSize: 14 }}>PIP</span>
         </div>
         {/* Пресеты */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

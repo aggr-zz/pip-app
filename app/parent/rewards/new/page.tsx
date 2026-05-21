@@ -71,7 +71,7 @@ export default async function NewRewardPage() {
           Новая награда
         </h1>
         <p style={{ color: 'var(--text-soft)', fontSize: 14.5, margin: '0 0 28px', lineHeight: 1.5 }}>
-          На что ребёнок сможет потратить накопленные pip. Реальную выдачу делаешь сам(а) — деньги, время за играми, поход в кино.
+          На что ребёнок сможет потратить накопленные PIP. Реальную выдачу делаешь сам(а) — деньги, время за играми, поход в кино.
         </p>
 
         <RewardForm children={children ?? []} />

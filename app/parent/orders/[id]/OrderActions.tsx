@@ -74,7 +74,7 @@ export function OrderActions({
           Отменить заказ?
         </h3>
         <p style={{ fontSize: 13, color: 'var(--text-soft)', margin: '0 0 16px', lineHeight: 1.5 }}>
-          {childName} получит назад {cost} pip. Напиши почему — это появится в истории ребёнка.
+          {childName} получит назад {cost} PIP. Напиши почему — это появится в истории ребёнка.
         </p>
 
         <textarea

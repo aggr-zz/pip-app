@@ -110,7 +110,7 @@ export default async function StatsPage({
           Статистика
         </h1>
         <p style={{ color: 'var(--text-soft)', fontSize: 14.5, margin: '0 0 20px', lineHeight: 1.5 }}>
-          Как семья пользуется pip
+          Как семья пользуется PIP
         </p>
 
         {/* Period tabs */}
@@ -157,8 +157,8 @@ export default async function StatsPage({
           }}
         >
           <BigStat label="Задач выполнено" value={String(familyTotals.tasks)} />
-          <BigStat label="Заработано" value={`${familyTotals.earned}`} unit="pip" />
-          <BigStat label="Потрачено в магазине" value={`${familyTotals.spent}`} unit="pip" />
+          <BigStat label="Заработано" value={`${familyTotals.earned}`} unit="PIP" />
+          <BigStat label="Потрачено в магазине" value={`${familyTotals.spent}`} unit="PIP" />
           <BigStat label="Выдано наличными" value={`${formatCash(familyTotals.cash)}`} unit="₽" />
         </div>
 
@@ -183,7 +183,7 @@ export default async function StatsPage({
                       <div style={{ fontWeight: 600, fontSize: 15 }}>{s.profile_name}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-soft)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                         <CoinDot size={9} />
-                        баланс {s.current_balance} pip
+                        баланс {s.current_balance} PIP
                       </div>
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default async function StatsPage({
                       {t.title}
                     </div>
                     <div style={{ fontSize: 11.5, color: 'var(--text-soft)', marginTop: 1 }}>
-                      {t.completions} раз · {t.total_earned} pip
+                      {t.completions} раз · {t.total_earned} PIP
                     </div>
                   </div>
                 </div>

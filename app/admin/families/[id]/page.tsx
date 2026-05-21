@@ -286,7 +286,7 @@ export default async function AdminFamilyDetailPage({
                 center={o.reward_id.slice(0, 8) + '…'}
                 right={
                   <>
-                    <span style={{ fontWeight: 600 }}>−{o.coin_cost_at_order} pip</span>
+                    <span style={{ fontWeight: 600 }}>−{o.coin_cost_at_order} PIP</span>
                     <span style={{ color: 'var(--text-muted)', marginLeft: 12, fontSize: 11.5 }}>
                       {timeAgo(o.ordered_at)}
                     </span>

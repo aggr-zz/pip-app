@@ -150,7 +150,7 @@ export default async function AdminStatsPage() {
           }}
         >
           <StatCard
-            label="pip в обороте"
+            label="PIP в обороте"
             value={Number(stats?.total_pip_in_circulation ?? 0).toLocaleString('ru-RU')}
             sub="сумма всех балансов"
           />
@@ -176,7 +176,7 @@ export default async function AdminStatsPage() {
           }}
         >
           <StatCard label="Детей на семью" value={avgChildrenPerFamily} />
-          <StatCard label="Баланс ребёнка" value={avgBalance} sub="pip" />
+          <StatCard label="Баланс ребёнка" value={avgBalance} sub="PIP" />
           <StatCard label="Выполнений / семья" value={completionsPerFamily} />
         </div>
       </section>

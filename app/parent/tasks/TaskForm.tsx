@@ -208,7 +208,7 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
               color: 'var(--color-gold-deep)',
             }}
           >
-            {coinValue} pip
+            {coinValue} PIP
           </span>
         </div>
         <input
@@ -256,14 +256,14 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <span>Это задание:</span>
                 <span style={{ fontWeight: 600 }}>
-                  {thisWeek} pip/нед · {thisMonth} pip/мес
+                  {thisWeek} PIP/нед · {thisMonth} PIP/мес
                 </span>
               </div>
               {totalWeek !== thisWeek && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 4, paddingTop: 6, borderTop: '1px solid var(--color-gold)' }}>
                   <span>Всего (все задания):</span>
                   <span style={{ fontWeight: 700, color: 'var(--color-gold-deep)' }}>
-                    {totalWeek} pip/нед · {totalMonth} pip/мес
+                    {totalWeek} PIP/нед · {totalMonth} PIP/мес
                   </span>
                 </div>
               )}

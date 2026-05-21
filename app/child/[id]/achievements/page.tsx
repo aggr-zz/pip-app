@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getChildContext } from '@/lib/getChildContext';
-import { PipLogo } from '@/components/ui/PipLogo';
 import { Avatar } from '@/components/ui/Avatar';
 import { ExitChildButton } from '../ExitChildButton';
 import {
@@ -26,6 +25,13 @@ type Achievement = {
   unlocked_at: string;
 };
 
+type ChildStats = {
+  tasks: number;    // total approved completions
+  coins: number;    // total earned PIP (cumulative)
+  streak: number;   // current streak
+  rewards: number;  // fulfilled reward orders
+};
+
 export default async function AchievementsPage({
   params,
 }: {
@@ -41,6 +47,7 @@ export default async function AchievementsPage({
     .single<Profile>();
   if (!child || child.family_id !== familyId || child.role !== 'child') notFound();
 
+  // ── Achievements ────────────────────────────────────────────────────────
   const { data: unlocked = [] } = await supabase
     .from('achievements')
     .select('type, unlocked_at')
@@ -51,7 +58,30 @@ export default async function AchievementsPage({
   const unlockedCount = unlockedMap.size;
   const totalCount = ALL_ACHIEVEMENT_TYPES.length;
 
-  // Группируем по категориям
+  // ── Stats for progress bars ─────────────────────────────────────────────
+  const { data: completions } = await supabase
+    .from('task_completions')
+    .select('awarded_coins')
+    .eq('profile_id', child.id)
+    .in('status', ['approved', 'auto_approved']);
+
+  const tasksCompleted = completions?.length ?? 0;
+  const coinsEarned = completions?.reduce((sum, r) => sum + (r.awarded_coins ?? 0), 0) ?? 0;
+
+  const { count: rewardsCount } = await supabase
+    .from('reward_orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('profile_id', child.id)
+    .eq('status', 'fulfilled');
+
+  const stats: ChildStats = {
+    tasks: tasksCompleted,
+    coins: coinsEarned,
+    streak: child.current_streak,
+    rewards: rewardsCount ?? 0,
+  };
+
+  // ── Group by category ───────────────────────────────────────────────────
   const byCategory: Record<string, AchievementType[]> = {
     tasks: [],
     streak: [],
@@ -62,7 +92,7 @@ export default async function AchievementsPage({
     byCategory[ACHIEVEMENTS[type].category].push(type);
   }
 
-  // Недавно открытые (за последние 24 часа)
+  // ── Recently unlocked (last 24h) ────────────────────────────────────────
   const dayAgo = Date.now() - 86400 * 1000;
   const recentlyUnlocked = (unlocked ?? []).filter(
     (a) => new Date(a.unlocked_at).getTime() > dayAgo,
@@ -71,6 +101,7 @@ export default async function AchievementsPage({
   return (
     <main style={{ minHeight: '100vh', padding: '20px 20px 64px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
+        {/* Header */}
         <header style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link
             href={`/child/${child.id}`}
@@ -110,7 +141,6 @@ export default async function AchievementsPage({
             overflow: 'hidden',
           }}
         >
-          {/* Decorative sparkles */}
           <div style={{ position: 'absolute', top: 10, left: 16, fontSize: 22, opacity: 0.4 }}>✨</div>
           <div style={{ position: 'absolute', bottom: 12, right: 14, fontSize: 18, opacity: 0.4 }}>⭐</div>
           <div style={{ position: 'absolute', top: 20, right: 30, fontSize: 16, opacity: 0.3 }}>💫</div>
@@ -131,7 +161,7 @@ export default async function AchievementsPage({
             {unlockedCount} из {totalCount} разблокировано
           </div>
 
-          {/* Progress bar */}
+          {/* Overall progress bar */}
           <div
             style={{
               marginTop: 14,
@@ -212,6 +242,12 @@ export default async function AchievementsPage({
                   const meta = ACHIEVEMENTS[type];
                   const unlockedAt = unlockedMap.get(type);
                   const isUnlocked = Boolean(unlockedAt);
+
+                  // Progress bar values
+                  const current = Math.min(stats[meta.metric], meta.goal);
+                  const pct = meta.goal > 0 ? (current / meta.goal) * 100 : 0;
+                  const showProgress = !isUnlocked && pct > 0;
+
                   return (
                     <div
                       key={type}
@@ -221,11 +257,12 @@ export default async function AchievementsPage({
                           ? '1px solid var(--color-gold)'
                           : '1px dashed var(--border-default)',
                         borderRadius: 'var(--radius-xl)',
-                        padding: 14,
+                        padding: '14px 14px 12px',
                         textAlign: 'center',
-                        opacity: isUnlocked ? 1 : 0.55,
                         position: 'relative',
                         boxShadow: isUnlocked ? '0 4px 16px rgba(242, 193, 78, 0.18)' : 'none',
+                        display: 'flex',
+                        flexDirection: 'column',
                       }}
                     >
                       <div
@@ -233,6 +270,7 @@ export default async function AchievementsPage({
                           fontSize: 40,
                           marginBottom: 6,
                           filter: isUnlocked ? 'none' : 'grayscale(1)',
+                          opacity: isUnlocked ? 1 : 0.55,
                         }}
                       >
                         {meta.icon}
@@ -244,6 +282,7 @@ export default async function AchievementsPage({
                           fontSize: 13.5,
                           marginBottom: 2,
                           lineHeight: 1.2,
+                          opacity: isUnlocked ? 1 : 0.65,
                         }}
                       >
                         {meta.title}
@@ -253,10 +292,14 @@ export default async function AchievementsPage({
                           fontSize: 11,
                           color: 'var(--text-soft)',
                           lineHeight: 1.35,
+                          opacity: isUnlocked ? 1 : 0.55,
+                          flex: 1,
                         }}
                       >
                         {meta.description}
                       </div>
+
+                      {/* Unlocked date */}
                       {isUnlocked && unlockedAt && (
                         <div
                           style={{
@@ -269,6 +312,66 @@ export default async function AchievementsPage({
                           }}
                         >
                           ✓ {formatDate(unlockedAt)}
+                        </div>
+                      )}
+
+                      {/* Progress bar (locked achievements with some progress) */}
+                      {!isUnlocked && (
+                        <div style={{ marginTop: 10 }}>
+                          {showProgress && (
+                            <div
+                              style={{
+                                fontSize: 10,
+                                color: 'var(--text-muted)',
+                                marginBottom: 4,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {current} / {meta.goal}
+                            </div>
+                          )}
+                          <div
+                            style={{
+                              height: 4,
+                              background: 'var(--border-default)',
+                              borderRadius: 100,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: '100%',
+                                width: `${pct}%`,
+                                background: pct > 0
+                                  ? 'linear-gradient(90deg, var(--color-coral), var(--color-gold))'
+                                  : 'transparent',
+                                borderRadius: 100,
+                                transition: 'width 0.4s ease',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Unlocked badge overlay */}
+                      {isUnlocked && (
+                        <div
+                          aria-hidden
+                          style={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            background: 'var(--color-gold)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 10,
+                          }}
+                        >
+                          ✓
                         </div>
                       )}
                     </div>

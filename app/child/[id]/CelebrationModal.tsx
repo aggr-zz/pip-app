@@ -339,7 +339,7 @@ export function CelebrationModal({
                   color: 'rgba(255,255,255,0.85)',
                   marginTop: 2,
                 }}>
-                  pip
+                  PIP
                 </div>
               </>
             )}

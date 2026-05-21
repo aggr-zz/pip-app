@@ -23,6 +23,8 @@ export type AchievementType =
   | 'streak_30'
   | 'first_reward';
 
+export type AchievementMetric = 'tasks' | 'coins' | 'streak' | 'rewards';
+
 interface AchievementMeta {
   icon: string;
   title: string;
@@ -30,6 +32,10 @@ interface AchievementMeta {
   category: 'tasks' | 'coins' | 'streak' | 'rewards';
   /** Приблизительный порядок «когда обычно получают» — для сортировки в UI */
   difficulty: number;
+  /** Значение метрики, при котором достижение открывается */
+  goal: number;
+  /** Какую метрику отслеживает прогресс-бар */
+  metric: AchievementMetric;
 }
 
 export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
@@ -40,6 +46,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Выполни самую первую задачу',
     category: 'tasks',
     difficulty: 1,
+    goal: 1,
+    metric: 'tasks',
   },
   tasks_10: {
     icon: '⭐',
@@ -47,6 +55,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Выполни десять задач',
     category: 'tasks',
     difficulty: 3,
+    goal: 10,
+    metric: 'tasks',
   },
   tasks_50: {
     icon: '🌟',
@@ -54,6 +64,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Выполни пятьдесят задач',
     category: 'tasks',
     difficulty: 5,
+    goal: 50,
+    metric: 'tasks',
   },
   tasks_100: {
     icon: '💫',
@@ -61,6 +73,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Сто задач — это сила',
     category: 'tasks',
     difficulty: 7,
+    goal: 100,
+    metric: 'tasks',
   },
 
   // Coins
@@ -70,6 +84,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Накопи 100 pip за всё время',
     category: 'coins',
     difficulty: 2,
+    goal: 100,
+    metric: 'coins',
   },
   coins_500: {
     icon: '💰',
@@ -77,6 +93,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Накопи 500 pip за всё время',
     category: 'coins',
     difficulty: 4,
+    goal: 500,
+    metric: 'coins',
   },
   coins_1000: {
     icon: '💎',
@@ -84,6 +102,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Накопи 1000 pip — серьёзная сумма',
     category: 'coins',
     difficulty: 6,
+    goal: 1000,
+    metric: 'coins',
   },
 
   // Streaks
@@ -93,6 +113,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Делай задачи три дня подряд',
     category: 'streak',
     difficulty: 2,
+    goal: 3,
+    metric: 'streak',
   },
   streak_7: {
     icon: '⚡',
@@ -100,6 +122,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Семь дней подряд без пропусков',
     category: 'streak',
     difficulty: 5,
+    goal: 7,
+    metric: 'streak',
   },
   streak_30: {
     icon: '🚀',
@@ -107,6 +131,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Тридцать дней подряд',
     category: 'streak',
     difficulty: 9,
+    goal: 30,
+    metric: 'streak',
   },
 
   // Rewards
@@ -116,6 +142,8 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementMeta> = {
     description: 'Получи первую награду из магазина',
     category: 'rewards',
     difficulty: 3,
+    goal: 1,
+    metric: 'rewards',
   },
 };
 

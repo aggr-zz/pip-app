@@ -108,8 +108,8 @@ export default async function ApprovalDetailPage({
               fontWeight: 500,
             }}
           >
-            {completion.status === 'approved' && `Подтверждено · начислено ${completion.awarded_coins ?? 0} pip`}
-            {completion.status === 'auto_approved' && `Автоподтверждено · начислено ${completion.awarded_coins ?? 0} pip`}
+            {completion.status === 'approved' && `Подтверждено · начислено ${completion.awarded_coins ?? 0} PIP`}
+            {completion.status === 'auto_approved' && `Автоподтверждено · начислено ${completion.awarded_coins ?? 0} PIP`}
             {completion.status === 'rejected' && `Отклонено: ${completion.rejection_reason ?? ''}`}
           </div>
         )}
@@ -250,7 +250,7 @@ export default async function ApprovalDetailPage({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <CoinDot size={10} />
-            <strong style={{ color: 'var(--text-primary)' }}>Текущий баланс {child.name}: {child.balance} pip</strong>
+            <strong style={{ color: 'var(--text-primary)' }}>Текущий баланс {child.name}: {child.balance} PIP</strong>
           </div>
           {isPending && (
             <div>

@@ -17,7 +17,7 @@ type Profile = {
 
 type CashTransaction = {
   id: string;
-  amount: number;            // отрицательный pip
+  amount: number;            // отрицательный PIP
   cash_amount: number | null;
   currency: string | null;
   reason: string | null;
@@ -119,7 +119,7 @@ export default async function CashPage({
             </h1>
             <div style={{ fontSize: 13, color: 'var(--text-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
               <CoinDot size={10} />
-              Баланс: <strong style={{ color: 'var(--text-primary)' }}>{child.balance} pip</strong>
+              Баланс: <strong style={{ color: 'var(--text-primary)' }}>{child.balance} PIP</strong>
             </div>
           </div>
         </div>
@@ -136,12 +136,12 @@ export default async function CashPage({
           <SummaryCard
             label="За 30 дней"
             value={`${formatCash(last30Cash)} ₽`}
-            sublabel={`за ${last30.reduce((s, t) => s + Math.abs(t.amount), 0)} pip`}
+            sublabel={`за ${last30.reduce((s, t) => s + Math.abs(t.amount), 0)} PIP`}
           />
           <SummaryCard
             label="Всего"
             value={`${formatCash(totalCash)} ₽`}
-            sublabel={`за ${totalPip} pip`}
+            sublabel={`за ${totalPip} PIP`}
           />
         </div>
 
@@ -167,7 +167,7 @@ export default async function CashPage({
             Записать выдачу
           </h2>
           <p style={{ fontSize: 13, color: 'var(--text-soft)', margin: '0 0 16px', lineHeight: 1.5 }}>
-            Деньги передаются вне приложения. Курс выбирай сам — pip ↔ ₽.
+            Деньги передаются вне приложения. Курс выбирай сам — PIP ↔ ₽.
           </p>
           <CashForm
             childId={child.id}
@@ -243,7 +243,7 @@ export default async function CashPage({
                       {formatCash(Number(tx.cash_amount ?? 0))} {tx.currency || '₽'}
                     </div>
                     <div style={{ fontSize: 11.5, color: 'var(--text-soft)', marginTop: 2 }}>
-                      {formatDate(tx.created_at)} · {Math.abs(tx.amount)} pip
+                      {formatDate(tx.created_at)} · {Math.abs(tx.amount)} PIP
                       {tx.reason && <> · {tx.reason}</>}
                     </div>
                   </div>

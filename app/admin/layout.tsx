@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { PipLogo } from '@/components/ui/PipLogo';
 
 export const metadata = {
-  title: 'pip — admin',
+  title: 'PIP — admin',
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

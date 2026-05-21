@@ -172,7 +172,7 @@ export function ApprovalActions({
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22 }}>
             {amount}
             <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-soft)', marginLeft: 4 }}>
-              из {fullAmount} pip ({percent}%)
+              из {fullAmount} PIP ({percent}%)
             </span>
           </span>
         </div>
@@ -257,7 +257,7 @@ export function ApprovalActions({
         disabled={isPending}
         style={{ marginBottom: 10 }}
       >
-        {isPending ? 'Подтверждаем…' : `Подтвердить · +${fullAmount} pip`}
+        {isPending ? 'Подтверждаем…' : `Подтвердить · +${fullAmount} PIP`}
       </Button>
 
       <div style={{ display: 'flex', gap: 8 }}>

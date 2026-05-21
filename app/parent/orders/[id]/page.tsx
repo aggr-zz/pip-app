@@ -98,7 +98,7 @@ export default async function OrderDetailPage({
           >
             {order.status === 'fulfilled' && 'Выдано'}
             {order.status === 'cancelled' &&
-              `Отменено: ${order.cancellation_reason ?? ''} · возвращено ${order.coin_cost_at_order} pip`}
+              `Отменено: ${order.cancellation_reason ?? ''} · возвращено ${order.coin_cost_at_order} PIP`}
           </div>
         )}
 
@@ -208,7 +208,7 @@ export default async function OrderDetailPage({
           }}
         >
           <strong style={{ color: 'var(--text-primary)' }}>
-            Баланс {child.name}: {child.balance} pip
+            Баланс {child.name}: {child.balance} PIP
           </strong>
           {isPending && (
             <div style={{ marginTop: 4 }}>

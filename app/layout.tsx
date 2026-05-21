@@ -3,13 +3,13 @@ import './../styles/globals.css';
 import { PageTransition } from '@/components/ui/PageTransition';
 
 export const metadata: Metadata = {
-  title: 'pip — копилка хороших привычек',
-  description: 'Дети делают полезное, получают pip-монеты, обменивают на согласованные награды. Семейная мотивация без денег и угроз.',
+  title: 'PIP — копилка хороших привычек',
+  description: 'Дети делают полезное, получают PIP-монеты, обменивают на согласованные награды. Семейная мотивация без денег и угроз.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'pip',
+    title: 'PIP',
   },
   formatDetection: {
     telephone: false,

@@ -163,7 +163,7 @@ export default async function TaskDetailPage({
               fontWeight: 700, fontSize: 16,
             }}>
               <span style={{ fontSize: 18 }}>🪙</span>
-              {task.coin_value} pip
+              {task.coin_value} PIP
             </div>
 
             {/* Требует подтверждения */}

@@ -32,9 +32,9 @@ export function CashForm({
     e.preventDefault();
     setError(null);
 
-    if (pipNum <= 0) return setError('Сколько pip списать?');
+    if (pipNum <= 0) return setError('Сколько PIP списать?');
     if (cashNum <= 0) return setError('Сколько денег выдаёшь?');
-    if (pipNum > currentBalance) return setError(`Не хватает: на балансе ${currentBalance} pip`);
+    if (pipNum > currentBalance) return setError(`Не хватает: на балансе ${currentBalance} PIP`);
 
     startTransition(async () => {
       const result = await recordCashPayout({
@@ -61,7 +61,7 @@ export function CashForm({
     });
   }
 
-  // Quick presets: курс 1 pip = 1 ₽, 1 pip = 0.5 ₽, и т.п.
+  // Quick presets: курс 1 PIP = 1 ₽, 1 PIP = 0.5 ₽, и т.п.
   function applyRate(rate: number) {
     if (pipNum > 0) {
       setCashStr(String(Math.round(pipNum * rate * 100) / 100));
@@ -88,14 +88,14 @@ export function CashForm({
         >
           <span style={{ fontSize: 18 }}>✓</span>
           <span>
-            Записано: {childName} получает <strong>{success.cash} ₽</strong> за {success.pip} pip
+            Записано: {childName} получает <strong>{success.cash} ₽</strong> за {success.pip} PIP
           </span>
         </div>
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
         <Field>
-          <Label>Списать с pip</Label>
+          <Label>Списать с PIP</Label>
           <Input
             value={pipStr}
             onChange={(v) => setPipStr(v.replace(/\D/g, '').slice(0, 6))}
@@ -123,10 +123,10 @@ export function CashForm({
       <div style={{ display: 'flex', gap: 6, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11.5, color: 'var(--text-muted)', marginRight: 4 }}>Курс:</span>
         {[
-          { label: '1 pip = 1 ₽', rate: 1 },
-          { label: '2 pip = 1 ₽', rate: 0.5 },
-          { label: '5 pip = 1 ₽', rate: 0.2 },
-          { label: '10 pip = 1 ₽', rate: 0.1 },
+          { label: '1 PIP = 1 ₽', rate: 1 },
+          { label: '2 PIP = 1 ₽', rate: 0.5 },
+          { label: '5 PIP = 1 ₽', rate: 0.2 },
+          { label: '10 PIP = 1 ₽', rate: 0.1 },
         ].map((preset) => (
           <button
             key={preset.label}
@@ -181,8 +181,8 @@ export function CashForm({
         >
           <CoinDot size={11} />
           {balanceAfter < 0
-            ? `Не хватает ${Math.abs(balanceAfter)} pip — на балансе только ${currentBalance}`
-            : `После выдачи баланс ${childName} → ${balanceAfter} pip`}
+            ? `Не хватает ${Math.abs(balanceAfter)} PIP — на балансе только ${currentBalance}`
+            : `После выдачи баланс ${childName} → ${balanceAfter} PIP`}
         </div>
       )}
 

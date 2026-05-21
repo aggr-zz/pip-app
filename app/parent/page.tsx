@@ -163,7 +163,7 @@ export default async function ParentDashboardPage() {
             <div className="empty__icon">👋</div>
             <h2 className="empty__title">Добавь первого ребёнка</h2>
             <p className="empty__text">
-              pip начинает работать когда в семье появляется ребёнок. Создадим его профиль и пин-код, по которому ребёнок войдёт со своего устройства.
+              PIP начинает работать когда в семье появляется ребёнок. Создадим его профиль и пин-код, по которому ребёнок войдёт со своего устройства.
             </p>
             <a href="/parent/children/new" style={{ display: 'inline-block', textDecoration: 'none' }}>
               <Button variant="ink" size="lg">+ Добавить ребёнка</Button>
@@ -202,7 +202,7 @@ export default async function ParentDashboardPage() {
                 id="hint-parent-add-task"
                 emoji="✏️"
                 title="Добавь первое задание"
-                body="Задания — основа pip. Дай ребёнку миссию и позволь заработать первые монеты. Даже «Почистить зубы» уже работает!"
+                body="Задания — основа PIP. Дай ребёнку миссию и позволь заработать первые монеты. Даже «Почистить зубы» уже работает!"
                 variant="gold"
                 cta={{ label: 'Создать задание', href: '/parent/tasks/new' }}
                 show={tasksCount === 0}

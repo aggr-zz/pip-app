@@ -104,7 +104,7 @@ export default async function AdminHomePage() {
           <MiniMetric label="Выполнений" value={stats?.total_completions ?? 0} />
           <MiniMetric label="Наград в каталогах" value={stats?.total_rewards ?? 0} />
           <MiniMetric label="Заказов выдано" value={stats?.total_orders_fulfilled ?? 0} />
-          <MiniMetric label="pip в обороте" value={Number(stats?.total_pip_in_circulation ?? 0).toLocaleString('ru-RU')} />
+          <MiniMetric label="PIP в обороте" value={Number(stats?.total_pip_in_circulation ?? 0).toLocaleString('ru-RU')} />
           <MiniMetric
             label="Выдано наличными"
             value={`${formatCash(Number(stats?.total_cash_paid ?? 0))} ₽`}
