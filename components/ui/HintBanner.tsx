@@ -82,6 +82,7 @@ export function HintBanner({
           background: v.bg,
           border: `1px solid ${v.border}`,
           borderRadius: 'var(--radius-xl)',
+          marginBottom: 16,
           animation: `${leaving ? 'hint-slide-out' : 'hint-slide-in'} 0.25s ease both`,
         }}
       >
