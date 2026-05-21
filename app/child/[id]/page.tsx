@@ -1,14 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getChildContext } from '@/lib/getChildContext';
-import { CoinBalance } from '@/components/ui/Coin';
-import { ExitChildButton } from './ExitChildButton';
-import { ChildAvatarButton } from './ChildAvatarButton';
 import { TaskRow } from './TaskRow';
 import { HintBanner } from '@/components/ui/HintBanner';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { isTaskScheduledFor, nowInTimezone, todayInTimezone, type ScheduleType } from '@/lib/schedule';
-import { ALL_ACHIEVEMENT_TYPES } from '@/lib/achievements';
 import type { TaskIconName } from '@/components/ui/TaskIcon';
 
 type Profile = {
@@ -109,105 +105,25 @@ export default async function ChildHomePage({
   }, 0);
   const monthlyPotential = Math.round(weeklyPotential * 4.3);
 
-  // Achievements count (для бейджа в навигации)
-  const { count: achievementsCount = 0 } = await supabase
-    .from('achievements')
-    .select('id', { count: 'exact', head: true })
-    .eq('profile_id', child.id);
-  const totalAchievements = ALL_ACHIEVEMENT_TYPES.length;
-
   return (
-    <main style={{ minHeight: '100vh', padding: '20px 20px 40px' }}>
+    <main style={{ minHeight: '100%', padding: '20px 20px 24px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 24,
-          }}
-        >
-          {/* Achievements trophy button */}
-          <Link
-            href={`/child/${child.id}/achievements`}
-            aria-label="Достижения"
-            title="Достижения"
+        {/* Greeting */}
+        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-              textDecoration: 'none',
-              flexShrink: 0,
-              position: 'relative',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 600,
+              fontSize: 26,
+              letterSpacing: '-0.015em',
+              margin: 0,
+              lineHeight: 1.1,
             }}
           >
-            🏆
-            {achievementsCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: -3,
-                  right: -3,
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  background: 'var(--color-coral)',
-                  color: 'white',
-                  fontSize: 9,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1.5px solid var(--bg-main)',
-                }}
-              >
-                {achievementsCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Right: avatar + exit */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ChildAvatarButton
-              profileId={child.id}
-              familyId={child.family_id}
-              name={child.name}
-              avatarColor={child.avatar_color}
-              avatarEmoji={child.avatar_emoji}
-              avatarUrl={child.avatar_url}
-            />
-            <ExitChildButton />
-          </div>
-        </header>
-
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 600,
-            fontSize: 28,
-            letterSpacing: '-0.015em',
-            margin: '0 0 20px',
-            lineHeight: 1.1,
-          }}
-        >
-          Привет, {child.name}! 👋
-        </h1>
-
-        <CoinBalance
-          amount={child.balance}
-          label="Твой баланс"
-          extra={
-            <div style={{ fontSize: 13, opacity: 0.85 }}>
-              <StreakBadge streak={child.current_streak} />
-            </div>
-          }
-        />
+            Привет, {child.name}! 👋
+          </h1>
+          <StreakBadge streak={child.current_streak} />
+        </div>
 
         {totalCount > 0 && (
           <div style={{ marginTop: 24 }}>
@@ -347,46 +263,6 @@ export default async function ChildHomePage({
           />
         </div>
 
-        {/* Shop link */}
-        <Link
-          href={`/child/${child.id}/shop`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            marginTop: 16,
-            padding: '14px 16px',
-            background: 'var(--color-ink)',
-            borderRadius: 'var(--radius-xl)',
-            color: 'white',
-            textDecoration: 'none',
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 20,
-            }}
-          >
-            🎁
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>Магазин</div>
-            <div style={{ fontSize: 12, opacity: 0.7, marginTop: 1 }}>
-              Купи награду за свои PIP
-            </div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </Link>
-
         {/* History link (Sprint 7) */}
         <Link
           href={`/child/${child.id}/history`}
@@ -429,56 +305,6 @@ export default async function ChildHomePage({
           </svg>
         </Link>
 
-        {/* Achievements link (Sprint 7) */}
-        <Link
-          href={`/child/${child.id}/achievements`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            marginTop: 10,
-            padding: '14px 16px',
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-soft)',
-            borderRadius: 'var(--radius-xl)',
-            color: 'var(--text-primary)',
-            textDecoration: 'none',
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, var(--color-coral-soft), var(--color-gold-soft))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 20,
-            }}
-          >
-            🏆
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>
-              Достижения
-              {achievementsCount > 0 && (
-                <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--color-gold-deep)', fontWeight: 700 }}>
-                  {achievementsCount} из {totalAchievements}
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 1 }}>
-              {achievementsCount === 0
-                ? 'Выполни первую задачу — получишь первый бейдж'
-                : 'Бейджи за прогресс'}
-            </div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--text-muted)' }}>
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </Link>
-
         <div
           style={{
             marginTop: 24,
@@ -511,10 +337,3 @@ export default async function ChildHomePage({
   );
 }
 
-function streakWord(n: number): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return 'день';
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дня';
-  return 'дней';
-}

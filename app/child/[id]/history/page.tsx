@@ -1,10 +1,6 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { getChildContext } from '@/lib/getChildContext';
-import { PipLogo } from '@/components/ui/PipLogo';
-import { Avatar } from '@/components/ui/Avatar';
 import { CoinDot } from '@/components/ui/Coin';
-import { ExitChildButton } from '../ExitChildButton';
 
 type Profile = {
   id: string;
@@ -85,47 +81,13 @@ export default async function ChildHistoryPage({
   }));
 
   return (
-    <main style={{ minHeight: '100vh', padding: '20px 20px 40px' }}>
+    <main style={{ minHeight: '100%', padding: '20px 20px 24px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        {/* Header */}
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 24,
-          }}
-        >
-          <Link
-            href={`/child/${child.id}`}
-            aria-label="Назад"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 36,
-              height: 36,
-              borderRadius: 100,
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              color: 'var(--text-primary)',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M19 12H5M12 5l-7 7 7 7" />
-            </svg>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Avatar name={child.name} color={child.avatar_color} size="md" />
-            <ExitChildButton />
-          </div>
-        </header>
-
         <h1
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 600,
-            fontSize: 28,
+            fontSize: 26,
             letterSpacing: '-0.015em',
             margin: '0 0 6px',
             lineHeight: 1.1,
