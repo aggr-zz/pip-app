@@ -216,21 +216,34 @@ export default async function AchievementsPage({
                   // Progress bar values
                   const current = Math.min(stats[meta.metric], meta.goal);
                   const pct = meta.goal > 0 ? (current / meta.goal) * 100 : 0;
-                  const showProgress = !isUnlocked && pct > 0;
+                  const inProgress = !isUnlocked && pct > 0;
+
+                  // Visual state
+                  const cardBg = isUnlocked
+                    ? 'linear-gradient(135deg, var(--color-gold-soft) 0%, rgba(255,255,255,0) 60%), var(--bg-surface)'
+                    : 'var(--bg-surface-2)';
+                  const cardBorder = isUnlocked
+                    ? '1.5px solid var(--color-gold)'
+                    : inProgress
+                      ? '1.5px solid var(--color-coral)'
+                      : '1px dashed var(--border-default)';
+                  const cardShadow = isUnlocked
+                    ? '0 4px 18px rgba(242, 193, 78, 0.22)'
+                    : inProgress
+                      ? '0 2px 10px rgba(238, 108, 77, 0.12)'
+                      : 'none';
 
                   return (
                     <div
                       key={type}
                       style={{
-                        background: isUnlocked ? 'var(--bg-surface)' : 'var(--bg-surface-2)',
-                        border: isUnlocked
-                          ? '1px solid var(--color-gold)'
-                          : '1px dashed var(--border-default)',
+                        background: cardBg,
+                        border: cardBorder,
                         borderRadius: 'var(--radius-xl)',
                         padding: '14px 14px 12px',
                         textAlign: 'center',
                         position: 'relative',
-                        boxShadow: isUnlocked ? '0 4px 16px rgba(242, 193, 78, 0.18)' : 'none',
+                        boxShadow: cardShadow,
                         display: 'flex',
                         flexDirection: 'column',
                       }}
@@ -239,8 +252,8 @@ export default async function AchievementsPage({
                         style={{
                           fontSize: 40,
                           marginBottom: 6,
-                          filter: isUnlocked ? 'none' : 'grayscale(1)',
-                          opacity: isUnlocked ? 1 : 0.55,
+                          filter: isUnlocked || inProgress ? 'none' : 'grayscale(1)',
+                          opacity: isUnlocked || inProgress ? 1 : 0.45,
                         }}
                       >
                         {meta.icon}
@@ -252,7 +265,12 @@ export default async function AchievementsPage({
                           fontSize: 13.5,
                           marginBottom: 2,
                           lineHeight: 1.2,
-                          opacity: isUnlocked ? 1 : 0.65,
+                          color: isUnlocked
+                            ? 'var(--color-gold-deep)'
+                            : inProgress
+                              ? 'var(--color-coral)'
+                              : 'var(--text-primary)',
+                          opacity: isUnlocked || inProgress ? 1 : 0.55,
                         }}
                       >
                         {meta.title}
@@ -262,7 +280,7 @@ export default async function AchievementsPage({
                           fontSize: 11,
                           color: 'var(--text-soft)',
                           lineHeight: 1.35,
-                          opacity: isUnlocked ? 1 : 0.55,
+                          opacity: isUnlocked || inProgress ? 0.85 : 0.5,
                           flex: 1,
                         }}
                       >
@@ -288,13 +306,13 @@ export default async function AchievementsPage({
                       {/* Progress bar (locked achievements with some progress) */}
                       {!isUnlocked && (
                         <div style={{ marginTop: 10 }}>
-                          {showProgress && (
+                          {inProgress && (
                             <div
                               style={{
                                 fontSize: 10,
-                                color: 'var(--text-muted)',
+                                color: 'var(--color-coral)',
                                 marginBottom: 4,
-                                fontWeight: 600,
+                                fontWeight: 700,
                               }}
                             >
                               {current} / {meta.goal}

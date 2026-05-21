@@ -187,7 +187,8 @@ export function ChildTabBar({
         display: 'flex',
         alignItems: 'stretch',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }}
+        viewTransitionName: 'child-tab-bar',
+      } as React.CSSProperties}
     >
       {tabs.map((tab) => (
         <Link

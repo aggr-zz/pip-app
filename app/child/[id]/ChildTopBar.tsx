@@ -37,7 +37,8 @@ export function ChildTopBar({ childId, balance, availableTaskCount }: Props) {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 16px',
-      }}
+        viewTransitionName: 'child-top-bar',
+      } as React.CSSProperties}
     >
       {/* Left: logo or back button */}
       {isMainTab ? (
