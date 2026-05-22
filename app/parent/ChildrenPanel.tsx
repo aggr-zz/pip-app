@@ -422,12 +422,30 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                   )}
 
                   {child.pendingApprovals.length === 0 && child.todayTasks.filter((t) => t.status === 'available').length === 0 && (
-                    <div style={{
-                      textAlign: 'center', padding: '16px 0',
-                      color: 'var(--text-soft)', fontSize: 13,
-                    }}>
-                      Нет заданий на сегодня
-                    </div>
+                    child.todayTasks.length === 0 ? (
+                      /* No tasks at all — prompt to create one */
+                      <a
+                        href="/parent/tasks/new"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          padding: '13px 14px',
+                          background: 'var(--color-ink)', color: 'white',
+                          borderRadius: 'var(--radius-lg)',
+                          fontWeight: 600, fontSize: 13.5,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        + Добавить задание
+                      </a>
+                    ) : (
+                      /* Tasks exist but all done/pending — all done for today */
+                      <div style={{
+                        textAlign: 'center', padding: '14px 0',
+                        color: 'var(--text-soft)', fontSize: 13,
+                      }}>
+                        Всё сделано на сегодня ✅
+                      </div>
+                    )
                   )}
 
                   {/* Link to child page */}
