@@ -4,7 +4,7 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-export function SignOutButton() {
+export function SignOutButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -22,15 +22,16 @@ export function SignOutButton() {
       onClick={handleSignOut}
       disabled={isPending}
       style={{
-        background: 'transparent',
+        background: fullWidth ? 'var(--bg-surface)' : 'transparent',
         border: '1px solid var(--border-default)',
         color: 'var(--text-soft)',
-        padding: '6px 12px',
-        borderRadius: 'var(--radius-md)',
-        fontSize: 12.5,
-        fontWeight: 500,
+        padding: fullWidth ? '12px' : '6px 12px',
+        borderRadius: 'var(--radius-lg)',
+        fontSize: fullWidth ? 14 : 12.5,
+        fontWeight: fullWidth ? 600 : 500,
         cursor: isPending ? 'wait' : 'pointer',
         fontFamily: 'inherit',
+        width: fullWidth ? '100%' : undefined,
         transition: 'background 0.15s, color 0.15s',
       }}
       onMouseEnter={(e) => {
