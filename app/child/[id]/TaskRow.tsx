@@ -4,7 +4,6 @@ import { useState, useTransition, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { markTaskComplete } from './actions';
 import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
-import { CoinPill } from '@/components/ui/Coin';
 import { PhotoUpload } from './PhotoUpload';
 import { CelebrationModal, type CelebrationData } from './CelebrationModal';
 import { AchievementCelebrationModal } from './AchievementCelebrationModal';
@@ -208,166 +207,151 @@ export function TaskRow({
 
   return (
     <>
-      {/* Swipe wrapper */}
+      {/* Row wrapper — swipe supported on mobile */}
       <div
         ref={rowRef}
-        style={{
-          position: 'relative',
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-        }}
+        style={{ position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
       >
-        {/* Green background revealed by swipe */}
+        {/* Swipe reveal — green stripe behind the row */}
         {!isInactive && (
           <div
             aria-hidden
             style={{
               position: 'absolute',
               inset: 0,
-              background: `linear-gradient(90deg, var(--color-mint-soft), var(--color-mint))`,
+              background: 'linear-gradient(90deg, var(--color-mint-soft), var(--color-mint))',
               borderRadius: 'var(--radius-lg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-start',
-              paddingLeft: 20,
+              paddingLeft: 16,
               opacity: swipeProgress,
               transition: isSwiping ? 'none' : 'opacity 0.2s ease',
             }}
           >
-            <div style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'var(--color-mint)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transform: `scale(${0.5 + swipeProgress * 0.5})`,
-              transition: isSwiping ? 'none' : 'transform 0.2s ease',
-              boxShadow: '0 2px 12px rgba(72, 199, 142, 0.4)',
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            {swipeProgress > 0.5 && (
-              <span style={{
-                marginLeft: 10,
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--color-mint-deep)',
-                opacity: (swipeProgress - 0.5) * 2,
-              }}>
-                {swipeProgress >= 1 ? 'Готово!' : 'Проведи ещё'}
-              </span>
-            )}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="var(--color-mint-deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+              style={{ opacity: swipeProgress }}>
+              <path d="M5 13l4 4L19 7" />
+            </svg>
           </div>
         )}
 
-        {/* Main task card — shifts right on swipe */}
+        {/* ── Task row ──────────────────────────────────────────────── */}
         <button
           type="button"
           onClick={handleClick}
           disabled={isInactive || isPending}
           style={{
             width: '100%',
-            background: isDone
-              ? 'var(--color-mint-soft)'
-              : isPendingApproval
-                ? 'var(--bg-surface-2)'
-                : 'var(--bg-surface)',
-            border: `1px solid ${isDone ? 'var(--color-mint)' : 'var(--border-soft)'}`,
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-soft)',
             borderRadius: 'var(--radius-lg)',
-            padding: '12px 14px',
+            padding: '13px 14px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
             cursor: isInactive ? 'default' : 'pointer',
-            opacity: isInactive ? 0.7 : 1,
             textAlign: 'left',
             fontFamily: 'inherit',
             position: 'relative',
             transform: `translateX(${swipeX}px)`,
             transition: isSwiping
               ? 'none'
-              : 'transform 0.35s cubic-bezier(0.22,1,0.36,1), background 0.15s, opacity 0.15s',
+              : 'transform 0.35s cubic-bezier(0.22,1,0.36,1)',
             willChange: isSwiping ? 'transform' : 'auto',
           }}
         >
-          <TaskIcon name={icon} size={40} />
+          {/* ── Checkbox ── */}
+          <div
+            aria-hidden
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: '50%',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.18s, border-color 0.18s, transform 0.18s',
+              ...(isDone ? {
+                background: 'var(--color-mint)',
+                border: '2px solid var(--color-mint)',
+                transform: 'scale(1)',
+              } : isPendingApproval ? {
+                background: 'var(--color-gold-soft)',
+                border: '2px solid var(--color-gold)',
+              } : {
+                background: 'transparent',
+                border: '2px solid var(--border-default)',
+              }),
+            }}
+          >
+            {isDone && (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {isPendingApproval && (
+              <div style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: 'var(--color-gold)',
+              }} />
+            )}
+          </div>
 
+          {/* ── Title + meta ── */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontWeight: 600,
-              fontSize: 14,
-              color: 'var(--text-primary)',
+              fontWeight: 500,
+              fontSize: 15,
+              color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
               textDecoration: isDone ? 'line-through' : 'none',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              lineHeight: 1.3,
             }}>
               {title}
             </div>
-            <div style={{
-              fontSize: 11.5,
-              color: isPendingApproval ? 'var(--color-gold-deep)' : 'var(--text-soft)',
-              marginTop: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-            }}>
-              {isDone ? (
-                '✓ выполнено'
-              ) : isPendingApproval ? (
-                'ждёт подтверждения'
-              ) : (
-                <>
-                  {requiresPhoto && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                      strokeLinejoin="round" aria-label="Требуется фото">
-                      <rect x="3" y="5" width="18" height="14" rx="2" />
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M7 5l2-2h6l2 2" />
-                    </svg>
-                  )}
-                  {coinValue} PIP
-                </>
-              )}
-            </div>
+            {!isDone && (
+              <div style={{
+                fontSize: 11.5,
+                color: isPendingApproval ? 'var(--color-gold-deep)' : 'var(--text-soft)',
+                marginTop: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}>
+                {isPendingApproval ? (
+                  'ждёт подтверждения'
+                ) : (
+                  <>
+                    {requiresPhoto && (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M7 5l2-2h6l2 2" />
+                      </svg>
+                    )}
+                    {coinValue} PIP
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Right side: coin, check, or pending dot */}
-          {isDone ? (
-            <div style={checkmarkStyle}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          ) : isPendingApproval ? (
-            <div style={pendingDotStyle} aria-label="Ждёт подтверждения" />
-          ) : (
-            <CoinPill amount={coinValue} />
-          )}
-
-          {/* Swipe arrow hint (shown when task is available and not being swiped yet) */}
-          {!isInactive && !isSwiping && swipeX === 0 && (
-            <div style={{
-              position: 'absolute',
-              right: -4,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: 0.2,
-              fontSize: 10,
-              color: 'var(--text-soft)',
-              pointerEvents: 'none',
-            }}>
-              ›
+          {/* ── Right: icon + coin pill (only when available) ── */}
+          {!isInactive && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <TaskIcon name={icon} size={28} />
             </div>
           )}
         </button>
@@ -420,24 +404,3 @@ export function TaskRow({
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const checkmarkStyle: React.CSSProperties = {
-  width: 26,
-  height: 26,
-  borderRadius: 100,
-  background: 'var(--color-mint)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-};
-
-const pendingDotStyle: React.CSSProperties = {
-  width: 10,
-  height: 10,
-  borderRadius: 100,
-  background: 'var(--color-gold)',
-  boxShadow: '0 0 0 4px var(--color-gold-soft)',
-  flexShrink: 0,
-};
