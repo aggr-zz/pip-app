@@ -95,11 +95,12 @@ export default async function ParentProfilePage() {
   rewardsCount = rc ?? 0;
 
   return (
-    <main style={{ minHeight: '100dvh', background: '#ECEEF6' }}>
+    <main style={{ minHeight: '100%' }}>
       {/* Top bar */}
       <header
         style={{
-          background: 'var(--color-ink)',
+          background: 'var(--bg-surface)',
+          borderBottom: '1px solid var(--border-soft)',
           padding: '0 16px',
           height: 52,
           display: 'flex',
@@ -111,9 +112,7 @@ export default async function ParentProfilePage() {
         }}
       >
         <PipLogo size={26} />
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16, color: 'white' }}>
-          Профиль родителя
-        </span>
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16 }}>Профиль</span>
         <div style={{ width: 26 }} />
       </header>
 

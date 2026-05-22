@@ -51,7 +51,7 @@ export default async function ParentLayout({
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Scrollable content — minHeight:0 ensures proper flex shrinking */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', background: '#ECEEF6' }}>
         {children}
       </div>
 
