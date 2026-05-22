@@ -81,16 +81,17 @@ export default async function ChildLayout({
     .eq('profile_id', id);
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <ChildTopBar
         childId={id}
         balance={child.balance}
         streak={child.current_streak}
       />
 
-      {/* Scrollable content area */}
+      {/* Scrollable content area — minHeight:0 allows flex item to shrink below content */}
       <div style={{
         flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
         overflowX: 'hidden',
       }}>

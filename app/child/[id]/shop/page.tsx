@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getChildContext } from '@/lib/getChildContext';
 import { RewardCard } from './RewardCard';
-import { HintBanner } from '@/components/ui/HintBanner';
 
 type Profile = {
   id: string;
@@ -37,7 +36,6 @@ export default async function ShopPage({
     .single<Profile>();
   if (!child || child.family_id !== familyId || child.role !== 'child') notFound();
 
-  // Все награды семьи
   const { data: allRewards = [] } = await supabase
     .from('rewards')
     .select('id, title, description, icon, coin_cost, limit_type, available_to')
@@ -46,13 +44,11 @@ export default async function ShopPage({
     .order('coin_cost', { ascending: true })
     .returns<Reward[]>();
 
-  // Фильтруем по available_to: либо null/empty (всем), либо содержит наш id
   const visibleRewards = (allRewards ?? []).filter((r) => {
     if (!r.available_to || r.available_to.length === 0) return true;
     return r.available_to.includes(child.id);
   });
 
-  // Какие награды уже заказаны этим ребёнком (для лимита 'once')
   const { data: ordersData = [] } = await supabase
     .from('reward_orders')
     .select('reward_id, status')
@@ -64,85 +60,79 @@ export default async function ShopPage({
   );
 
   return (
-    <main style={{ minHeight: '100%', padding: '20px 20px 24px' }}>
+    <main style={{ minHeight: '100%', padding: '20px 16px 32px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 600,
-            fontSize: 26,
-            letterSpacing: '-0.015em',
-            margin: '0 0 16px',
-            lineHeight: 1.1,
-          }}
-        >
-          Магазин 🎁
-        </h1>
 
-        <div style={{ marginTop: 0 }}>
-          <HintBanner
-            id={`hint-shop-save-${child.id}`}
-            emoji="💰"
-            title="Копи на мечту"
-            body="Не трать всё сразу! Копи PIP на что-то по-настоящему крутое. Чем больше накопишь — тем круче приз."
-            variant="gold"
-            show={child.balance > 0 && child.balance < 50}
-          />
-          <HintBanner
-            id={`hint-shop-ask-${child.id}`}
-            emoji="💬"
-            title="Нет нужной награды?"
-            body="Попроси родителей добавить что-то особенное. Может, они и не знали, чего ты хочешь!"
-            variant="mint"
-            show={visibleRewards.length < 3}
-          />
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: 26,
+              letterSpacing: '-0.015em',
+              margin: '0 0 4px',
+              lineHeight: 1.1,
+            }}
+          >
+            Магазин 🎁
+          </h1>
+          <div style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+            Обменяй PIP на крутые награды
+          </div>
         </div>
 
-        <section style={{ marginTop: 28 }}>
-          {visibleRewards.length === 0 ? (
-            <div
-              style={{
-                padding: '40px 24px',
-                background: 'var(--bg-surface)',
-                border: '1px dashed var(--border-default)',
-                borderRadius: 'var(--radius-xl)',
-                textAlign: 'center',
-                color: 'var(--text-soft)',
-              }}
-            >
-              <div style={{ fontSize: 42, marginBottom: 14 }}>🌱</div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
-                Пока нет наград.
-                <br />
-                Попроси родителей добавить!
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {visibleRewards.map((r) => {
-                const alreadyOrdered = orderedRewardIds.has(r.id);
-                const canAfford = child.balance >= r.coin_cost;
-                const isOnceLimit = r.limit_type === 'once';
-                const isBlocked = isOnceLimit && alreadyOrdered;
+        {/* Grid or empty state */}
+        {visibleRewards.length === 0 ? (
+          <div
+            style={{
+              padding: '48px 24px',
+              background: 'var(--bg-surface)',
+              border: '1px dashed var(--border-default)',
+              borderRadius: 'var(--radius-xl)',
+              textAlign: 'center',
+              color: 'var(--text-soft)',
+            }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 14 }}>🌱</div>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+              Пока нет наград.
+              <br />
+              Попроси родителей добавить!
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 12,
+            }}
+          >
+            {visibleRewards.map((r, index) => {
+              const alreadyOrdered = orderedRewardIds.has(r.id);
+              const canAfford = child.balance >= r.coin_cost;
+              const isOnceLimit = r.limit_type === 'once';
+              const isBlocked = isOnceLimit && alreadyOrdered;
 
-                return (
-                  <RewardCard
-                    key={r.id}
-                    rewardId={r.id}
-                    childId={child.id}
-                    title={r.title}
-                    description={r.description}
-                    icon={r.icon}
-                    coinCost={r.coin_cost}
-                    balance={child.balance}
-                    canAfford={canAfford}
-                    alreadyOrdered={isBlocked}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </section>
+              return (
+                <RewardCard
+                  key={r.id}
+                  rewardId={r.id}
+                  childId={child.id}
+                  title={r.title}
+                  description={r.description}
+                  icon={r.icon}
+                  coinCost={r.coin_cost}
+                  balance={child.balance}
+                  canAfford={canAfford}
+                  alreadyOrdered={isBlocked}
+                  cardIndex={index}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </main>
   );
