@@ -183,18 +183,13 @@ export function ChildTabBar({
 
   return (
     <nav
-      className="child-tab-bar"
       style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 200,
         background: 'var(--bg-surface)',
         borderTop: '1px solid var(--border-soft)',
         display: 'flex',
         alignItems: 'stretch',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        flexShrink: 0,
       }}
     >
       {tabs.map((tab) => (

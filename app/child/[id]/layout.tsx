@@ -81,15 +81,19 @@ export default async function ChildLayout({
     .eq('profile_id', id);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <ChildTopBar
         childId={id}
         balance={child.balance}
         streak={child.current_streak}
       />
 
-      {/* Content area — padded only for fixed bottom tab bar */}
-      <div style={{ flex: 1, paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+      {/* Scrollable content area */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }}>
         {children}
       </div>
 

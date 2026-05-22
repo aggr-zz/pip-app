@@ -127,16 +127,6 @@ button {
 .page-enter-up    { animation: 340ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide-up; }
 .page-enter-fade  { animation: 220ms cubic-bezier(0.22, 1, 0.36, 1) both page-fade-scale; }
 
-/* Bottom tab bar — своё имя для view transitions, чтобы не двигалась с root */
-.child-tab-bar {
-  view-transition-name: child-tab-bar;
-}
-
-::view-transition-new(child-tab-bar),
-::view-transition-old(child-tab-bar) {
-  animation: none;
-}
-
 /* Уважаем prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-new(root),

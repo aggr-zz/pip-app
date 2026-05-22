@@ -220,7 +220,7 @@ export default async function AchievementsPage({
 
                   // Visual state
                   const cardBg = isUnlocked
-                    ? 'linear-gradient(135deg, var(--color-gold-soft) 0%, rgba(255,255,255,0) 60%), var(--bg-surface)'
+                    ? 'var(--color-gold-soft)'
                     : 'var(--bg-surface-2)';
                   const cardBorder = isUnlocked
                     ? '1.5px solid var(--color-gold)'
@@ -228,7 +228,7 @@ export default async function AchievementsPage({
                       ? '1.5px solid var(--color-coral)'
                       : '1px dashed var(--border-default)';
                   const cardShadow = isUnlocked
-                    ? '0 4px 18px rgba(242, 193, 78, 0.22)'
+                    ? '0 4px 18px rgba(242, 193, 78, 0.28)'
                     : inProgress
                       ? '0 2px 10px rgba(238, 108, 77, 0.12)'
                       : 'none';
@@ -320,8 +320,8 @@ export default async function AchievementsPage({
                           )}
                           <div
                             style={{
-                              height: 4,
-                              background: 'var(--border-default)',
+                              height: 5,
+                              background: 'rgba(0,0,0,0.10)',
                               borderRadius: 100,
                               overflow: 'hidden',
                             }}

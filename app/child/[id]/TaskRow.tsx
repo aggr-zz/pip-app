@@ -349,7 +349,7 @@ export function TaskRow({
           </div>
 
           {/* ── Right: icon (always shown) ── */}
-          <TaskIcon name={icon} size={34} colored={false} />
+          <TaskIcon name={icon} size={44} colored={false} />
         </button>
       </div>
 
