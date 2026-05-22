@@ -110,11 +110,6 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
   return (
     <>
       <style>{`
-        @keyframes pip-pulse-ring {
-          0%   { opacity: 0.9; transform: scale(1); }
-          60%  { opacity: 0;   transform: scale(1.85); }
-          100% { opacity: 0;   transform: scale(1.85); }
-        }
         @keyframes pip-panel-in {
           from { opacity: 0; transform: translateY(-8px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -159,7 +154,7 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                   textAlign: 'left',
                 }}
               >
-                {/* Avatar with pulse ring if pending */}
+                {/* Avatar with dot badge if pending */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <Avatar
                     name={child.name}
@@ -169,20 +164,13 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                     size="md"
                   />
                   {hasPending && (
-                    <>
-                      <span style={{
-                        position: 'absolute', inset: -3, borderRadius: '50%',
-                        border: '2px solid var(--color-coral)',
-                        animation: 'pip-pulse-ring 1.8s ease-out infinite',
-                        pointerEvents: 'none',
-                      }} />
-                      <span style={{
-                        position: 'absolute', inset: -3, borderRadius: '50%',
-                        border: '2px solid var(--color-coral)',
-                        animation: 'pip-pulse-ring 1.8s ease-out 0.7s infinite',
-                        pointerEvents: 'none',
-                      }} />
-                    </>
+                    <span style={{
+                      position: 'absolute', top: 0, right: 0,
+                      width: 10, height: 10, borderRadius: '50%',
+                      background: 'var(--color-coral)',
+                      border: '2px solid var(--bg-surface)',
+                      pointerEvents: 'none',
+                    }} />
                   )}
                 </div>
 
@@ -276,55 +264,61 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                               display: 'flex',
                               alignItems: 'center',
                               gap: 12,
-                              background: 'var(--color-coral-soft)',
-                              border: '1px solid var(--color-coral)',
+                              background: 'var(--bg-surface)',
+                              border: '1px solid var(--border-soft)',
                               borderRadius: 'var(--radius-lg)',
                               padding: '12px 14px',
                               textDecoration: 'none',
                             }}
                           >
-                            {/* Pulsing icon */}
-                            <div style={{ position: 'relative', flexShrink: 0 }}>
-                              {iconName ? (
-                                <TaskIcon name={iconName} size={40} colored />
-                              ) : (
-                                <div style={{
-                                  width: 40, height: 40, borderRadius: 'var(--radius-md)',
-                                  background: 'var(--color-coral-soft)',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: 20,
-                                }}>✅</div>
-                              )}
-                              <span style={{
-                                position: 'absolute', inset: -4, borderRadius: 'var(--radius-md)',
-                                border: '2px solid var(--color-coral)',
-                                animation: 'pip-pulse-ring 1.5s ease-out infinite',
-                                pointerEvents: 'none',
-                              }} />
+                            {/* Coral circle indicator — matches TaskRow checkbox */}
+                            <div style={{
+                              width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                              background: 'var(--color-coral-soft)',
+                              border: '2px solid var(--color-coral)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="var(--color-coral)" strokeWidth="3" strokeLinecap="round">
+                                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
                             </div>
 
+                            {/* Title + subtitle */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{
-                                fontWeight: 600, fontSize: 14,
-                                color: 'var(--color-coral-deep)',
+                                fontWeight: 500, fontSize: 15,
+                                color: 'var(--text-primary)',
                                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                lineHeight: 1.2,
+                                lineHeight: 1.3,
                               }}>
                                 {approval.taskTitle}
                               </div>
                               <div style={{
-                                fontSize: 11.5, color: 'var(--color-coral-deep)',
-                                opacity: 0.75, marginTop: 2, display: 'flex', gap: 8,
+                                fontSize: 11.5, color: 'var(--color-coral)',
+                                marginTop: 2, display: 'flex', gap: 8,
                               }}>
                                 <span>+{approval.coinValue} PIP</span>
                                 {approval.hasPhoto && <span>📸 фото</span>}
                               </div>
                             </div>
 
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                              stroke="var(--color-coral)" strokeWidth="2.5" strokeLinecap="round">
-                              <path d="M9 6l6 6-6 6" />
-                            </svg>
+                            {/* Task icon with dot — same side as TaskRow */}
+                            <div style={{ position: 'relative', flexShrink: 0 }}>
+                              {iconName ? (
+                                <TaskIcon name={iconName} size={44} colored={false} />
+                              ) : (
+                                <div style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>✅</div>
+                              )}
+                              {/* Small dot badge */}
+                              <span style={{
+                                position: 'absolute', top: 2, right: 2,
+                                width: 8, height: 8, borderRadius: '50%',
+                                background: 'var(--color-coral)',
+                                border: '1.5px solid var(--bg-surface)',
+                                pointerEvents: 'none',
+                              }} />
+                            </div>
                           </a>
                         );
                       })}
