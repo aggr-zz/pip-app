@@ -36,7 +36,7 @@ export function ApprovalActions({
         return;
       }
 
-      router.push('/parent/approvals');
+      router.push('/parent');
       router.refresh();
     });
   }
@@ -59,7 +59,7 @@ export function ApprovalActions({
         return;
       }
 
-      router.push('/parent/approvals');
+      router.push('/parent');
       router.refresh();
     });
   }
