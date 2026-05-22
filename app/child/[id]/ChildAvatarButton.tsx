@@ -11,6 +11,7 @@ interface ChildAvatarButtonProps {
   avatarColor: AvatarColor;
   avatarEmoji?: string | null;
   avatarUrl?: string | null;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**
@@ -24,6 +25,7 @@ export function ChildAvatarButton({
   avatarColor,
   avatarEmoji,
   avatarUrl,
+  size = 'md',
 }: ChildAvatarButtonProps) {
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState<AvatarData>({ avatarColor, avatarEmoji, avatarUrl });
@@ -48,7 +50,7 @@ export function ChildAvatarButton({
           color={current.avatarColor}
           avatarEmoji={current.avatarEmoji}
           avatarUrl={current.avatarUrl}
-          size="md"
+          size={size}
         />
         {/* Значок карандаша */}
         <span

@@ -82,7 +82,7 @@ export function ChildTopBar({ childId, balance, streak }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <PipLogo size={26} />
           {streak > 0 && (
-            <div style={{ position: 'relative' }}>
+            <div>
               <button
                 onClick={handleStreakClick}
                 style={{
@@ -93,7 +93,7 @@ export function ChildTopBar({ childId, balance, streak }: Props) {
                   borderRadius: 100,
                   padding: '5px 11px 5px 8px',
                   color: 'var(--color-gold-deep)',
-                  border: 'none',
+                  border: '1.5px solid var(--color-gold)',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                 }}
@@ -110,15 +110,15 @@ export function ChildTopBar({ childId, balance, streak }: Props) {
                 </span>
               </button>
 
-              {/* Tooltip */}
+              {/* Tooltip — position:fixed so it's never clipped by overflow:hidden */}
               {showTooltip && (
                 <div
                   role="tooltip"
                   style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    left: 0,
-                    zIndex: 300,
+                    position: 'fixed',
+                    top: 58,
+                    left: 16,
+                    zIndex: 1000,
                     background: 'var(--color-ink)',
                     color: 'white',
                     borderRadius: 10,
@@ -126,11 +126,8 @@ export function ChildTopBar({ childId, balance, streak }: Props) {
                     fontSize: 12.5,
                     fontWeight: 500,
                     lineHeight: 1.4,
-                    whiteSpace: 'nowrap',
-                    maxWidth: 220,
-                    whiteSpaceCollapse: 'preserve',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                    animation: 'pip-fade-in 0.15s ease',
+                    maxWidth: 240,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.22)',
                   }}
                 >
                   {streakHint(streak)}
@@ -138,7 +135,7 @@ export function ChildTopBar({ childId, balance, streak }: Props) {
                   <div style={{
                     position: 'absolute',
                     top: -5,
-                    left: 16,
+                    left: 20,
                     width: 10,
                     height: 10,
                     background: 'var(--color-ink)',
