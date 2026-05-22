@@ -95,7 +95,7 @@ export default async function ParentProfilePage() {
   rewardsCount = rc ?? 0;
 
   return (
-    <main style={{ minHeight: '100%', background: '#ECEEF6' }}>
+    <main style={{ minHeight: '100dvh', background: '#ECEEF6' }}>
       {/* Top bar */}
       <header
         style={{
