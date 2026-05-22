@@ -80,15 +80,14 @@ export default async function ChildLayout({
     .eq('profile_id', id);
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <ChildTopBar
         childId={id}
         balance={child.balance}
-        availableTaskCount={availableTaskCount}
       />
 
-      {/* Content area — padded for fixed top/bottom bars */}
-      <div style={{ paddingTop: 52, paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+      {/* Content area — padded only for fixed bottom tab bar */}
+      <div style={{ flex: 1, paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
         {children}
       </div>
 

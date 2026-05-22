@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 
+const STORAGE_KEY = 'pip-banner-closed';
+
 // ─── Slide definitions ────────────────────────────────────────────────────────
 
 type Slide = {
@@ -200,6 +202,21 @@ export function BannerCarousel({ childId }: { childId: string }) {
   const slides = makeSlides(childId);
   const [current, setCurrent] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [closed, setClosed] = useState(false);
+
+  // Read localStorage after mount
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(STORAGE_KEY) === '1') setClosed(true);
+    } catch {}
+  }, []);
+
+  function handleClose() {
+    setClosed(true);
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+  }
+
+  if (closed) return null;
   const touchRef = useRef({ startX: 0, startY: 0, axisLocked: false, active: false });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -271,11 +288,11 @@ export function BannerCarousel({ childId }: { childId: string }) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          borderRadius: 20,
+          borderRadius: 0,
           overflow: 'hidden',
           height: 156,
           background: slide.gradient,
-          boxShadow: `0 8px 28px ${slide.shadowColor}`,
+          boxShadow: `0 4px 20px ${slide.shadowColor}`,
           display: 'flex',
           alignItems: 'stretch',
           position: 'relative',
@@ -283,6 +300,35 @@ export function BannerCarousel({ childId }: { childId: string }) {
           cursor: 'pointer',
         }}
       >
+        {/* Close button */}
+        <button
+          aria-label="Закрыть"
+          onClick={(e) => { e.stopPropagation(); handleClose(); }}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 10,
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            background: 'rgba(0,0,0,0.18)',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            backdropFilter: 'blur(4px)',
+            flexShrink: 0,
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
         {/* Decorative circles */}
         <div aria-hidden style={{
           position: 'absolute', top: -30, right: -20,

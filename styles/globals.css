@@ -127,9 +127,11 @@ button {
 .page-enter-up    { animation: 340ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide-up; }
 .page-enter-fade  { animation: 220ms cubic-bezier(0.22, 1, 0.36, 1) both page-fade-scale; }
 
-/* Fixed UI chrome (top bar + tab bar) — не должны анимироваться при переходах */
-::view-transition-new(child-top-bar),
-::view-transition-old(child-top-bar),
+/* Bottom tab bar — своё имя для view transitions, чтобы не двигалась с root */
+.child-tab-bar {
+  view-transition-name: child-tab-bar;
+}
+
 ::view-transition-new(child-tab-bar),
 ::view-transition-old(child-tab-bar) {
   animation: none;

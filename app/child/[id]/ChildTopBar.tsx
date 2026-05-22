@@ -6,7 +6,6 @@ import { PipLogo } from '@/components/ui/PipLogo';
 interface Props {
   childId: string;
   balance: number;
-  availableTaskCount: number;
 }
 
 const MAIN_TAB_PATHS = (id: string) => [
@@ -16,7 +15,18 @@ const MAIN_TAB_PATHS = (id: string) => [
   `/child/${id}/profile`,
 ];
 
-export function ChildTopBar({ childId, balance, availableTaskCount }: Props) {
+function CoinIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" fill="var(--color-gold)" />
+      <circle cx="12" cy="12" r="8" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <text x="12" y="16" textAnchor="middle" fontSize="8" fontWeight="bold"
+        fill="rgba(255,255,255,0.9)" fontFamily="sans-serif">P</text>
+    </svg>
+  );
+}
+
+export function ChildTopBar({ childId, balance }: Props) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -25,20 +35,14 @@ export function ChildTopBar({ childId, balance, availableTaskCount }: Props) {
   return (
     <header
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
         height: 52,
-        zIndex: 100,
         background: 'var(--bg-main)',
         borderBottom: '1px solid var(--border-soft)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 16px',
-        viewTransitionName: 'child-top-bar',
-      } as React.CSSProperties}
+      }}
     >
       {/* Left: logo or back button */}
       {isMainTab ? (
@@ -67,78 +71,32 @@ export function ChildTopBar({ childId, balance, availableTaskCount }: Props) {
         </button>
       )}
 
-      {/* Right: balance + tasks badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* Tasks pending badge */}
-        {availableTaskCount > 0 && (
-          <div style={{ position: 'relative' }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border-default)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 16,
-              }}
-            >
-              ✅
-            </div>
-            <span
-              style={{
-                position: 'absolute',
-                top: -4,
-                right: -4,
-                minWidth: 17,
-                height: 17,
-                borderRadius: 100,
-                background: 'var(--color-coral)',
-                color: 'white',
-                fontSize: 10,
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid var(--bg-main)',
-                padding: '0 3px',
-                lineHeight: 1,
-              }}
-            >
-              {availableTaskCount}
-            </span>
-          </div>
-        )}
-
-        {/* Balance pill */}
-        <div
+      {/* Right: balance pill only */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+          background: 'var(--color-gold-soft)',
+          borderRadius: 100,
+          padding: '5px 12px 5px 7px',
+          color: 'var(--color-gold-deep)',
+        }}
+      >
+        <CoinIcon />
+        <span
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            background: 'var(--color-gold-soft)',
-            borderRadius: 100,
-            padding: '5px 12px 5px 8px',
-            color: 'var(--color-gold-deep)',
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: 14,
+            letterSpacing: '-0.01em',
           }}
         >
-          <span style={{ fontSize: 15 }}>🪙</span>
-          <span
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: '-0.01em',
-            }}
-          >
-            {balance.toLocaleString('ru-RU')}
-          </span>
-          <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.7, letterSpacing: '0.04em' }}>
-            PIP
-          </span>
-        </div>
+          {balance.toLocaleString('ru-RU')}
+        </span>
+        <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.7, letterSpacing: '0.04em' }}>
+          PIP
+        </span>
       </div>
     </header>
   );

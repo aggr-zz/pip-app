@@ -348,12 +348,8 @@ export function TaskRow({
             )}
           </div>
 
-          {/* ── Right: icon + coin pill (only when available) ── */}
-          {!isInactive && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <TaskIcon name={icon} size={28} />
-            </div>
-          )}
+          {/* ── Right: icon (always shown) ── */}
+          <TaskIcon name={icon} size={34} colored={false} />
         </button>
       </div>
 

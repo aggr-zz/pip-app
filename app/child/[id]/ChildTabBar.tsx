@@ -17,7 +17,7 @@ interface Props {
 
 function TasksIcon({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 11l3 3 8-8" />
       <path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" />
@@ -27,7 +27,7 @@ function TasksIcon({ active }: { active: boolean }) {
 
 function ShopIcon({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 12V22H4V12" />
       <path d="M22 7H2v5h20V7z" />
@@ -40,7 +40,7 @@ function ShopIcon({ active }: { active: boolean }) {
 
 function TrophyIcon({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 21h8M12 17v4" />
       <path d="M7 4H4a2 2 0 0 0-2 2v1a5 5 0 0 0 5 5" />
@@ -176,19 +176,19 @@ export function ChildTabBar({
 
   return (
     <nav
+      className="child-tab-bar"
       style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 100,
+        zIndex: 200,
         background: 'var(--bg-surface)',
         borderTop: '1px solid var(--border-soft)',
         display: 'flex',
         alignItems: 'stretch',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        viewTransitionName: 'child-tab-bar',
-      } as React.CSSProperties}
+      }}
     >
       {tabs.map((tab) => (
         <Link
