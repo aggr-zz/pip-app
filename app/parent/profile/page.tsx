@@ -172,40 +172,73 @@ export default async function ParentProfilePage() {
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {(children ?? []).map((child) => (
-                <a
+                <div
                   key={child.id}
-                  href={`/parent/children/${child.id}`}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border-soft)',
                     borderRadius: 'var(--radius-xl)',
-                    padding: '12px 16px',
-                    textDecoration: 'none',
+                    overflow: 'hidden',
                   }}
                 >
-                  <Avatar
-                    name={child.name}
-                    color={child.avatar_color}
-                    avatarEmoji={child.avatar_emoji}
-                    avatarUrl={child.avatar_url}
-                    size="md"
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
-                      {child.name}
+                  {/* Main row — opens child profile */}
+                  <a
+                    href={`/parent/children/${child.id}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '12px 16px', textDecoration: 'none',
+                    }}
+                  >
+                    <Avatar
+                      name={child.name}
+                      color={child.avatar_color}
+                      avatarEmoji={child.avatar_emoji}
+                      avatarUrl={child.avatar_url}
+                      size="md"
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+                        {child.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 2 }}>
+                        🔥 {child.current_streak} {daysWord(child.current_streak)} · 💰 {child.balance} PIP
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 2 }}>
-                      🔥 Стрик {child.current_streak} {daysWord(child.current_streak)} · 💰 {child.balance} PIP
-                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </a>
+
+                  {/* Quick actions row */}
+                  <div style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+                    borderTop: '1px solid var(--border-soft)',
+                  }}>
+                    {[
+                      { href: `/parent/children/${child.id}/cash`, emoji: '💸', label: 'Наличные' },
+                      { href: `/parent/children/${child.id}`, emoji: '📲', label: 'Подключить' },
+                      { href: `/parent/children/${child.id}/adjust`, emoji: '⚖️', label: 'Баланс' },
+                    ].map((action, i) => (
+                      <a
+                        key={action.href + i}
+                        href={action.href}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center',
+                          justifyContent: 'center', gap: 3,
+                          padding: '9px 4px',
+                          textDecoration: 'none',
+                          borderRight: i < 2 ? '1px solid var(--border-soft)' : 'none',
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>{action.emoji}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-soft)' }}>
+                          {action.label}
+                        </span>
+                      </a>
+                    ))}
                   </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
-                </a>
+                </div>
               ))}
             </div>
 
