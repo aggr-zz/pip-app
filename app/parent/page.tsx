@@ -172,11 +172,8 @@ export default async function ParentDashboardPage() {
     };
   });
 
-  // Default expand: first child with pending approvals, else first child
-  const defaultExpandedId =
-    childrenWithTasks.find((c) => c.pendingApprovals.length > 0)?.id ??
-    childrenWithTasks[0]?.id ??
-    null;
+  // 1 child → auto-expand; 2+ children → all collapsed
+  const defaultExpandedId = childrenWithTasks.length === 1 ? childrenWithTasks[0].id : null;
 
   const totalPending = childrenWithTasks.reduce((s, c) => s + c.pendingApprovals.length, 0);
 
@@ -238,54 +235,6 @@ export default async function ParentDashboardPage() {
           children={childrenWithTasks}
           defaultExpandedId={defaultExpandedId}
         />
-
-        {/* Quick actions */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 10,
-            marginTop: 20,
-          }}
-        >
-          <a
-            href="/parent/tasks/new"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              height: 44,
-              background: 'var(--color-ink)',
-              color: 'white',
-              borderRadius: 'var(--radius-lg)',
-              fontWeight: 600,
-              fontSize: 14,
-              textDecoration: 'none',
-            }}
-          >
-            + Задание
-          </a>
-          <a
-            href="/parent/tasks"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              height: 44,
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-lg)',
-              fontWeight: 600,
-              fontSize: 14,
-              textDecoration: 'none',
-            }}
-          >
-            Все задания
-          </a>
-        </div>
       </div>
     </main>
   );
