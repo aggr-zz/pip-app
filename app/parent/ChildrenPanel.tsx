@@ -325,8 +325,8 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                     </>
                   )}
 
-                  {/* ── Today's tasks (TaskRow style) ───────────────── */}
-                  {child.todayTasks.length > 0 && (
+                  {/* ── Today's tasks — only available (pending shown above) ── */}
+                  {child.todayTasks.filter((t) => t.status === 'available').length > 0 && (
                     <>
                       <div style={{
                         fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
@@ -336,7 +336,7 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                       }}>
                         Сегодня
                       </div>
-                      {child.todayTasks.map((task) => {
+                      {child.todayTasks.filter((t) => t.status === 'available').map((task) => {
                         const isDone = task.status === 'done';
                         const isPending = task.status === 'pending';
                         const iconName = safeIcon(task.icon);
@@ -421,7 +421,7 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                     </>
                   )}
 
-                  {child.pendingApprovals.length === 0 && child.todayTasks.length === 0 && (
+                  {child.pendingApprovals.length === 0 && child.todayTasks.filter((t) => t.status === 'available').length === 0 && (
                     <div style={{
                       textAlign: 'center', padding: '16px 0',
                       color: 'var(--text-soft)', fontSize: 13,

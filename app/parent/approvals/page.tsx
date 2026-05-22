@@ -1,13 +1,8 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { PipLogo } from '@/components/ui/PipLogo';
-import { Avatar } from '@/components/ui/Avatar';
-import { CoinPill } from '@/components/ui/Coin';
-import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
-import { autoApproveSweep } from './actions';
-import { ApproveAllButton } from './ApproveAllButton';
-import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
+
+export default async function ApprovalsPage() {
+  redirect('/parent');
+}
 
 type PendingCompletion = {
   id: string;

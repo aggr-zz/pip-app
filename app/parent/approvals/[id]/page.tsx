@@ -64,8 +64,8 @@ export default async function ApprovalDetailPage({
         {/* Header */}
         <header style={{ marginBottom: 28, display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link
-            href="/parent/approvals"
-            aria-label="Назад к подтверждениям"
+            href="/parent"
+            aria-label="Назад"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -218,7 +218,7 @@ export default async function ApprovalDetailPage({
           />
         ) : (
           <Link
-            href="/parent/approvals"
+            href="/parent"
             style={{
               display: 'block',
               textAlign: 'center',
@@ -231,7 +231,7 @@ export default async function ApprovalDetailPage({
               fontSize: 14.5,
             }}
           >
-            К списку подтверждений
+            На главную
           </Link>
         )}
 

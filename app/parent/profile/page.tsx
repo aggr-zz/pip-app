@@ -238,7 +238,6 @@ export default async function ParentProfilePage() {
               { href: '/parent/tasks', label: '📋 Все задания' },
               { href: '/parent/rewards', label: '🎁 Каталог наград' },
               { href: '/parent/orders', label: '🛍 История заказов' },
-              { href: '/parent/approvals', label: '⚡ Подтверждения заданий' },
             ].map((link) => (
               <a
                 key={link.href}
