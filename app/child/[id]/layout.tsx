@@ -11,6 +11,7 @@ type ChildProfile = {
   role: string;
   name: string;
   balance: number;
+  current_streak: number;
   avatar_color: string;
   avatar_emoji: string | null;
   avatar_url: string | null;
@@ -28,7 +29,7 @@ export default async function ChildLayout({
 
   const { data: child } = await supabase
     .from('profiles')
-    .select('id, family_id, role, name, balance, avatar_color, avatar_emoji, avatar_url')
+    .select('id, family_id, role, name, balance, current_streak, avatar_color, avatar_emoji, avatar_url')
     .eq('id', id)
     .single<ChildProfile>();
 
@@ -84,6 +85,7 @@ export default async function ChildLayout({
       <ChildTopBar
         childId={id}
         balance={child.balance}
+        streak={child.current_streak}
       />
 
       {/* Content area — padded only for fixed bottom tab bar */}
@@ -99,6 +101,7 @@ export default async function ChildLayout({
         childName={child.name}
         availableTaskCount={availableTaskCount}
         achievementsCount={achievementsCount ?? 0}
+        balance={child.balance}
       />
     </div>
   );

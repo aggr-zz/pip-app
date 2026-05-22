@@ -11,6 +11,7 @@ interface Props {
   childName: string;
   availableTaskCount: number;
   achievementsCount: number;
+  balance: number;
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -123,6 +124,7 @@ export function ChildTabBar({
   childName,
   availableTaskCount,
   achievementsCount,
+  balance,
 }: Props) {
   const pathname = usePathname();
 
@@ -135,19 +137,24 @@ export function ChildTabBar({
   const isAchievementsActive = pathname.startsWith(`/child/${childId}/achievements`);
   const isProfileActive = pathname.startsWith(`/child/${childId}/profile`);
 
+  // Format balance: show as-is up to 999, then "1k", "2.5k" etc.
+  const balanceLabel = balance >= 1000
+    ? `${(balance / 1000).toFixed(balance % 1000 < 100 ? 0 : 1)}k`
+    : balance > 0 ? String(balance) : null;
+
   const tabs = [
     {
       href: `/child/${childId}`,
       label: 'Задания',
       active: isTasksActive,
-      badge: availableTaskCount > 0 ? availableTaskCount : null,
+      badge: availableTaskCount > 0 ? { value: availableTaskCount, gold: false } : null,
       icon: <TasksIcon active={isTasksActive} />,
     },
     {
       href: `/child/${childId}/shop`,
       label: 'Магазин',
       active: isShopActive,
-      badge: null,
+      badge: balanceLabel ? { value: balanceLabel, gold: true } : null,
       icon: <ShopIcon active={isShopActive} />,
     },
     {
@@ -215,22 +222,23 @@ export function ChildTabBar({
                 style={{
                   position: 'absolute',
                   top: -5,
-                  right: -7,
+                  right: tab.badge.gold ? -10 : -7,
                   minWidth: 16,
                   height: 16,
                   borderRadius: 100,
-                  background: 'var(--color-coral)',
-                  color: 'white',
+                  background: tab.badge.gold ? 'var(--color-gold)' : 'var(--color-coral)',
+                  color: tab.badge.gold ? 'var(--color-gold-deep)' : 'white',
                   fontSize: 9,
                   fontWeight: 800,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: '1.5px solid var(--bg-surface)',
-                  padding: '0 2px',
+                  padding: '0 4px',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {tab.badge}
+                {tab.badge.value}
               </span>
             )}
           </div>

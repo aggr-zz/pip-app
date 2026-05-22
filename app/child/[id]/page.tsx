@@ -142,8 +142,8 @@ export default async function ChildHomePage({
             </div>
             <div
               style={{
-                height: 6,
-                background: 'var(--border-soft)',
+                height: 7,
+                background: 'rgba(0,0,0,0.08)',
                 borderRadius: 100,
                 overflow: 'hidden',
               }}
@@ -155,6 +155,7 @@ export default async function ChildHomePage({
                   background: 'linear-gradient(90deg, var(--color-coral), var(--color-gold))',
                   borderRadius: 100,
                   transition: 'width 0.4s ease',
+                  minWidth: progress > 0 ? 8 : 0,
                 }}
               />
             </div>

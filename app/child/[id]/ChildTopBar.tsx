@@ -6,6 +6,7 @@ import { PipLogo } from '@/components/ui/PipLogo';
 interface Props {
   childId: string;
   balance: number;
+  streak: number;
 }
 
 const MAIN_TAB_PATHS = (id: string) => [
@@ -26,7 +27,7 @@ function CoinIcon() {
   );
 }
 
-export function ChildTopBar({ childId, balance }: Props) {
+export function ChildTopBar({ childId, balance, streak }: Props) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -44,9 +45,32 @@ export function ChildTopBar({ childId, balance }: Props) {
         padding: '0 16px',
       }}
     >
-      {/* Left: logo or back button */}
+      {/* Left: logo (+ streak on main tabs) or back button */}
       {isMainTab ? (
-        <PipLogo size={26} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <PipLogo size={26} />
+          {streak > 0 && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              background: 'var(--color-gold-soft)',
+              borderRadius: 100,
+              padding: '4px 10px 4px 7px',
+              color: 'var(--color-gold-deep)',
+            }}>
+              <span style={{ fontSize: 14, lineHeight: 1 }}>🔥</span>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: 13,
+                letterSpacing: '-0.01em',
+              }}>
+                {streak}
+              </span>
+            </div>
+          )}
+        </div>
       ) : (
         <button
           onClick={() => router.back()}
