@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { getChildContext } from '@/lib/getChildContext';
 import { TaskRow } from './TaskRow';
 import { BannerCarousel } from './BannerCarousel';
-import { StreakBadge } from '@/components/ui/StreakBadge';
 import { isTaskScheduledFor, nowInTimezone, todayInTimezone, type ScheduleType } from '@/lib/schedule';
 import type { TaskIconName } from '@/components/ui/TaskIcon';
 
@@ -105,7 +104,7 @@ export default async function ChildHomePage({
         </div>
 
         {/* Greeting */}
-        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ marginBottom: 16 }}>
           <h1
             style={{
               fontFamily: 'var(--font-display)',
@@ -118,7 +117,6 @@ export default async function ChildHomePage({
           >
             Привет, {child.name}! 👋
           </h1>
-          <StreakBadge streak={child.current_streak} />
         </div>
 
         {totalCount > 0 && (

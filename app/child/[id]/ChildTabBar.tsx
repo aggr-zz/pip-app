@@ -227,7 +227,7 @@ export function ChildTabBar({
                   height: 16,
                   borderRadius: 100,
                   background: tab.badge.gold ? 'var(--color-gold)' : 'var(--color-coral)',
-                  color: tab.badge.gold ? 'var(--color-gold-deep)' : 'white',
+                  color: 'white',
                   fontSize: 9,
                   fontWeight: 800,
                   display: 'flex',
