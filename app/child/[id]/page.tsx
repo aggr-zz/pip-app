@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getChildContext } from '@/lib/getChildContext';
 import { TaskRow } from './TaskRow';
-import { HintBanner } from '@/components/ui/HintBanner';
+import { BannerCarousel } from './BannerCarousel';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { isTaskScheduledFor, nowInTimezone, todayInTimezone, type ScheduleType } from '@/lib/schedule';
 import type { TaskIconName } from '@/components/ui/TaskIcon';
@@ -96,25 +96,21 @@ export default async function ChildHomePage({
     return !s || s === 'rejected';
   }).length;
 
-  // Потенциальный заработок в неделю/месяц по всем заданиям
-  const weeklyPotential = (allTasks ?? []).reduce((sum, t) => {
-    if (t.schedule_type === 'daily') return sum + t.coin_value * 7;
-    if (t.schedule_type === 'weekdays') return sum + t.coin_value * 5;
-    if (t.schedule_type === 'custom') return sum + t.coin_value * (t.schedule_days?.length ?? 0);
-    return sum; // once — не считаем
-  }, 0);
-  const monthlyPotential = Math.round(weeklyPotential * 4.3);
-
   return (
     <main style={{ minHeight: '100%', padding: '20px 20px 24px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
+        {/* Banner carousel — full bleed */}
+        <div style={{ margin: '-20px -20px 20px' }}>
+          <BannerCarousel childId={child.id} />
+        </div>
+
         {/* Greeting */}
-        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 600,
-              fontSize: 26,
+              fontSize: 22,
               letterSpacing: '-0.015em',
               margin: 0,
               lineHeight: 1.1,
@@ -215,55 +211,7 @@ export default async function ChildHomePage({
           )}
         </section>
 
-        {/* Подсказки для детей */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
-          <HintBanner
-            id={`hint-child-potential-${child.id}`}
-            emoji="💰"
-            title="Сколько можно заработать?"
-            body={weeklyPotential > 0
-              ? `Если выполнять все задания без пропусков — ${weeklyPotential} PIP в неделю и ${monthlyPotential} PIP в месяц. Регулярность — это деньги!`
-              : 'Выполняй задания каждый день — монетки будут копиться быстрее!'
-            }
-            variant="gold"
-            show={weeklyPotential > 0 && child.current_streak < 3}
-          />
-          <HintBanner
-            id={`hint-child-welcome-${child.id}`}
-            emoji="👋"
-            title="Добро пожаловать в PIP!"
-            body="Выполняй задания каждый день и копи pip-монеты. Потом трать их в магазине на что-то классное!"
-            variant="gold"
-            show={child.balance === 0 && child.current_streak === 0}
-          />
-          <HintBanner
-            id={`hint-child-deadline-${child.id}`}
-            emoji="⏰"
-            title="Успей до конца дня"
-            body="Задания обновляются каждый день. Не откладывай — сделай сегодня, чтобы не потерять стрик!"
-            variant="mint"
-            show={availableCount > 0}
-          />
-          <HintBanner
-            id={`hint-child-nocheat-${child.id}`}
-            emoji="👀"
-            title="Не пытайся жульничать!"
-            body="Родители видят всё и могут вычесть монеты или поставить штраф. Делай честно — это выгоднее 😄"
-            variant="coral"
-            show={child.balance > 0}
-          />
-          <HintBanner
-            id={`hint-child-shop-${child.id}`}
-            emoji="🛍️"
-            title="Загляни в магазин"
-            body="У тебя уже есть монеты! Открой магазин и посмотри на что можно их потратить."
-            variant="gold"
-            cta={{ label: 'Открыть магазин', href: `/child/${child.id}/shop` }}
-            show={child.balance >= 10}
-          />
-        </div>
-
-        {/* History link (Sprint 7) */}
+        {/* History link */}
         <Link
           href={`/child/${child.id}/history`}
           style={{
