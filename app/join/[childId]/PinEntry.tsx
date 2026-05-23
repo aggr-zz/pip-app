@@ -41,6 +41,11 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
     });
   }
 
+  function handlePress(d: string) {
+    if (d === '⌫') handleDelete();
+    else handleDigit(d);
+  }
+
   const DIGITS = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
 
   return (
@@ -89,7 +94,14 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
           return (
             <button
               key={i}
-              onClick={() => isDelete ? handleDelete() : handleDigit(d)}
+              // onClick — fallback для десктопа
+              onClick={() => !isDisabled && handlePress(d)}
+              // onTouchEnd — срабатывает мгновенно на Android/iOS без 300мс задержки
+              onTouchEnd={(e) => {
+                if (isDisabled) return;
+                e.preventDefault(); // отменяем синтетический click после touch
+                handlePress(d);
+              }}
               disabled={isDisabled}
               style={{
                 height: 68,
