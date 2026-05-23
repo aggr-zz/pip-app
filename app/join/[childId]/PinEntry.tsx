@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { joinAsChild } from './actions';
 
@@ -10,22 +10,25 @@ interface PinEntryProps {
 }
 
 export function PinEntry({ childId, childName }: PinEntryProps) {
-  const router = useRouter();
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const router    = useRouter();
+  const [pin,     setPin]     = useState('');
+  const [error,   setError]   = useState<string | null>(null);
+  const [focused, setFocused] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  function handleDigit(d: string) {
-    if (pin.length >= 4 || isPending) return;
-    const next = pin + d;
-    setPin(next);
-    setError(null);
-    if (next.length === 4) submit(next);
-  }
+  // Фокусируем поле при монтировании (показывает клавиатуру на мобильных)
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(t);
+  }, []);
 
-  function handleDelete() {
-    setPin((p) => p.slice(0, -1));
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (isPending) return;
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    setPin(value);
     setError(null);
+    if (value.length === 4) submit(value);
   }
 
   function submit(code: string) {
@@ -34,6 +37,7 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
       if (!result.ok) {
         setError(result.error);
         setPin('');
+        setTimeout(() => inputRef.current?.focus(), 50);
         return;
       }
       router.push(`/child/${result.childId}`);
@@ -41,33 +45,63 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
     });
   }
 
-  function handlePress(d: string) {
-    if (d === '⌫') handleDelete();
-    else handleDigit(d);
+  function focusInput() {
+    inputRef.current?.focus();
   }
 
-  const DIGITS = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-      {/* Привет */}
-      <p style={{ fontSize: 15, color: 'var(--text-soft)', margin: '0 0 28px', textAlign: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <p style={{
+        fontSize: 15, color: 'var(--text-soft)',
+        margin: '0 0 32px', textAlign: 'center',
+      }}>
         Введи свой PIN
       </p>
 
-      {/* Точки PIN */}
-      <div style={{ display: 'flex', gap: 18, marginBottom: 32 }}>
+      {/* Скрытый нативный инпут — вызывает системную клавиатуру */}
+      <input
+        ref={inputRef}
+        type="tel"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoComplete="one-time-code"
+        maxLength={4}
+        value={pin}
+        onChange={handleChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        disabled={isPending}
+        style={{
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'none',
+          width: 0,
+          height: 0,
+          border: 'none',
+          outline: 'none',
+        }}
+      />
+
+      {/* Точки — нажатие фокусирует инпут */}
+      <div
+        onClick={focusInput}
+        style={{
+          display: 'flex', gap: 20, marginBottom: 28,
+          cursor: 'pointer', padding: '12px 24px',
+          touchAction: 'manipulation',
+        }}
+      >
         {[0,1,2,3].map((i) => (
           <div
             key={i}
             style={{
-              width: 18, height: 18,
+              width: 20, height: 20,
               borderRadius: '50%',
               background: i < pin.length
                 ? 'var(--color-ink)'
                 : 'var(--border-default)',
-              transition: 'background 0.15s',
-              transform: i < pin.length ? 'scale(1.1)' : 'scale(1)',
+              transition: 'background 0.15s, transform 0.1s',
+              transform: i < pin.length ? 'scale(1.15)' : 'scale(1)',
             }}
           />
         ))}
@@ -85,58 +119,37 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
         </div>
       )}
 
-      {/* Клавиатура */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 300 }}>
-        {DIGITS.map((d, i) => {
-          if (d === '') return <div key={i} />;
-          const isDelete = d === '⌫';
-          const isDisabled = isPending || (!isDelete && pin.length >= 4);
-          return (
-            <button
-              key={i}
-              // onClick — fallback для десктопа
-              onClick={() => !isDisabled && handlePress(d)}
-              // onTouchEnd — срабатывает мгновенно на Android/iOS без 300мс задержки
-              onTouchEnd={(e) => {
-                if (isDisabled) return;
-                e.preventDefault(); // отменяем синтетический click после touch
-                handlePress(d);
-              }}
-              disabled={isDisabled}
-              style={{
-                height: 68,
-                borderRadius: 'var(--radius-xl)',
-                border: 'none',
-                background: isDelete ? 'transparent' : 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-display)',
-                fontWeight: isDelete ? 400 : 600,
-                fontSize: isDelete ? 22 : 26,
-                cursor: isDisabled ? 'default' : 'pointer',
-                boxShadow: isDelete ? 'none' : '0 1px 4px rgba(0,0,0,0.08)',
-                transition: 'transform 0.08s, background 0.1s',
-                opacity: isDisabled && !isDelete ? 0.4 : 1,
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
-                userSelect: 'none',
-              }}
-              onPointerDown={(e) => {
-                if (!isDelete && !isDisabled) {
-                  (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.94)';
-                }
-              }}
-              onPointerUp={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
-              }}
-              onPointerCancel={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
-              }}
-            >
-              {isPending && d === '⌫' ? '…' : d}
-            </button>
-          );
-        })}
-      </div>
+      {/* Кнопка-подсказка открыть клавиатуру */}
+      <button
+        type="button"
+        onClick={focusInput}
+        disabled={isPending}
+        style={{
+          width: '100%', maxWidth: 280,
+          padding: '18px 24px',
+          background: focused ? 'var(--color-ink)' : 'var(--bg-surface)',
+          border: `2px solid ${focused ? 'var(--color-ink)' : 'var(--border-default)'}`,
+          borderRadius: 'var(--radius-xl)',
+          color: focused ? 'white' : 'var(--text-soft)',
+          fontFamily: 'var(--font-display)',
+          fontWeight: 600,
+          fontSize: 16,
+          cursor: isPending ? 'wait' : 'pointer',
+          transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+        }}
+      >
+        {isPending
+          ? '⏳ Проверяю…'
+          : focused
+            ? '⌨️ Вводи цифры'
+            : '👆 Нажми и введи PIN'}
+      </button>
 
       <style>{`
         @keyframes shake {
