@@ -104,13 +104,19 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
                 boxShadow: isDelete ? 'none' : '0 1px 4px rgba(0,0,0,0.08)',
                 transition: 'transform 0.08s, background 0.1s',
                 opacity: isDisabled && !isDelete ? 0.4 : 1,
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+                userSelect: 'none',
               }}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 if (!isDelete && !isDisabled) {
                   (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.94)';
                 }
               }}
-              onMouseUp={(e) => {
+              onPointerUp={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
+              }}
+              onPointerCancel={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
               }}
             >
