@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { joinAsChild } from './actions';
+import { useState } from 'react';
 
 interface PinEntryProps {
   childId: string;
@@ -9,16 +8,16 @@ interface PinEntryProps {
 }
 
 export function PinEntry({ childId, childName }: PinEntryProps) {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [pin,       setPin]       = useState('');
+  const [error,     setError]     = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
 
-  function handleDigit(d: string) {
+  async function handleDigit(d: string) {
     if (pin.length >= 4 || isPending) return;
     const next = pin + d;
     setPin(next);
     setError(null);
-    if (next.length === 4) submit(next);
+    if (next.length === 4) await submit(next);
   }
 
   function handleDelete() {
@@ -27,17 +26,31 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
     setError(null);
   }
 
-  function submit(code: string) {
-    startTransition(async () => {
-      const result = await joinAsChild({ childId, pin: code });
-      if (!result.ok) {
-        setError(result.error);
-        setPin('');
+  async function submit(code: string) {
+    setIsPending(true);
+    try {
+      const res = await fetch('/api/auth/child-pin', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ childId, pin: code }),
+        redirect: 'follow',
+      });
+
+      if (res.ok || res.redirected) {
+        // API route вернул редирект — переходим на URL из ответа
+        window.location.href = res.url || `/child/${childId}`;
         return;
       }
-      // Полная перезагрузка — гарантирует что сервер увидит только что выставленную куку
-      window.location.href = `/child/${result.childId}`;
-    });
+
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? 'Что-то пошло не так');
+      setPin('');
+    } catch {
+      setError('Нет соединения');
+      setPin('');
+    } finally {
+      setIsPending(false);
+    }
   }
 
   const DIGITS = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
@@ -80,7 +93,7 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 300 }}>
         {DIGITS.map((d, i) => {
           if (d === '') return <div key={i} />;
-          const isDelete = d === '⌫';
+          const isDelete   = d === '⌫';
           const isDisabled = isPending || (!isDelete && pin.length >= 4);
 
           return (
@@ -89,11 +102,10 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
               role="button"
               aria-label={isDelete ? 'Удалить' : d}
               aria-disabled={isDisabled}
-              // onTouchStart — срабатывает мгновенно при касании на Android/iOS
               onTouchStart={(e) => {
-                e.preventDefault(); // предотвращает задержку клика и детекцию скролла
+                e.preventDefault();
                 if (isDisabled) return;
-                if (!isDelete) (e.currentTarget as HTMLDivElement).style.transform = 'scale(0.94)';
+                (e.currentTarget as HTMLDivElement).style.transform = 'scale(0.94)';
                 if (isDelete) handleDelete();
                 else handleDigit(d);
               }}
@@ -101,14 +113,13 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
                 e.preventDefault();
                 (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
               }}
-              // onClick — fallback для десктопа
               onClick={() => {
                 if (isDisabled) return;
                 if (isDelete) handleDelete();
                 else handleDigit(d);
               }}
               onMouseDown={(e) => {
-                if (!isDelete && !isDisabled) (e.currentTarget as HTMLDivElement).style.transform = 'scale(0.94)';
+                if (!isDisabled) (e.currentTarget as HTMLDivElement).style.transform = 'scale(0.94)';
               }}
               onMouseUp={(e) => {
                 (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
