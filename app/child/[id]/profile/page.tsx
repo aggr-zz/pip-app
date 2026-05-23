@@ -3,6 +3,7 @@ import { getChildContext } from '@/lib/getChildContext';
 import { ChildAvatarButton } from '../ChildAvatarButton';
 import { ExitChildButton } from '../ExitChildButton';
 import { ALL_ACHIEVEMENT_TYPES } from '@/lib/achievements';
+import { PushToggle } from '@/components/ui/PushToggle';
 
 type Profile = {
   id: string;
@@ -322,6 +323,18 @@ export default async function ChildProfilePage({
             </div>
           </div>
         )}
+
+        {/* Push notifications */}
+        <section style={{ marginBottom: 20 }}>
+          <h2 style={{
+            fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15,
+            letterSpacing: '-0.01em', margin: '0 0 10px',
+            color: 'var(--text-primary)',
+          }}>
+            🔔 Уведомления
+          </h2>
+          <PushToggle profileId={child.id} />
+        </section>
 
         {/* Exit button */}
         <ExitChildButton fullWidth />

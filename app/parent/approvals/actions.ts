@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { sendPushToProfile } from '@/lib/webpush';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -67,6 +68,13 @@ export async function approveCompletion(input: {
       console.warn('[approveCompletion] check_achievements failed:', e);
     }
     revalidatePath(`/child/${completion.profile_id}/achievements`);
+
+    // Push notification to child
+    void sendPushToProfile(completion.profile_id, {
+      title: '🎉 Задание подтверждено!',
+      body: `+${row.awarded ?? 0} PIP зачислено на счёт`,
+      url: `/child/${completion.profile_id}`,
+    });
   }
 
   revalidatePath('/parent/approvals');
@@ -124,6 +132,21 @@ export async function rejectCompletion(input: {
     if (deleteError) {
       console.warn('[rejectCompletion] не удалось удалить фото:', deleteError);
     }
+  }
+
+  // Push notification to child
+  const { data: rejCompletion } = await supabase
+    .from('task_completions')
+    .select('profile_id')
+    .eq('id', input.completionId)
+    .single();
+
+  if (rejCompletion?.profile_id) {
+    void sendPushToProfile(rejCompletion.profile_id, {
+      title: '❌ Задание отклонено',
+      body: reason.length > 80 ? reason.slice(0, 77) + '…' : reason,
+      url: `/child/${rejCompletion.profile_id}`,
+    });
   }
 
   revalidatePath('/parent/approvals');

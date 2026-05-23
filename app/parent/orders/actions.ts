@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { sendPushToProfile } from '@/lib/webpush';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -39,6 +40,13 @@ export async function fulfillOrder(orderId: string): Promise<Result> {
       console.warn('[fulfillOrder] check_achievements failed:', e);
     }
     revalidatePath(`/child/${order.profile_id}/achievements`);
+
+    // Push notification to child
+    void sendPushToProfile(order.profile_id, {
+      title: '🎁 Награда получена!',
+      body: 'Родитель выдал твою награду',
+      url: `/child/${order.profile_id}/shop`,
+    });
   }
 
   revalidatePath('/parent/orders');

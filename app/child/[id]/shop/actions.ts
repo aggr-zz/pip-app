@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { sendPushToProfile } from '@/lib/webpush';
 
 const ACTIVE_CHILD_COOKIE = 'pip_active_child';
 
@@ -54,6 +55,29 @@ export async function orderReward(input: {
 
   revalidatePath(`/child/${input.childId}`);
   revalidatePath(`/child/${input.childId}/shop`);
+
+  // Push notification to parent(s)
+  const { data: childProfile } = await supabase
+    .from('profiles')
+    .select('family_id, name')
+    .eq('id', input.childId)
+    .single();
+
+  if (childProfile?.family_id) {
+    const { data: parents } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('family_id', childProfile.family_id)
+      .eq('role', 'parent');
+
+    for (const parent of parents ?? []) {
+      void sendPushToProfile(parent.id, {
+        title: '🛍 Новый заказ награды',
+        body: `${childProfile.name} заказал(а) награду`,
+        url: '/parent/orders',
+      });
+    }
+  }
 
   return {
     ok: true,
