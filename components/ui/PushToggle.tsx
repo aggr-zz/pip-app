@@ -6,13 +6,28 @@ interface Props {
   profileId: string;
 }
 
-type Status = 'loading' | 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed';
+type Status = 'loading' | 'unsupported' | 'needs-pwa' | 'denied' | 'subscribed' | 'unsubscribed';
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+}
+
+function isInStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || (window.navigator as any).standalone === true;
+}
 
 export function PushToggle({ profileId }: Props) {
   const [status, setStatus] = useState<Status>('loading');
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
+    // На iOS уведомления работают только из установленного PWA
+    if (isIOS() && !isInStandaloneMode()) {
+      setStatus('needs-pwa');
+      return;
+    }
+
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setStatus('unsupported');
       return;
@@ -90,6 +105,26 @@ export function PushToggle({ profileId }: Props) {
   }
 
   if (status === 'loading') return null;
+
+  if (status === 'needs-pwa') return (
+    <div style={{
+      fontSize: 13, color: 'var(--text-soft)',
+      background: 'var(--bg-surface-2)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '14px 16px',
+      lineHeight: 1.55,
+    }}>
+      <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>
+        📲 Добавь приложение на экран «Домой»
+      </div>
+      Уведомления на iPhone работают только из установленного приложения:
+      <ol style={{ margin: '8px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <li>Нажми <strong>«Поделиться»</strong> в Safari (иконка со стрелкой)</li>
+        <li>Выбери <strong>«На экран Домой»</strong></li>
+        <li>Открой PIP с экрана — уведомления станут доступны</li>
+      </ol>
+    </div>
+  );
 
   if (status === 'unsupported') return (
     <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
