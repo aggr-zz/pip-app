@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { joinAsChild } from './actions';
 
 interface PinEntryProps {
@@ -10,7 +9,6 @@ interface PinEntryProps {
 }
 
 export function PinEntry({ childId, childName }: PinEntryProps) {
-  const router = useRouter();
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -37,8 +35,8 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
         setPin('');
         return;
       }
-      router.push(`/child/${result.childId}`);
-      router.refresh();
+      // Полная перезагрузка — гарантирует что сервер увидит только что выставленную куку
+      window.location.href = `/child/${result.childId}`;
     });
   }
 
