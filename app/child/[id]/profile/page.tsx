@@ -325,16 +325,7 @@ export default async function ChildProfilePage({
         )}
 
         {/* Push notifications */}
-        <section style={{ marginBottom: 20 }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15,
-            letterSpacing: '-0.01em', margin: '0 0 10px',
-            color: 'var(--text-primary)',
-          }}>
-            🔔 Уведомления
-          </h2>
-          <PushToggle profileId={child.id} />
-        </section>
+        <PushToggle profileId={child.id} />
 
         {/* Exit button */}
         <ExitChildButton fullWidth />

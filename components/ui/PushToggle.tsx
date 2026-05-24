@@ -104,91 +104,106 @@ export function PushToggle({ profileId }: Props) {
     }
   }
 
+  // Пока идёт определение статуса — не рендерим ничего (секция тоже не нужна)
   if (status === 'loading') return null;
 
-  if (status === 'needs-pwa') return (
-    <div style={{
-      fontSize: 13, color: 'var(--text-soft)',
-      background: 'var(--bg-surface-2)',
-      borderRadius: 'var(--radius-lg)',
-      padding: '14px 16px',
-      lineHeight: 1.55,
+  const sectionTitle = (
+    <h2 style={{
+      fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17,
+      letterSpacing: '-0.01em', margin: '0 0 12px',
     }}>
-      <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>
-        📲 Добавь приложение на экран «Домой»
-      </div>
-      Уведомления на iPhone работают только из установленного приложения:
-      <ol style={{ margin: '8px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <li>Нажми <strong>«Поделиться»</strong> в Safari (иконка со стрелкой)</li>
-        <li>Выбери <strong>«На экран Домой»</strong></li>
-        <li>Открой PIP с экрана — уведомления станут доступны</li>
-      </ol>
-    </div>
+      Уведомления
+    </h2>
   );
 
-  if (status === 'unsupported') return (
-    <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
-      Уведомления не поддерживаются в этом браузере
-    </div>
+  if (status === 'needs-pwa') return (
+    <section style={{ marginBottom: 24 }}>
+      {sectionTitle}
+      <div style={{
+        fontSize: 13, color: 'var(--text-soft)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-soft)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '14px 16px',
+        lineHeight: 1.55,
+      }}>
+        <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>
+          📲 Добавь приложение на экран «Домой»
+        </div>
+        Уведомления на iPhone работают только из установленного приложения:
+        <ol style={{ margin: '8px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <li>Нажми <strong>«Поделиться»</strong> в Safari (иконка со стрелкой вверх)</li>
+          <li>Выбери <strong>«На экран Домой»</strong></li>
+          <li>Открой PIP с экрана — уведомления станут доступны</li>
+        </ol>
+      </div>
+    </section>
   );
+
+  if (status === 'unsupported') return null;
 
   if (status === 'denied') return (
-    <div style={{
-      fontSize: 12, color: 'var(--text-soft)', textAlign: 'center',
-      padding: '10px 14px', background: 'var(--bg-surface-2)',
-      borderRadius: 'var(--radius-md)', lineHeight: 1.5,
-    }}>
-      🔕 Уведомления заблокированы в настройках браузера
-    </div>
+    <section style={{ marginBottom: 24 }}>
+      {sectionTitle}
+      <div style={{
+        fontSize: 13, color: 'var(--text-soft)', textAlign: 'center',
+        padding: '12px 14px', background: 'var(--bg-surface)',
+        border: '1px solid var(--border-soft)',
+        borderRadius: 'var(--radius-lg)', lineHeight: 1.5,
+      }}>
+        🔕 Уведомления заблокированы в настройках браузера
+      </div>
+    </section>
   );
 
   const isOn = status === 'subscribed';
 
   return (
-    <button
-      type="button"
-      onClick={isOn ? handleDisable : handleEnable}
-      disabled={isPending}
-      style={{
-        width: '100%', padding: '12px 16px',
-        background: isOn ? 'var(--color-mint-soft)' : 'var(--bg-surface)',
-        border: `1px solid ${isOn ? 'var(--color-mint)' : 'var(--border-default)'}`,
-        borderRadius: 'var(--radius-lg)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        cursor: isPending ? 'wait' : 'pointer',
-        fontFamily: 'inherit',
-        transition: 'background 0.15s, border-color 0.15s',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 20 }}>{isOn ? '🔔' : '🔕'}</span>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
-            {isOn ? 'Уведомления включены' : 'Включить уведомления'}
-          </div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-soft)', marginTop: 1 }}>
-            {isOn ? 'Нажми чтобы отключить' : 'О новых заданиях и наградах'}
+    <section style={{ marginBottom: 24 }}>
+      {sectionTitle}
+      <button
+        type="button"
+        onClick={isOn ? handleDisable : handleEnable}
+        disabled={isPending}
+        style={{
+          width: '100%', padding: '12px 16px',
+          background: isOn ? 'var(--color-mint-soft)' : 'var(--bg-surface)',
+          border: `1px solid ${isOn ? 'var(--color-mint)' : 'var(--border-default)'}`,
+          borderRadius: 'var(--radius-lg)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          cursor: isPending ? 'wait' : 'pointer',
+          fontFamily: 'inherit',
+          transition: 'background 0.15s, border-color 0.15s',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 20 }}>{isOn ? '🔔' : '🔕'}</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+              {isOn ? 'Уведомления включены' : 'Включить уведомления'}
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-soft)', marginTop: 1 }}>
+              {isOn ? 'Нажми чтобы отключить' : 'О новых заданиях и наградах'}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Toggle pill */}
-      <div style={{
-        width: 44, height: 26, borderRadius: 13,
-        background: isOn ? 'var(--color-mint)' : 'var(--border-default)',
-        position: 'relative', flexShrink: 0,
-        transition: 'background 0.2s',
-      }}>
         <div style={{
-          position: 'absolute', top: 3,
-          left: isOn ? 21 : 3,
-          width: 20, height: 20, borderRadius: '50%',
-          background: 'white',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-          transition: 'left 0.2s',
-        }} />
-      </div>
-    </button>
+          width: 44, height: 26, borderRadius: 13,
+          background: isOn ? 'var(--color-mint)' : 'var(--border-default)',
+          position: 'relative', flexShrink: 0,
+          transition: 'background 0.2s',
+        }}>
+          <div style={{
+            position: 'absolute', top: 3,
+            left: isOn ? 21 : 3,
+            width: 20, height: 20, borderRadius: '50%',
+            background: 'white',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+            transition: 'left 0.2s',
+          }} />
+        </div>
+      </button>
+    </section>
   );
 }
 

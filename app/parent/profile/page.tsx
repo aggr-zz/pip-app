@@ -295,15 +295,7 @@ export default async function ParentProfilePage() {
         </section>
 
         {/* ── Push notifications ───────────────────────────────────── */}
-        <section style={{ marginBottom: 20 }}>
-          <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17,
-            letterSpacing: '-0.01em', margin: '0 0 12px',
-          }}>
-            Уведомления
-          </h2>
-          <PushToggle profileId={me.id} />
-        </section>
+        <PushToggle profileId={me.id} />
 
         {/* ── Sign out ─────────────────────────────────────────────── */}
         <SignOutButton fullWidth />

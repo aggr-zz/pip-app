@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
 
     const token = signChildSession(child.id, child.family_id);
 
-    // Редирект + кука в одном ответе — браузер гарантированно
-    // применит Set-Cookie до перехода на новую страницу
-    const response = NextResponse.redirect(
-      new URL(`/child/${child.id}`, req.url),
-      { status: 302 }
-    );
+    // Возвращаем 200 + Set-Cookie (без редиректа).
+    // Клиент сам навигирует через window.location.href — это гарантирует
+    // что кука записана в jar ДО следующего запроса.
+    // (fetch + redirect:'follow' на Android Chrome иногда не сохраняет
+    //  Set-Cookie из промежуточного 302-ответа до завершения fetch.)
+    const response = NextResponse.json({ ok: true, childId: child.id });
 
     response.cookies.set('pip_child_direct', token, {
       httpOnly: true,

@@ -33,12 +33,12 @@ export function PinEntry({ childId, childName }: PinEntryProps) {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ childId, pin: code }),
-        redirect: 'follow',
+        // Не используем redirect:'follow' — API возвращает 200+Set-Cookie,
+        // и мы навигируем сами. Кука гарантированно записана до перехода.
       });
 
-      if (res.ok || res.redirected) {
-        // API route вернул редирект — переходим на URL из ответа
-        window.location.href = res.url || `/child/${childId}`;
+      if (res.ok) {
+        window.location.href = `/child/${childId}`;
         return;
       }
 
