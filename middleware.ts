@@ -5,6 +5,11 @@ import { verifyChildSession } from '@/lib/childSession';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // / — лендинг, публичная страница (сам проверяет авторизацию)
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   // /join/* — публичные страницы, не требуют никакой авторизации
   if (pathname.startsWith('/join/')) {
     return NextResponse.next();
