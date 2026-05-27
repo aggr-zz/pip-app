@@ -22,6 +22,16 @@ type Profile = {
   longest_streak: number;
 };
 
+type Task = {
+  id: string;
+  title: string;
+  icon: string;
+  coin_value: number;
+  schedule_type: string;
+  requires_approval: boolean;
+  requires_photo: boolean;
+};
+
 export default async function ChildDetailPage({
   params,
 }: {
@@ -54,6 +64,16 @@ export default async function ChildDetailPage({
   }
 
   const age = child.birth_year ? new Date().getFullYear() - child.birth_year : null;
+
+  // Tasks assigned to this child
+  const { data: assignedTasks = [] } = await supabase
+    .from('tasks')
+    .select('id, title, icon, coin_value, schedule_type, requires_approval, requires_photo')
+    .eq('family_id', me.family_id)
+    .is('archived_at', null)
+    .contains('assigned_to', [child.id])
+    .order('title')
+    .returns<Task[]>();
 
   // Build absolute join URL using request host header
   const headersList = await headers();
@@ -275,11 +295,147 @@ export default async function ChildDetailPage({
             <path d="M9 6l6 6-6 6" />
           </svg>
         </Link>
+        {/* Assigned tasks */}
+        <section style={{ marginTop: 24 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', marginBottom: 10,
+          }}>
+            <div style={{
+              fontSize: 11.5, fontWeight: 700,
+              color: 'var(--text-soft)',
+              textTransform: 'uppercase', letterSpacing: '0.06em',
+            }}>
+              Задания ({assignedTasks?.length ?? 0})
+            </div>
+            <a
+              href="/parent/tasks/new"
+              style={{
+                fontSize: 12, fontWeight: 600,
+                color: 'var(--color-coral)', textDecoration: 'none',
+                padding: '4px 10px',
+                background: 'var(--color-coral-soft)',
+                borderRadius: 100,
+              }}
+            >
+              + Добавить
+            </a>
+          </div>
+
+          {assignedTasks?.length === 0 ? (
+            <div style={{
+              padding: '20px', textAlign: 'center',
+              background: 'var(--bg-surface)',
+              border: '1px dashed var(--border-default)',
+              borderRadius: 'var(--radius-xl)',
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+              <div style={{ fontSize: 13, color: 'var(--text-soft)' }}>
+                Нет заданий — <a href="/parent/tasks/new" style={{ color: 'var(--color-coral)', textDecoration: 'none', fontWeight: 600 }}>создай первое</a>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {assignedTasks?.map((task) => (
+                <a
+                  key={task.id}
+                  href={`/parent/tasks/${task.id}`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-soft)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '12px 14px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {/* Icon */}
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    background: 'var(--bg-surface-2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20, flexShrink: 0,
+                  }}>
+                    {task.icon}
+                  </div>
+
+                  {/* Title + schedule */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontWeight: 600, fontSize: 14,
+                      color: 'var(--text-primary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {task.title}
+                    </div>
+                    <div style={{
+                      fontSize: 11.5, color: 'var(--text-muted)',
+                      marginTop: 2,
+                    }}>
+                      {scheduleLabel(task.schedule_type)} · {task.coin_value} PIP
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    {task.requires_approval && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600,
+                        padding: '2px 7px', borderRadius: 100,
+                        background: 'var(--color-gold-soft)',
+                        color: 'var(--color-gold-deep)',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        ✅ проверка
+                      </span>
+                    )}
+                    {task.requires_photo && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600,
+                        padding: '2px 7px', borderRadius: 100,
+                        background: 'var(--color-coral-soft)',
+                        color: 'var(--color-coral-deep)',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        📷 фото
+                      </span>
+                    )}
+                    {!task.requires_approval && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600,
+                        padding: '2px 7px', borderRadius: 100,
+                        background: 'var(--color-mint-soft)',
+                        color: 'var(--color-mint-deep)',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        ⚡ авто
+                      </span>
+                    )}
+                  </div>
+
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* Join link + QR code */}
         <JoinLinkCard joinUrl={joinUrl} childName={child.name} />
       </div>
     </main>
   );
+}
+
+function scheduleLabel(type: string): string {
+  if (type === 'daily') return 'Каждый день';
+  if (type === 'weekdays') return 'Пн–Пт';
+  if (type === 'custom') return 'По дням';
+  if (type === 'once') return 'Разово';
+  return type;
 }
 
 function ageWord(n: number): string {

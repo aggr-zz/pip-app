@@ -73,6 +73,19 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
   const [requiresApproval, setRequiresApproval] = useState<boolean>(
     defaults?.requires_approval ?? true
   );
+  const [requiresPhoto, setRequiresPhoto] = useState<boolean>(
+    defaults?.requires_photo ?? false
+  );
+
+  // Фото имеет смысл только с подтверждением — синхронизируем
+  function handleRequiresApproval(v: boolean) {
+    setRequiresApproval(v);
+    if (!v) setRequiresPhoto(false); // без подтверждения фото недоступно
+  }
+  function handleRequiresPhoto(v: boolean) {
+    setRequiresPhoto(v);
+    if (v) setRequiresApproval(true); // фото требует подтверждения
+  }
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -101,7 +114,7 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
       schedule_type: scheduleType,
       schedule_days: scheduleType === 'custom' ? scheduleDays : null,
       requires_approval: requiresApproval,
-      requires_photo: false, // Sprint 3
+      requires_photo: requiresPhoto,
       assigned_to: assignedTo,
     };
 
@@ -358,15 +371,74 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
         )}
       </Field>
 
-      {/* Подтверждение */}
+      {/* Подтверждение + фото */}
       <Field>
+        <Label>Проверка</Label>
+
         <ToggleRow
+          icon="✅"
           label="Подтверждать вручную"
-          description="Ребёнок отмечает «готово», а ты подтверждаешь и начисляешь монеты"
+          description="Ребёнок отмечает «готово», ты проверяешь и начисляешь монеты"
           value={requiresApproval}
-          onChange={setRequiresApproval}
+          onChange={handleRequiresApproval}
           disabled={isPending}
         />
+
+        <div style={{ marginTop: 8 }}>
+          <ToggleRow
+            icon="📷"
+            label="С фотоотчётом"
+            description="Ребёнок прикрепляет фото выполненного задания"
+            value={requiresPhoto}
+            onChange={handleRequiresPhoto}
+            disabled={isPending || !requiresApproval}
+            dimmed={!requiresApproval}
+          />
+        </div>
+
+        {/* Подсказка о связи двух опций */}
+        {!requiresApproval && (
+          <div style={{
+            marginTop: 8,
+            padding: '8px 12px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-soft)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 12,
+            color: 'var(--text-muted)',
+            lineHeight: 1.5,
+          }}>
+            💡 Без подтверждения монеты начисляются сразу автоматически — фото недоступно
+          </div>
+        )}
+
+        {requiresApproval && !requiresPhoto && (
+          <div style={{
+            marginTop: 8,
+            padding: '8px 12px',
+            background: 'var(--color-mint-soft)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 12,
+            color: 'var(--color-mint-deep)',
+            lineHeight: 1.5,
+          }}>
+            ✅ Ребёнок нажимает «Готово» → ты видишь в списке на проверку → подтверждаешь или отклоняешь
+          </div>
+        )}
+
+        {requiresPhoto && (
+          <div style={{
+            marginTop: 8,
+            padding: '8px 12px',
+            background: 'var(--color-coral-soft)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 12,
+            color: 'var(--color-coral-deep)',
+            lineHeight: 1.5,
+          }}>
+            📷 Ребёнок делает фото → ты видишь фото на странице проверки → подтверждаешь или отклоняешь
+          </div>
+        )}
       </Field>
 
       {error && (
@@ -567,22 +639,26 @@ function SegmentedControl({
 }
 
 function ToggleRow({
+  icon,
   label,
   description,
   value,
   onChange,
   disabled,
+  dimmed,
 }: {
+  icon?: string;
   label: string;
   description?: string;
   value: boolean;
   onChange: (v: boolean) => void;
   disabled?: boolean;
+  dimmed?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={() => onChange(!value)}
+      onClick={() => !disabled && onChange(!value)}
       disabled={disabled}
       style={{
         width: '100%',
@@ -590,14 +666,19 @@ function ToggleRow({
         border: '1px solid var(--border-soft)',
         borderRadius: 'var(--radius-lg)',
         padding: '14px 16px',
-        cursor: 'pointer',
+        cursor: disabled ? 'default' : 'pointer',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
         textAlign: 'left',
         fontFamily: 'inherit',
+        opacity: dimmed ? 0.45 : 1,
+        transition: 'opacity 0.15s',
       }}
     >
+      {icon && (
+        <div style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>{icon}</div>
+      )}
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{label}</div>
         {description && (
