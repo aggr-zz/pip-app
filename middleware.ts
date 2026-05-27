@@ -20,6 +20,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Юридические страницы — публичные
+  if (pathname === '/terms' || pathname === '/privacy') {
+    return NextResponse.next();
+  }
+
   // /child/* — разрешаем если есть валидный pip_child_direct токен
   if (pathname.startsWith('/child/')) {
     const token = request.cookies.get('pip_child_direct')?.value;

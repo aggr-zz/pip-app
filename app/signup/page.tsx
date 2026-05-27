@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsConfirm, setNeedsConfirm] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -21,6 +22,10 @@ export default function SignupPage() {
 
     if (password.length < 8) {
       setError('Пароль слишком короткий — минимум 8 символов');
+      return;
+    }
+    if (!agreed) {
+      setError('Необходимо принять пользовательское соглашение');
       return;
     }
 
@@ -111,6 +116,23 @@ export default function SignupPage() {
             disabled={isPending}
           />
 
+          {/* Чекбокс принятия соглашения */}
+          <label className="auth__agree">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              disabled={isPending}
+              className="auth__agree-check"
+            />
+            <span>
+              Я подтверждаю, что мне есть 18 лет, и принимаю{' '}
+              <a href="/terms" target="_blank" rel="noopener">условия использования</a>{' '}
+              и{' '}
+              <a href="/privacy" target="_blank" rel="noopener">политику конфиденциальности</a>
+            </span>
+          </label>
+
           {error && <div className="auth__error" role="alert">{error}</div>}
 
           <Button
@@ -118,16 +140,12 @@ export default function SignupPage() {
             variant="primary"
             size="lg"
             fullWidth
-            disabled={isPending}
+            disabled={isPending || !agreed}
             style={{ marginTop: 8 }}
           >
             {isPending ? 'Создаём…' : 'Зарегистрироваться'}
           </Button>
         </form>
-
-        <p className="auth__terms">
-          Регистрируясь, ты соглашаешься с <a href="/terms">условиями</a> и <a href="/privacy">политикой конфиденциальности</a>.
-        </p>
 
         <p className="auth__footer">
           Уже есть аккаунт? <a href="/login">Войти</a>
@@ -242,16 +260,31 @@ const authStyles = `
     font-size: 13.5px;
     margin: 14px 0 4px;
   }
-  .auth__terms {
-    margin: 16px 0 0;
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.5;
-    text-align: center;
-  }
-  .auth__terms a {
+  .auth__agree {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 16px 0 4px;
+    cursor: pointer;
+    font-size: 13px;
     color: var(--text-soft);
+    line-height: 1.5;
+  }
+  .auth__agree-check {
+    flex-shrink: 0;
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-coral);
+    cursor: pointer;
+  }
+  .auth__agree a {
+    color: var(--text-primary);
     text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .auth__agree a:hover {
+    color: var(--color-coral);
   }
   .auth__footer {
     margin: 24px 0 0;
