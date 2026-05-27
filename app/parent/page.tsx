@@ -181,6 +181,37 @@ export default async function ParentDashboardPage() {
     <main style={{ minHeight: '100%' }}>
       <RealtimeRefresh tables={['task_completions', 'reward_orders']} />
 
+      {/* ── FAB — Добавить задание ──────────────────────────────────── */}
+      <a
+        href="/parent/tasks/new"
+        style={{
+          position: 'fixed',
+          right: 16,
+          bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 12px)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
+          background: 'var(--color-ink)',
+          color: 'white',
+          borderRadius: 100,
+          padding: '12px 18px 12px 14px',
+          fontFamily: 'var(--font-body)',
+          fontWeight: 600,
+          fontSize: 14,
+          textDecoration: 'none',
+          boxShadow: '0 4px 20px rgba(27,34,56,0.28)',
+          zIndex: 20,
+          whiteSpace: 'nowrap',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="white" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        Задание
+      </a>
+
       {/* ── Top bar ─────────────────────────────────────────────────── */}
       <TopBar name={me.name} />
 
