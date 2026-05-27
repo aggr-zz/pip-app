@@ -6,6 +6,7 @@ import { RealtimeRefresh } from '@/components/realtime/RealtimeRefresh';
 import { ParentBannerCarousel } from './ParentBannerCarousel';
 import { ChildrenPanel, type ChildData } from './ChildrenPanel';
 import { isTaskScheduledFor, todayInTimezone, nowInTimezone } from '@/lib/schedule';
+import { CreatedToast } from './CreatedToast';
 
 type Profile = {
   id: string;
@@ -180,6 +181,7 @@ export default async function ParentDashboardPage() {
   return (
     <main style={{ minHeight: '100%' }}>
       <RealtimeRefresh tables={['task_completions', 'reward_orders']} />
+      <CreatedToast />
 
       {/* ── FAB — Добавить задание ──────────────────────────────────── */}
       <a

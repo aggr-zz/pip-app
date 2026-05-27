@@ -126,7 +126,11 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
         setError(result.error);
         return;
       }
-      router.push('/parent/tasks');
+      if (mode === 'create') {
+        router.push('/parent?created=1');
+      } else {
+        router.push('/parent/tasks');
+      }
       router.refresh();
     });
   }
