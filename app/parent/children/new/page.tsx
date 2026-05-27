@@ -18,7 +18,7 @@ export default async function NewChildPage() {
   if (!me || me.role !== 'parent') redirect('/');
 
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'start center', padding: '40px 24px' }}>
+    <main style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '40px 24px' }}>
       <div style={{ width: '100%', maxWidth: 460 }}>
         <header style={{ marginBottom: 28, display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link href="/parent" aria-label="Назад" style={{

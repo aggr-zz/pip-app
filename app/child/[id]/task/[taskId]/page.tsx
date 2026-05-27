@@ -93,8 +93,8 @@ export default async function TaskDetailPage({
           : 'available';
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
-      <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <main style={{ minHeight: '100%', background: 'var(--bg-page)' }}>
+      <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
 
         {/* ── Header ─────────────────────────────────────────── */}
         <header style={{

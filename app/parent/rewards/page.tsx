@@ -51,7 +51,7 @@ export default async function RewardsPage({
   const { data: rewards = [] } = await query.returns<Reward[]>();
 
   return (
-    <main style={{ minHeight: '100vh', padding: '40px 24px 64px' }}>
+    <main style={{ minHeight: '100%', padding: '40px 24px 64px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <header style={{ marginBottom: 28, display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link

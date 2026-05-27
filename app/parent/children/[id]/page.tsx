@@ -82,7 +82,7 @@ export default async function ChildDetailPage({
   const joinUrl = `${proto}://${host}/join/${child.id}`;
 
   return (
-    <main style={{ minHeight: '100vh', padding: '40px 24px' }}>
+    <main style={{ minHeight: '100%', padding: '40px 24px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
         {/* Header */}
         <header style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>

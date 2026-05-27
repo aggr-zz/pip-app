@@ -75,7 +75,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     <div
       key={animKey}
       className={animClass}
-      style={{ minHeight: '100vh', isolation: 'isolate' }}
+      style={{ minHeight: '100dvh', isolation: 'isolate' }}
     >
       {children}
     </div>

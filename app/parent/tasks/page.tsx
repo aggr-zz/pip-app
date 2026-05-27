@@ -89,7 +89,7 @@ export default async function TasksPage({
   const childMap = new Map((children ?? []).map((c) => [c.id, c]));
 
   return (
-    <main style={{ minHeight: '100vh', paddingBottom: 40 }}>
+    <main style={{ minHeight: '100%', paddingBottom: 40 }}>
       <header style={headerStyle}>
         <div style={headerContainerStyle}>
           <Link href="/parent" aria-label="Назад" style={backBtnStyle}>
