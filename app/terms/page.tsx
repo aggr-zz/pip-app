@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { PipLogo } from '@/components/ui/PipLogo';
 
@@ -158,7 +159,7 @@ export default function TermsPage() {
   );
 }
 
-function DocSection({ title, children }: { title: string; children: React.ReactNode }) {
+function DocSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ marginBottom: 36 }}>
       <h2 style={{
