@@ -15,6 +15,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Страницы сброса пароля — публичные (сессия создаётся через code из письма)
+  if (pathname === '/forgot-password' || pathname === '/reset-password') {
+    return NextResponse.next();
+  }
+
   // /child/* — разрешаем если есть валидный pip_child_direct токен
   if (pathname.startsWith('/child/')) {
     const token = request.cookies.get('pip_child_direct')?.value;

@@ -68,14 +68,30 @@ function LoginContent() {
             placeholder="parent@example.com"
             disabled={isPending}
           />
-          <Field
-            label="Пароль"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="••••••••"
-            disabled={isPending}
-          />
+          <div style={{ position: 'relative' }}>
+            <Field
+              label="Пароль"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+              disabled={isPending}
+            />
+            <a
+              href="/forgot-password"
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                fontSize: 12,
+                color: 'var(--color-coral)',
+                fontWeight: 500,
+                lineHeight: '18px',
+              }}
+            >
+              Забыл пароль?
+            </a>
+          </div>
 
           {error && <div className="auth__error" role="alert">{error}</div>}
 
