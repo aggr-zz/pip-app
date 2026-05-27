@@ -1,13 +1,23 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 /**
  * Показывает всплывающее уведомление «Задание добавлено»
  * когда в URL есть ?created=1, затем убирает параметр.
+ *
+ * Обёрнут в Suspense — useSearchParams() в Next.js 15 требует этого.
  */
 export function CreatedToast() {
+  return (
+    <Suspense fallback={null}>
+      <CreatedToastInner />
+    </Suspense>
+  );
+}
+
+function CreatedToastInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -84,4 +94,4 @@ export function CreatedToast() {
     </div>
     </>
   );
-}
+}  // end CreatedToastInner
