@@ -360,23 +360,63 @@ export function TaskRow({
                   </>
                 ) : (
                   <>
-                    {requiresPhoto && (
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="5" width="18" height="14" rx="2" />
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M7 5l2-2h6l2 2" />
-                      </svg>
+                    {requiresPhoto ? (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        background: 'var(--color-coral-soft)',
+                        color: 'var(--color-coral-deep)',
+                        borderRadius: 100,
+                        padding: '1px 7px 1px 5px',
+                        fontWeight: 600,
+                        fontSize: 11,
+                      }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="5" width="18" height="14" rx="2" />
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M7 5l2-2h6l2 2" />
+                        </svg>
+                        с фото · {coinValue} PIP
+                      </span>
+                    ) : (
+                      <>{coinValue} PIP</>
                     )}
-                    {coinValue} PIP
                   </>
                 )}
               </div>
             )}
           </div>
 
-          {/* ── Right: icon (always shown) ── */}
-          <TaskIcon name={icon} size={44} colored={false} />
+          {/* ── Right: icon (always shown, with 📷 badge for photo tasks) ── */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <TaskIcon
+              name={icon}
+              size={requiresPhoto && !isInactive ? 48 : 44}
+              colored={requiresPhoto && !isInactive}
+            />
+            {requiresPhoto && !isInactive && (
+              <div style={{
+                position: 'absolute',
+                bottom: -2,
+                right: -2,
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                background: 'var(--color-coral)',
+                border: '2px solid var(--bg-surface)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                  stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M7 5l2-2h6l2 2" />
+                </svg>
+              </div>
+            )}
+          </div>
         </button>
       </div>
 
