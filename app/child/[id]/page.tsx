@@ -37,6 +37,14 @@ type TaskCompletion = {
   rejection_reason: string | null;
 };
 
+type ParentMessage = {
+  id: string;
+  type: string;
+  amount: number;
+  reason: string | null;
+  created_at: string;
+};
+
 export default async function ChildHomePage({
   params,
 }: {
@@ -85,6 +93,19 @@ export default async function ChildHomePage({
     completions = rows ?? [];
   }
 
+  // Сообщения от родителя — manual_adjustment и bonus за последние 72 часа с причиной
+  const since72h = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+  const { data: parentMessages = [] } = await supabase
+    .from('transactions')
+    .select('id, type, amount, reason, created_at')
+    .eq('profile_id', child.id)
+    .in('type', ['manual_adjustment', 'bonus'])
+    .not('reason', 'is', null)
+    .gte('created_at', since72h)
+    .order('created_at', { ascending: false })
+    .limit(5)
+    .returns<ParentMessage[]>();
+
   const completionByTaskId = new Map(completions.map((c) => [c.task_id, c]));
   const statusByTaskId = new Map(completions.map((c) => [c.task_id, c.status]));
   const doneCount = completions.filter(
@@ -120,6 +141,65 @@ export default async function ChildHomePage({
             Привет, {child.name}! 👋
           </h1>
         </div>
+
+        {/* Parent messages — bonus / penalty notifications */}
+        {(parentMessages ?? []).length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {(parentMessages ?? []).map((msg) => {
+              const isBonus = msg.amount > 0;
+              return (
+                <div
+                  key={msg.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                    padding: '12px 14px',
+                    background: isBonus ? 'var(--color-mint-soft)' : 'var(--status-danger-soft)',
+                    border: `1px solid ${isBonus ? 'var(--color-mint)' : 'var(--status-danger)'}`,
+                    borderRadius: 'var(--radius-lg)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 'var(--radius-md)',
+                      background: isBonus ? 'var(--color-mint)' : 'var(--color-coral)',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {isBonus ? '⭐' : '⚠️'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: isBonus ? 'var(--color-mint-deep)' : 'var(--status-danger)',
+                        }}
+                      >
+                        {isBonus ? `+${msg.amount} PIP от родителя` : `${msg.amount} PIP от родителя`}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.45 }}>
+                      «{msg.reason}»
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                      {timeAgoRu(msg.created_at)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {totalCount > 0 && (
           <div style={{ marginTop: 24 }}>
@@ -289,5 +369,17 @@ export default async function ChildHomePage({
       `}</style>
     </main>
   );
+}
+
+function timeAgoRu(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 2) return 'только что';
+  if (minutes < 60) return `${minutes} мин назад`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ч назад`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'вчера';
+  return `${days} дня назад`;
 }
 
