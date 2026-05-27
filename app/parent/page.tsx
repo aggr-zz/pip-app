@@ -258,7 +258,7 @@ export default async function ParentDashboardPage() {
               borderRadius: 100,
             }}
           >
-            + Добавить
+            + Ребёнка
           </a>
         </div>
 
