@@ -34,6 +34,7 @@ type Task = {
 type TaskCompletion = {
   task_id: string;
   status: 'pending' | 'approved' | 'rejected' | 'auto_approved';
+  rejection_reason: string | null;
 };
 
 export default async function ChildHomePage({
@@ -76,7 +77,7 @@ export default async function ChildHomePage({
   if (taskIds.length > 0) {
     const { data: rows = [] } = await supabase
       .from('task_completions')
-      .select('task_id, status')
+      .select('task_id, status, rejection_reason')
       .eq('profile_id', child.id)
       .eq('scheduled_for', today)
       .in('task_id', taskIds)
@@ -84,6 +85,7 @@ export default async function ChildHomePage({
     completions = rows ?? [];
   }
 
+  const completionByTaskId = new Map(completions.map((c) => [c.task_id, c]));
   const statusByTaskId = new Map(completions.map((c) => [c.task_id, c.status]));
   const doneCount = completions.filter(
     (c) => c.status === 'approved' || c.status === 'auto_approved'
@@ -180,13 +182,17 @@ export default async function ChildHomePage({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {todayTasks.map((task) => {
-                const compStatus = statusByTaskId.get(task.id);
+                const completion = completionByTaskId.get(task.id);
+                const compStatus = completion?.status;
                 const status: 'available' | 'pending' | 'done' =
                   compStatus === 'approved' || compStatus === 'auto_approved'
                     ? 'done'
                     : compStatus === 'pending'
                       ? 'pending'
                       : 'available';
+                // undefined = not rejected; null = rejected with no reason; string = rejected with reason
+                const rejectionReason: string | null | undefined =
+                  compStatus === 'rejected' ? (completion?.rejection_reason ?? null) : undefined;
 
                 return (
                   <TaskRow
@@ -203,6 +209,7 @@ export default async function ChildHomePage({
                     initialStatus={status}
                     requiresApproval={task.requires_approval}
                     requiresPhoto={task.requires_photo}
+                    rejectionReason={rejectionReason}
                   />
                 );
               })}

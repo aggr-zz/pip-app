@@ -24,6 +24,8 @@ interface TaskRowProps {
   initialStatus: 'available' | 'pending' | 'done';
   requiresApproval: boolean;
   requiresPhoto: boolean;
+  /** undefined = not rejected; null = rejected (no reason given); string = rejected with reason */
+  rejectionReason?: string | null;
 }
 
 const SWIPE_THRESHOLD = 88;   // px to trigger completion
@@ -44,6 +46,7 @@ export function TaskRow({
   initialStatus,
   requiresApproval,
   requiresPhoto,
+  rejectionReason,
 }: TaskRowProps) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
@@ -200,6 +203,8 @@ export function TaskRow({
   const isDone          = status === 'done';
   const isPendingApproval = status === 'pending';
   const isInactive      = isDone || isPendingApproval;
+  // undefined = not rejected; null/string = was rejected (highlight even when no reason text)
+  const isRejected      = !isInactive && rejectionReason !== undefined;
 
   // Swipe progress (0–1) for visual indicators
   const swipeProgress = Math.min(swipeX / SWIPE_THRESHOLD, 1);
@@ -247,8 +252,10 @@ export function TaskRow({
           disabled={isInactive || isPending}
           style={{
             width: '100%',
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-soft)',
+            background: isRejected ? 'var(--color-coral-soft)' : 'var(--bg-surface)',
+            border: isRejected
+              ? '1.5px solid var(--color-coral)'
+              : '1px solid var(--border-soft)',
             borderRadius: 'var(--radius-lg)',
             padding: '13px 14px',
             display: 'flex',
@@ -284,6 +291,9 @@ export function TaskRow({
               } : isPendingApproval ? {
                 background: 'var(--color-gold-soft)',
                 border: '2px solid var(--color-gold)',
+              } : isRejected ? {
+                background: 'var(--color-coral-soft)',
+                border: '2px solid var(--color-coral)',
               } : {
                 background: 'transparent',
                 border: '2px solid var(--border-default)',
@@ -304,6 +314,12 @@ export function TaskRow({
                 background: 'var(--color-gold)',
               }} />
             )}
+            {isRejected && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="var(--color-coral)" strokeWidth="3" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            )}
           </div>
 
           {/* ── Title + meta ── */}
@@ -323,7 +339,11 @@ export function TaskRow({
             {!isDone && (
               <div style={{
                 fontSize: 11.5,
-                color: isPendingApproval ? 'var(--color-gold-deep)' : 'var(--text-soft)',
+                color: isPendingApproval
+                  ? 'var(--color-gold-deep)'
+                  : isRejected
+                    ? 'var(--color-coral)'
+                    : 'var(--text-soft)',
                 marginTop: 2,
                 display: 'flex',
                 alignItems: 'center',
@@ -331,6 +351,13 @@ export function TaskRow({
               }}>
                 {isPendingApproval ? (
                   'ждёт подтверждения'
+                ) : isRejected ? (
+                  <>
+                    <span style={{ fontWeight: 600 }}>Отклонено</span>
+                    {rejectionReason ? (
+                      <span style={{ opacity: 0.85 }}>· {rejectionReason}</span>
+                    ) : null}
+                  </>
                 ) : (
                   <>
                     {requiresPhoto && (
