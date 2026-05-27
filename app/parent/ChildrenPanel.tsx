@@ -337,8 +337,6 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                         Сегодня
                       </div>
                       {child.todayTasks.filter((t) => t.status === 'available').map((task) => {
-                        const isDone = task.status === 'done';
-                        const isPending = task.status === 'pending';
                         const iconName = safeIcon(task.icon);
 
                         return (
@@ -348,47 +346,27 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                               background: 'var(--bg-surface)',
                               border: '1px solid var(--border-soft)',
                               borderRadius: 'var(--radius-lg)',
-                              padding: '12px 14px',
+                              padding: '10px 14px',
                               display: 'flex',
                               alignItems: 'center',
                               gap: 12,
                             }}
                           >
-                            {/* Circular checkbox — same as TaskRow */}
-                            <div
-                              style={{
-                                width: 26,
-                                height: 26,
-                                borderRadius: '50%',
-                                flexShrink: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...(isDone ? {
-                                  background: 'var(--color-mint)',
-                                  border: '2px solid var(--color-mint)',
-                                } : isPending ? {
-                                  background: 'var(--color-gold-soft)',
-                                  border: '2px solid var(--color-gold)',
-                                } : {
-                                  background: 'transparent',
-                                  border: '2px solid var(--border-default)',
-                                }),
-                              }}
-                            >
-                              {isDone && <CheckSvg />}
-                              {isPending && (
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-gold)' }} />
-                              )}
-                            </div>
+                            {/* Task icon слева — информационная строка, без псевдочекбокса */}
+                            {iconName ? (
+                              <TaskIcon name={iconName} size={38} colored />
+                            ) : (
+                              <div style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                                📋
+                              </div>
+                            )}
 
-                            {/* Title + subtitle */}
+                            {/* Title */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{
                                 fontWeight: 500,
                                 fontSize: 15,
-                                color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
-                                textDecoration: isDone ? 'line-through' : 'none',
+                                color: 'var(--text-primary)',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
@@ -396,25 +374,21 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
                               }}>
                                 {task.title}
                               </div>
-                              {!isDone && (
-                                <div style={{
-                                  fontSize: 11.5,
-                                  color: isPending ? 'var(--color-gold-deep)' : 'var(--text-soft)',
-                                  marginTop: 2,
-                                }}>
-                                  {isPending ? 'ждёт подтверждения' : `${task.coinValue} PIP`}
-                                </div>
-                              )}
+                              <div style={{ fontSize: 11.5, color: 'var(--text-soft)', marginTop: 2 }}>
+                                {task.coinValue} PIP
+                              </div>
                             </div>
 
-                            {/* Task icon — same as TaskRow (colored=false) */}
-                            {iconName ? (
-                              <TaskIcon name={iconName} size={44} colored={false} />
-                            ) : (
-                              <div style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                                ✅
-                              </div>
-                            )}
+                            {/* Coin pill справа */}
+                            <div style={{
+                              fontSize: 12, fontWeight: 600,
+                              color: 'var(--color-gold-deep)',
+                              background: 'var(--color-gold-soft)',
+                              borderRadius: 100, padding: '3px 9px',
+                              flexShrink: 0,
+                            }}>
+                              +{task.coinValue}
+                            </div>
                           </div>
                         );
                       })}

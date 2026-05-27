@@ -43,7 +43,7 @@ function LandingPage() {
       {/* ── NAV ─────────────────────────────────────────── */}
       <nav className="lp-nav">
         <div className="lp-nav__inner">
-          <a href="/" aria-label="pip"><PipLogo size={28} /></a>
+          <a href="/" aria-label="pip"><PipLogo size={28} color="#1B2238" /></a>
           <div className="lp-nav__links">
             <a href="#problem" className="lp-nav__link">Как устроено</a>
             <a href="#why" className="lp-nav__link">Почему pip</a>
@@ -523,7 +523,7 @@ function LandingPage() {
         .lp-pains { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 40px; }
         @media (max-width: 640px) { .lp-pains { grid-template-columns: 1fr; } }
         .lp-pain { border-radius: 20px; padding: 24px 22px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
-        .lp-pain__emoji { font-size: 32px; margin-bottom: 12px; display: block; }
+        .lp-pain__emoji { font-size: 40px; margin-bottom: 14px; display: block; }
         .lp-pain__title { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 19px; margin: 0 0 8px; line-height: 1.2; color: white; }
         .lp-pain__text { font-size: 14px; line-height: 1.55; margin: 0; color: rgba(255,255,255,.65); }
         .lp-bridge { background: var(--lp-coral); border-radius: 24px; padding: 32px 36px; display: flex; align-items: center; gap: 28px; }
@@ -585,7 +585,7 @@ function LandingPage() {
         .lp-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         @media (max-width: 640px) { .lp-features { grid-template-columns: 1fr; } }
         .lp-feature { background: var(--lp-surface); padding: 28px 24px; border-radius: 22px; border: 1px solid var(--lp-line-soft); }
-        .lp-fi { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 22px; }
+        .lp-fi { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; font-size: 30px; }
         .lp-fi--coral { background: var(--lp-coral-soft); }
         .lp-fi--gold  { background: var(--lp-gold-soft); }
         .lp-fi--mint  { background: var(--lp-mint-soft); }
