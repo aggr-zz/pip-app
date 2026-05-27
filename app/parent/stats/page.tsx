@@ -94,7 +94,7 @@ export default async function StatsPage({
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </Link>
-          <PipLogo size={28} />
+          <PipLogo size={28} href="/parent" />
         </header>
 
         <h1

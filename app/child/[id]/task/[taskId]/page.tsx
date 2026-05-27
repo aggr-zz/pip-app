@@ -115,7 +115,7 @@ export default async function TaskDetailPage({
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </Link>
-          <PipLogo size={26} />
+          <PipLogo size={26} href={`/child/${childId}`} />
           <div style={{ width: 38 }} />
         </header>
 

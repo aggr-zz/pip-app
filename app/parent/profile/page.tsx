@@ -112,7 +112,7 @@ export default async function ParentProfilePage() {
           zIndex: 10,
         }}
       >
-        <PipLogo size={26} />
+        <PipLogo size={26} href="/parent" />
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16 }}>Профиль</span>
         <div style={{ width: 26 }} />
       </header>

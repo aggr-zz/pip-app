@@ -288,7 +288,7 @@ function TopBar({ name }: { name: string }) {
         zIndex: 10,
       }}
     >
-      <PipLogo size={26} />
+      <PipLogo size={26} href="/parent" />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 13, color: 'var(--text-soft)' }}>{name}</span>
         <SignOutButton />

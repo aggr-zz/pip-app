@@ -93,7 +93,7 @@ export default async function EditTaskPage({
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </Link>
-          <PipLogo size={26} />
+          <PipLogo size={26} href="/parent" />
         </header>
 
         <h1

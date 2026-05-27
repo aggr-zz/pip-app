@@ -97,7 +97,7 @@ export default async function TasksPage({
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </Link>
-          <PipLogo size={26} />
+          <PipLogo size={26} href="/parent" />
           <Link href="/parent/tasks/new" style={addBtnStyle} aria-label="Добавить задачу">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
               <path d="M12 5v14M5 12h14" />

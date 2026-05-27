@@ -61,7 +61,7 @@ export default async function NewTaskPage() {
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </Link>
-          <PipLogo size={26} />
+          <PipLogo size={26} href="/parent" />
         </header>
 
         <h1

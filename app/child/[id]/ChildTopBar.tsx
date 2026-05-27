@@ -80,7 +80,7 @@ export function ChildTopBar({ childId, balance, streak }: Props) {
       {/* Left: logo (+ streak on main tabs) or back button */}
       {isMainTab ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <PipLogo size={26} />
+          <PipLogo size={26} href={`/child/${childId}`} />
           {streak > 0 && (
             <div>
               <button
