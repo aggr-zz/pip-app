@@ -45,6 +45,13 @@ type ParentMessage = {
   created_at: string;
 };
 
+type GoalReward = {
+  id: string;
+  title: string;
+  icon: string;
+  coin_cost: number;
+};
+
 export default async function ChildHomePage({
   params,
 }: {
@@ -91,6 +98,23 @@ export default async function ChildHomePage({
       .in('task_id', taskIds)
       .returns<TaskCompletion[]>();
     completions = rows ?? [];
+  }
+
+  // Текущая цель-копилка
+  const { data: goalRow } = await supabase
+    .from('reward_goals')
+    .select('reward_id')
+    .eq('child_id', child.id)
+    .maybeSingle();
+
+  let goalReward: GoalReward | null = null;
+  if (goalRow?.reward_id) {
+    const { data: rw } = await supabase
+      .from('rewards')
+      .select('id, title, icon, coin_cost')
+      .eq('id', goalRow.reward_id)
+      .maybeSingle<GoalReward>();
+    goalReward = rw ?? null;
   }
 
   // Сообщения от родителя — manual_adjustment и bonus за последние 72 часа с причиной
@@ -141,6 +165,69 @@ export default async function ChildHomePage({
             Привет, {child.name}! 👋
           </h1>
         </div>
+
+        {/* Цель-копилка */}
+        {goalReward && (
+          <div style={{
+            marginBottom: 16,
+            padding: '14px 16px',
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--color-gold)',
+            borderRadius: 'var(--radius-xl)',
+            boxShadow: '0 4px 18px rgba(242,193,78,0.15)',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-gold-deep)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+              🎯 Моя мечта
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Иконка награды */}
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, #FFE39A, #D4A12E)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 26,
+                boxShadow: '0 4px 12px rgba(212,161,46,0.3)',
+              }}>
+                {goalReward.icon}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, fontFamily: 'var(--font-display)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {goalReward.title}
+                </div>
+                {/* Прогресс-бар */}
+                {(() => {
+                  const pct = goalReward.coin_cost > 0
+                    ? Math.min(100, Math.round((child.balance / goalReward.coin_cost) * 100))
+                    : 100;
+                  const need = Math.max(0, goalReward.coin_cost - child.balance);
+                  const done = pct >= 100;
+                  return (
+                    <>
+                      <div style={{ height: 8, background: 'rgba(0,0,0,0.08)', borderRadius: 100, overflow: 'hidden', marginBottom: 4 }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${pct}%`,
+                          background: done
+                            ? 'linear-gradient(90deg, var(--color-mint), var(--color-mint-deep))'
+                            : 'linear-gradient(90deg, var(--color-gold), var(--color-gold-deep))',
+                          borderRadius: 100,
+                          transition: 'width 0.5s ease',
+                          minWidth: pct > 0 ? 8 : 0,
+                        }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-soft)' }}>
+                        <span style={{ color: done ? 'var(--color-mint-deep)' : 'var(--color-gold-deep)', fontWeight: 700 }}>
+                          {done ? '🎉 Можно купить!' : `ещё ${need} PIP`}
+                        </span>
+                        <span>{child.balance} / {goalReward.coin_cost}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Parent messages — bonus / penalty notifications */}
         {(parentMessages ?? []).length > 0 && (

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { orderReward } from './actions';
+import { setGoal, clearGoal } from './goalActions';
 
 interface RewardCardProps {
   rewardId: string;
@@ -14,6 +15,8 @@ interface RewardCardProps {
   balance: number;
   canAfford: boolean;
   alreadyOrdered: boolean;
+  isGoal?: boolean;
+  hasAnyGoal?: boolean;
 }
 
 type State = 'idle' | 'confirm' | 'ordered';
@@ -56,11 +59,25 @@ export function RewardCard({
   canAfford,
   alreadyOrdered,
   cardIndex = 0,
+  isGoal = false,
+  hasAnyGoal = false,
 }: RewardCardProps & { cardIndex?: number }) {
   const router = useRouter();
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [goalPending, startGoalTransition] = useTransition();
+
+  function handleGoalToggle() {
+    startGoalTransition(async () => {
+      if (isGoal) {
+        await clearGoal({ childId });
+      } else {
+        await setGoal({ childId, rewardId });
+      }
+      router.refresh();
+    });
+  }
 
   const isBlocked = alreadyOrdered;
   const pct = coinCost > 0 ? Math.min(100, Math.round((balance / coinCost) * 100)) : 100;
@@ -315,6 +332,35 @@ export function RewardCard({
                 {canAfford ? 'Купить' : 'Копи'}
               </button>
             </div>
+
+            {/* Goal button */}
+            <button
+              type="button"
+              onClick={handleGoalToggle}
+              disabled={goalPending}
+              style={{
+                width: '100%',
+                marginTop: 6,
+                padding: '6px',
+                background: isGoal ? 'rgba(91,168,144,0.12)' : 'transparent',
+                border: isGoal
+                  ? '1px solid var(--color-mint)'
+                  : '1px dashed var(--border-default)',
+                borderRadius: 'var(--radius-md)',
+                color: isGoal ? 'var(--color-mint-deep)' : 'var(--text-muted)',
+                fontWeight: 600,
+                fontSize: 11,
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                transition: 'all 0.15s',
+              }}
+            >
+              {isGoal ? '🎯 Моя цель' : '🎯 Сделать целью'}
+            </button>
           </>
         )}
       </div>

@@ -59,6 +59,14 @@ export default async function ShopPage({
     (ordersData ?? []).map((o) => o.reward_id)
   );
 
+  // Текущая цель-копилка ребёнка
+  const { data: goalRow } = await supabase
+    .from('reward_goals')
+    .select('reward_id')
+    .eq('child_id', child.id)
+    .maybeSingle();
+  const currentGoalRewardId = goalRow?.reward_id ?? null;
+
   return (
     <main style={{ minHeight: '100%', padding: '20px 16px 32px' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
@@ -128,6 +136,8 @@ export default async function ShopPage({
                   canAfford={canAfford}
                   alreadyOrdered={isBlocked}
                   cardIndex={index}
+                  isGoal={currentGoalRewardId === r.id}
+                  hasAnyGoal={currentGoalRewardId !== null}
                 />
               );
             })}
