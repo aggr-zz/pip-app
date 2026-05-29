@@ -24,6 +24,7 @@ type Task = {
   requires_approval: boolean;
   requires_photo: boolean;
   assigned_to: string[];
+  remind_at: string | null;
 };
 
 export default async function EditTaskPage({
@@ -134,6 +135,7 @@ export default async function EditTaskPage({
             requires_approval: task.requires_approval,
             requires_photo: task.requires_photo,
             assigned_to: task.assigned_to,
+            remind_at: task.remind_at,
           }}
         />
       </div>

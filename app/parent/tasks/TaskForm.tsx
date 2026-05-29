@@ -76,6 +76,12 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
   const [requiresPhoto, setRequiresPhoto] = useState<boolean>(
     defaults?.requires_photo ?? false
   );
+  const [remindEnabled, setRemindEnabled] = useState<boolean>(
+    !!(defaults?.remind_at)
+  );
+  const [remindAt, setRemindAt] = useState<string>(
+    defaults?.remind_at ?? '18:00'
+  );
 
   // Фото имеет смысл только с подтверждением — синхронизируем
   function handleRequiresApproval(v: boolean) {
@@ -116,6 +122,7 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
       requires_approval: requiresApproval,
       requires_photo: requiresPhoto,
       assigned_to: assignedTo,
+      remind_at: remindEnabled ? remindAt : null,
     };
 
     startTransition(async () => {
@@ -441,6 +448,59 @@ export function TaskForm({ mode, taskId, children, defaults, existingTasks = [] 
             lineHeight: 1.5,
           }}>
             📷 Ребёнок делает фото → ты видишь фото на странице проверки → подтверждаешь или отклоняешь
+          </div>
+        )}
+      </Field>
+
+      {/* Напоминание */}
+      <Field>
+        <Label>Напоминание</Label>
+        <ToggleRow
+          icon="⏰"
+          label="Напоминать ребёнку"
+          description="Push-уведомление придёт в выбранное время, если задача не выполнена"
+          value={remindEnabled}
+          onChange={setRemindEnabled}
+          disabled={isPending}
+        />
+
+        {remindEnabled && (
+          <div
+            style={{
+              marginTop: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '12px 14px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-lg)',
+            }}
+          >
+            <span style={{ fontSize: 13, color: 'var(--text-soft)', whiteSpace: 'nowrap' }}>
+              Напомнить в
+            </span>
+            <input
+              type="time"
+              value={remindAt}
+              onChange={(e) => setRemindAt(e.target.value)}
+              disabled={isPending}
+              style={{
+                flex: 1,
+                background: 'var(--bg-surface-2)',
+                border: '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-md)',
+                padding: '8px 12px',
+                fontFamily: 'inherit',
+                fontSize: 16,
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+              }}
+            />
+            <span style={{ fontSize: 13, color: 'var(--text-soft)', whiteSpace: 'nowrap' }}>
+              МСК
+            </span>
           </div>
         )}
       </Field>

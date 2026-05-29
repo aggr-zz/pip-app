@@ -19,6 +19,7 @@ export interface TaskInput {
   requires_approval: boolean;
   requires_photo: boolean;
   assigned_to: string[];
+  remind_at?: string | null; // 'HH:MM' or null
 }
 
 // ─── Валидация ────────────────────────────────────────────────────────
@@ -94,6 +95,7 @@ export async function createTask(input: TaskInput): Promise<Result<{ id: string 
       requires_photo: input.requires_photo,
       assigned_to: input.assigned_to,
       created_by: me.id,
+      remind_at: input.remind_at || null,
     })
     .select('id')
     .single();
@@ -139,6 +141,7 @@ export async function updateTask(taskId: string, input: TaskInput): Promise<Resu
       requires_approval: input.requires_approval,
       requires_photo: input.requires_photo,
       assigned_to: input.assigned_to,
+      remind_at: input.remind_at || null,
     })
     .eq('id', taskId)
     .eq('family_id', me.family_id);
