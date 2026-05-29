@@ -17,7 +17,11 @@ export default function LoginPage() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') || '/parent';
+  const inviteToken = searchParams.get('invite');
+  // Если есть инвайт — после логина идём обратно на страницу принятия инвайта
+  const next = inviteToken
+    ? `/invite-family/${encodeURIComponent(inviteToken)}`
+    : searchParams.get('next') || '/parent';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,7 +61,31 @@ function LoginContent() {
         </a>
 
         <h1 className="auth__title">С возвращением</h1>
-        <p className="auth__sub">Войди, чтобы посмотреть, как там дети.</p>
+        <p className="auth__sub">
+          {inviteToken
+            ? 'Войди в аккаунт, чтобы принять приглашение в семью.'
+            : 'Войди, чтобы посмотреть, как там дети.'}
+        </p>
+
+        {inviteToken && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              background: 'rgba(255,183,77,0.12)',
+              border: '1px solid rgba(255,183,77,0.4)',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: 20,
+              fontSize: 13,
+              color: 'var(--text-primary)',
+            }}
+          >
+            <span style={{ fontSize: 18 }}>👨‍👩‍👧</span>
+            <span>После входа ты окажешься в приглашённой семье</span>
+          </div>
+        )}
 
         <form onSubmit={handleEmailLogin} noValidate>
           <Field

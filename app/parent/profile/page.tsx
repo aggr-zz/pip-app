@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { PipLogo } from '@/components/ui/PipLogo';
 import { SignOutButton } from '../SignOutButton';
 import { PushToggle } from '@/components/ui/PushToggle';
+import { InviteLinkCard } from '../invite/InviteLinkCard';
 
 type Profile = {
   id: string;
@@ -257,6 +258,17 @@ export default async function ParentProfilePage() {
             </a>
           </section>
         )}
+
+        {/* ── Co-parent invite ─────────────────────────────────────── */}
+        <section style={{ marginBottom: 24 }}>
+          <h2 style={{
+            fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17,
+            letterSpacing: '-0.01em', margin: '0 0 12px',
+          }}>
+            Родители
+          </h2>
+          <InviteLinkCard />
+        </section>
 
         {/* ── Links ────────────────────────────────────────────────── */}
         <section style={{ marginBottom: 24 }}>

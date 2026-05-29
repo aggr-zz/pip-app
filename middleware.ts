@@ -15,6 +15,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // /invite-family/* — публичная страница принятия инвайта
+  if (pathname.startsWith('/invite-family/')) {
+    return NextResponse.next();
+  }
+
   // Страницы сброса пароля — публичные (сессия создаётся через code из письма)
   if (pathname === '/forgot-password' || pathname === '/reset-password') {
     return NextResponse.next();

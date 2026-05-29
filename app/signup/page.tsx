@@ -1,13 +1,26 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PipLogo } from '@/components/ui/PipLogo';
 import { Button } from '@/components/ui/Button';
+import { acceptFamilyInvite } from '@/app/invite-family/[token]/inviteActions';
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+      <SignupContent />
+    </Suspense>
+  );
+}
+
+function SignupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,7 +66,17 @@ export default function SignupPage() {
         setNeedsConfirm(true);
         return;
       }
-      router.push(isJoining ? '/child' : '/parent');
+
+      // Если пришли с инвайтом — присоединяем к семье
+      if (inviteToken) {
+        const joinResult = await acceptFamilyInvite(inviteToken);
+        if (!joinResult.ok) {
+          // Регистрация прошла, но инвайт не сработал — не критично, просто идём в /parent
+          console.warn('[signup] invite accept failed:', joinResult.error);
+        }
+      }
+
+      router.push('/parent');
       router.refresh();
     });
   }
@@ -84,11 +107,34 @@ export default function SignupPage() {
           <PipLogo size={48} />
         </a>
 
-        <h1 className="auth__title">Создать семью</h1>
+        <h1 className="auth__title">
+          {inviteToken ? 'Войти в семью' : 'Создать семью'}
+        </h1>
         <p className="auth__sub">
-          Один email на семью. Детей добавишь после регистрации — каждому
-          задашь PIN, и они смогут входить в свой режим.
+          {inviteToken
+            ? 'Создай аккаунт — и сразу окажешься в семье, куда тебя пригласили.'
+            : 'Один email на семью. Детей добавишь после регистрации — каждому задашь PIN, и они смогут входить в свой режим.'}
         </p>
+
+        {inviteToken && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              background: 'rgba(255,183,77,0.12)',
+              border: '1px solid rgba(255,183,77,0.4)',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: 20,
+              fontSize: 13,
+              color: 'var(--text-primary)',
+            }}
+          >
+            <span style={{ fontSize: 18 }}>👨‍👩‍👧</span>
+            <span>Ты принимаешь приглашение в семью</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} noValidate>
           <Field
