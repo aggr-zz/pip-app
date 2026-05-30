@@ -1,18 +1,57 @@
 {
+  "id": "/",
   "name": "pip — копилка хороших привычек",
   "short_name": "pip",
   "description": "Дети делают полезное, получают pip-монеты, обменивают на согласованные награды. Семейная мотивация без денег и угроз.",
-  "start_url": "/parent",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F2EDE2",
   "theme_color": "#EE6C4D",
   "lang": "ru",
+  "dir": "ltr",
   "categories": ["lifestyle", "education", "productivity"],
   "icons": [
     {
+      "src": "/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/icon-192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
@@ -21,6 +60,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-maskable-512.png",
@@ -33,12 +78,23 @@
     {
       "name": "Подтверждения",
       "short_name": "Подтвердить",
-      "url": "/parent/approvals"
+      "url": "/parent/approvals",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Новая задача",
       "short_name": "Задача",
-      "url": "/parent/tasks/new"
+      "url": "/parent/tasks/new",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Главный экран ребёнка"
     }
   ]
 }
