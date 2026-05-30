@@ -10,7 +10,11 @@ type Child = {
   avatar_color: 'coral' | 'mint' | 'ink' | 'gold' | 'rose' | 'sky';
 };
 
-export default async function NewTaskPage() {
+export default async function NewTaskPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ title?: string; text?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -37,6 +41,10 @@ export default async function NewTaskPage() {
     .select('id, coin_value, schedule_type, schedule_days')
     .eq('family_id', me.family_id)
     .is('archived_at', null);
+
+  // share_target: предзаполняем из ?title= или ?text= (PWA Web Share Target API)
+  const params = await searchParams;
+  const sharedTitle = (params.title || params.text || '').trim().slice(0, 80);
 
   return (
     <main style={{ minHeight: '100%', padding: '40px 24px' }}>
@@ -84,10 +92,17 @@ export default async function NewTaskPage() {
             lineHeight: 1.5,
           }}
         >
-          Опиши, что должен делать ребёнок, и сколько монет начислять.
+          {sharedTitle
+            ? 'Текст из поделённого сообщения добавлен как название.'
+            : 'Опиши, что должен делать ребёнок, и сколько монет начислять.'}
         </p>
 
-        <TaskForm mode="create" children={children ?? []} existingTasks={existingTasks ?? []} />
+        <TaskForm
+          mode="create"
+          children={children ?? []}
+          existingTasks={existingTasks ?? []}
+          defaults={sharedTitle ? { title: sharedTitle } : undefined}
+        />
       </div>
     </main>
   );
