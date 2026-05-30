@@ -1,0 +1,26 @@
+import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-static';
+
+export function GET() {
+  return NextResponse.json(
+    [
+      {
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: {
+          namespace: 'android_app',
+          package_name: 'ru.pipup.twa',
+          sha256_cert_fingerprints: [
+            '50:C4:4F:2C:EE:19:46:E9:8A:7E:16:83:CD:15:4D:ED:EA:10:C6:FE:DC:E4:50:D7:6F:AE:33:23:47:1A:6E:41',
+          ],
+        },
+      },
+    ],
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    }
+  );
+}
