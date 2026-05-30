@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './../styles/globals.css';
 import { PageTransition } from '@/components/ui/PageTransition';
+import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
 
 export const metadata: Metadata = {
   title: 'PIP — копилка хороших привычек',
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <ServiceWorkerRegistration />
         <PageTransition>{children}</PageTransition>
       </body>
     </html>
