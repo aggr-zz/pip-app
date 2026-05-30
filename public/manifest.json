@@ -1,11 +1,12 @@
 {
-  "id": "/",
+  "id": "/?source=pwa",
   "name": "pip — копилка хороших привычек",
   "short_name": "pip",
-  "description": "Дети делают полезное, получают pip-монеты, обменивают на согласованные награды. Семейная мотивация без денег и угроз.",
+  "description": "Семейное приложение для детей 6–16 лет. Дети выполняют задания, получают pip-монеты и обменивают их на награды. Мотивация без денег и угроз.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#F2EDE2",
   "theme_color": "#EE6C4D",
@@ -74,27 +75,35 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshot-child.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Экран ребёнка: задания, баланс и цель-копилка"
+    },
+    {
+      "src": "/screenshot-parent.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Экран родителя: дети, прогресс и подтверждения"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Подтверждения",
       "short_name": "Подтвердить",
       "url": "/parent/approvals",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Новая задача",
       "short_name": "Задача",
       "url": "/parent/tasks/new",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96", "type": "image/png" }]
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Главный экран ребёнка"
-    }
-  ]
+  "prefer_related_applications": false
 }
