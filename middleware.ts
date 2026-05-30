@@ -10,6 +10,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // /.well-known/* — системные файлы (assetlinks.json и др.), без авторизации
+  if (pathname.startsWith('/.well-known/')) {
+    return NextResponse.next();
+  }
+
   // /join/* — публичные страницы, не требуют никакой авторизации
   if (pathname.startsWith('/join/')) {
     return NextResponse.next();
