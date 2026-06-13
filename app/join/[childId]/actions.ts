@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signChildSession } from '@/lib/childSession';
+import { isPinLocked, recordPinFailure, clearPinAttempts } from '@/lib/pinRateLimit';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -20,6 +21,11 @@ export async function joinAsChild(input: {
     return { ok: false, error: 'PIN — 4 цифры' };
   }
 
+  const lock = isPinLocked(input.childId);
+  if (lock.locked) {
+    return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
+  }
+
   const supabase = createAdminClient();
 
   const { data: child, error } = await supabase
@@ -31,8 +37,12 @@ export async function joinAsChild(input: {
   if (error || !child) return { ok: false, error: 'Профиль не найден' };
   if (child.role !== 'child') return { ok: false, error: 'Это не детский профиль' };
   if (child.archived_at) return { ok: false, error: 'Профиль удалён' };
-  if (child.pin !== input.pin) return { ok: false, error: 'Неверный PIN' };
+  if (child.pin !== input.pin) {
+    recordPinFailure(input.childId);
+    return { ok: false, error: 'Неверный PIN' };
+  }
 
+  clearPinAttempts(input.childId);
   const token = signChildSession(child.id, child.family_id);
   const cookieStore = await cookies();
   cookieStore.set('pip_child_direct', token, {

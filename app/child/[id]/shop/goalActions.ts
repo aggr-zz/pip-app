@@ -8,11 +8,12 @@ import { verifyChildSession } from '@/lib/childSession';
 
 type Result = { ok: true } | { ok: false; error: string };
 
-/** Авторизация — два режима (аналог markTaskComplete) */
+/** Авторизация — два режима (аналог markTaskComplete). Возвращает и familyId. */
 async function resolveAuth(childId: string): Promise<
-  { ok: true; adminDb: ReturnType<typeof createAdminClient> } | { ok: false; error: string }
+  { ok: true; adminDb: ReturnType<typeof createAdminClient>; familyId: string } | { ok: false; error: string }
 > {
   const cookieStore = await cookies();
+  const adminDb = createAdminClient();
 
   // Режим 1: pip_child_direct
   const directToken = cookieStore.get('pip_child_direct')?.value;
@@ -21,7 +22,7 @@ async function resolveAuth(childId: string): Promise<
     if (!session || session.childId !== childId) {
       return { ok: false, error: 'Сессия ребёнка недействительна' };
     }
-    return { ok: true, adminDb: createAdminClient() };
+    return { ok: true, adminDb, familyId: session.familyId };
   }
 
   // Режим 2: родитель + pip_active_child
@@ -34,7 +35,24 @@ async function resolveAuth(childId: string): Promise<
     return { ok: false, error: 'Сначала зайди в режим ребёнка по PIN' };
   }
 
-  return { ok: true, adminDb: createAdminClient() };
+  // Семья родителя + проверка, что ребёнок из этой же семьи (а не из чужой).
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('family_id')
+    .eq('user_id', user.id)
+    .single();
+  if (!me?.family_id) return { ok: false, error: 'Профиль родителя не найден' };
+
+  const { data: child } = await adminDb
+    .from('profiles')
+    .select('family_id, role')
+    .eq('id', childId)
+    .single();
+  if (child?.role !== 'child' || child.family_id !== me.family_id) {
+    return { ok: false, error: 'Ребёнок не из вашей семьи' };
+  }
+
+  return { ok: true, adminDb, familyId: me.family_id };
 }
 
 /** Установить / сменить цель-копилку */
@@ -44,6 +62,16 @@ export async function setGoal(input: {
 }): Promise<Result> {
   const auth = await resolveAuth(input.childId);
   if (!auth.ok) return auth;
+
+  // Награда должна быть из той же семьи — иначе можно записать в цель чужую награду.
+  const { data: reward } = await auth.adminDb
+    .from('rewards')
+    .select('family_id')
+    .eq('id', input.rewardId)
+    .single();
+  if (!reward || reward.family_id !== auth.familyId) {
+    return { ok: false, error: 'Награда не найдена' };
+  }
 
   const { error } = await auth.adminDb
     .from('reward_goals')

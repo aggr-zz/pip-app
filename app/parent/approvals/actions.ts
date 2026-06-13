@@ -9,6 +9,43 @@ type Result<T = Record<string, never>> =
   | { ok: false; error: string };
 
 
+/**
+ * Пост-обработка после успешного аппрува заявки: удалить фото из Storage,
+ * проверить достижения и отправить пуш ребёнку. Общая для одиночного
+ * подтверждения и «Подтвердить все» — чтобы поведение не расходилось.
+ */
+async function afterApprove(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  completionId: string,
+  row: { photo_path?: string | null; awarded?: number | null } | null,
+): Promise<void> {
+  if (row?.photo_path) {
+    const { error } = await supabase.storage.from('task-photos').remove([row.photo_path]);
+    if (error) console.warn('[approve] не удалось удалить фото:', error);
+  }
+
+  const { data: completion } = await supabase
+    .from('task_completions')
+    .select('profile_id')
+    .eq('id', completionId)
+    .single();
+
+  if (completion?.profile_id) {
+    try {
+      await supabase.rpc('check_achievements', { p_profile_id: completion.profile_id });
+    } catch (e) {
+      console.warn('[approve] check_achievements failed:', e);
+    }
+    revalidatePath(`/child/${completion.profile_id}/achievements`);
+    void sendPushToProfile(completion.profile_id, {
+      title: '🎉 Задание подтверждено!',
+      body: `+${row?.awarded ?? 0} PIP зачислено на счёт`,
+      url: `/child/${completion.profile_id}`,
+    });
+  }
+}
+
+
 // ─── APPROVE ──────────────────────────────────────────────────────────
 /**
  * Родитель подтверждает выполнение задачи.
@@ -42,40 +79,7 @@ export async function approveCompletion(input: {
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { ok: false, error: 'Пустой ответ от БД' };
 
-  // Удаляем фото из Storage (если было)
-  if (row.photo_path) {
-    const { error: deleteError } = await supabase.storage
-      .from('task-photos')
-      .remove([row.photo_path]);
-    if (deleteError) {
-      // Не блокирующая ошибка — задача аппрувнута, фото остаётся как orphan.
-      // Periodic cleanup можно сделать в Sprint 7.
-      console.warn('[approveCompletion] не удалось удалить фото:', deleteError);
-    }
-  }
-
-  // Проверяем достижения ребёнка (нужен profile_id из completion)
-  const { data: completion } = await supabase
-    .from('task_completions')
-    .select('profile_id')
-    .eq('id', input.completionId)
-    .single();
-
-  if (completion?.profile_id) {
-    try {
-      await supabase.rpc('check_achievements', { p_profile_id: completion.profile_id });
-    } catch (e) {
-      console.warn('[approveCompletion] check_achievements failed:', e);
-    }
-    revalidatePath(`/child/${completion.profile_id}/achievements`);
-
-    // Push notification to child
-    void sendPushToProfile(completion.profile_id, {
-      title: '🎉 Задание подтверждено!',
-      body: `+${row.awarded ?? 0} PIP зачислено на счёт`,
-      url: `/child/${completion.profile_id}`,
-    });
-  }
+  await afterApprove(supabase, input.completionId, row);
 
   revalidatePath('/parent/approvals');
   revalidatePath('/parent');
@@ -171,11 +175,15 @@ export async function approveAllCompletions(input: {
 
   let approved = 0;
   for (const completionId of input.completionIds) {
-    const { error } = await supabase.rpc('approve_task_completion', {
+    const { data, error } = await supabase.rpc('approve_task_completion', {
       p_completion_id: completionId,
       p_awarded: null, // полная сумма
     });
-    if (!error) approved++;
+    if (error) continue;
+    approved++;
+    // То же, что в одиночном подтверждении: фото/достижения/пуш.
+    const row = Array.isArray(data) ? data[0] : data;
+    await afterApprove(supabase, completionId, row);
   }
 
   revalidatePath('/parent/approvals');

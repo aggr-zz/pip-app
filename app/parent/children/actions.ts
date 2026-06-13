@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyChildSession } from '@/lib/childSession';
+import { isPinLocked, recordPinFailure, clearPinAttempts } from '@/lib/pinRateLimit';
 import type { AvatarColor } from './constants';
 
 // ─── Константы ────────────────────────────────────────────────────────
@@ -90,6 +91,11 @@ export async function enterChildMode(input: {
     return { ok: false, error: 'PIN должен быть из 4 цифр' };
   }
 
+  const lock = isPinLocked(input.childId);
+  if (lock.locked) {
+    return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Не авторизован' };
@@ -115,9 +121,11 @@ export async function enterChildMode(input: {
   }
 
   if (child.pin !== input.pin) {
-    // TODO Sprint 7: rate-limit неудачных попыток через Redis/БД
+    recordPinFailure(input.childId);
     return { ok: false, error: 'Неверный PIN' };
   }
+
+  clearPinAttempts(input.childId);
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, input.childId, {

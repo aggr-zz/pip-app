@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendPushToProfile } from '@/lib/webpush';
+import { isTaskScheduledFor, nowInTimezone, todayInTimezone, type ScheduleType } from '@/lib/schedule';
 
 /**
  * POST /api/cron/task-reminders
@@ -29,13 +30,8 @@ export async function POST(request: NextRequest) {
   const currentHour = moscowNow.getHours();
   const currentMinute = moscowNow.getMinutes();
 
-  // День недели в московском времени (0=Вс, 1=Пн..6=Сб)
-  // Конвертируем в наш формат (0=Пн..6=Вс)
-  const jsDow = moscowNow.getDay(); // 0=Sun
-  const appDow = jsDow === 0 ? 6 : jsDow - 1; // 0=Mon..6=Sun
-
-  // Строка времени для сравнения — окно ±15 минут
-  // remind_at хранится как TIME — сравниваем диапазон
+  // Строка времени для сравнения — окно ±15 минут.
+  // remind_at хранится как TIME в МСК — сравниваем диапазон.
   const windowMinutes = 15;
   const totalMin = currentHour * 60 + currentMinute;
   const fromMin = totalMin - windowMinutes;
@@ -49,15 +45,22 @@ export async function POST(request: NextRequest) {
   }
   const fromTime = minToTime(fromMin);
   const toTime = minToTime(toMin);
+  // Окно может переходить через полночь (напр. 23:50–00:20) — тогда fromTime > toTime
+  // и обычный gte+lte даёт пустой диапазон. В этом случае берём remind_at >= from ИЛИ <= to.
+  const wrapsMidnight = fromTime > toTime;
 
   // ── Находим задачи с remind_at в текущем окне ─────────────────────────────
-  const { data: tasks, error: tasksError } = await admin
+  let tasksQuery = admin
     .from('tasks')
     .select('id, title, icon, schedule_type, schedule_days, assigned_to, family_id')
     .not('remind_at', 'is', null)
-    .is('archived_at', null)
-    .gte('remind_at', fromTime)
-    .lte('remind_at', toTime)
+    .is('archived_at', null);
+
+  tasksQuery = wrapsMidnight
+    ? tasksQuery.or(`remind_at.gte.${fromTime},remind_at.lte.${toTime}`)
+    : tasksQuery.gte('remind_at', fromTime).lte('remind_at', toTime);
+
+  const { data: tasks, error: tasksError } = await tasksQuery
     .returns<Array<{
       id: string;
       title: string;
@@ -77,27 +80,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sent: 0, message: 'No tasks due now' });
   }
 
-  // ── Фильтруем по расписанию (подходит ли сегодняшний день) ───────────────
-  const dueTasks = tasks.filter((t) => {
-    if (t.schedule_type === 'daily') return true;
-    if (t.schedule_type === 'weekdays') return appDow < 5; // 0=Пн..4=Пт
-    if (t.schedule_type === 'custom' && t.schedule_days) {
-      return t.schedule_days.includes(appDow);
-    }
-    if (t.schedule_type === 'once') return true; // разовая — тоже напомним
-    return false;
-  });
-
-  if (dueTasks.length === 0) {
-    return NextResponse.json({ sent: 0, message: 'No tasks scheduled for today' });
-  }
-
-  // ── Дата "сегодня" в Москве ───────────────────────────────────────────────
-  const todayStr = moscowNow.toISOString().split('T')[0]; // YYYY-MM-DD
+  // ── Таймзоны семей: день недели и "сегодня" считаем в часовом поясе семьи,
+  //    как в markTaskComplete — иначе на границе суток дедуп ломается ────────
+  const familyIds = [...new Set(tasks.map((t) => t.family_id))];
+  const { data: families } = await admin
+    .from('families')
+    .select('id, timezone')
+    .in('id', familyIds)
+    .returns<Array<{ id: string; timezone: string | null }>>();
+  const tzByFamily = new Map<string, string>(
+    (families ?? []).map((f) => [f.id, f.timezone || 'Europe/Moscow'])
+  );
 
   let totalSent = 0;
+  let tasksChecked = 0;
 
-  for (const task of dueTasks) {
+  for (const task of tasks) {
+    const tz = tzByFamily.get(task.family_id) || 'Europe/Moscow';
+
+    // Подходит ли сегодняшний день недели в часовом поясе семьи?
+    if (!isTaskScheduledFor(
+      { schedule_type: task.schedule_type as ScheduleType, schedule_days: task.schedule_days },
+      nowInTimezone(tz),
+    )) continue;
+    tasksChecked++;
+
+    // Дата "сегодня" в часовом поясе семьи (совпадает со scheduled_for в task_completions)
+    const today = todayInTimezone(tz);
     // Находим детей для этого задания
     const { data: children } = await admin
       .from('profiles')
@@ -121,7 +130,7 @@ export async function POST(request: NextRequest) {
         .select('id', { count: 'exact', head: true })
         .eq('task_id', task.id)
         .eq('profile_id', child.id)
-        .eq('scheduled_for', todayStr)
+        .eq('scheduled_for', today)
         .in('status', ['pending', 'approved', 'auto_approved']);
 
       if ((count ?? 0) > 0) {
@@ -146,7 +155,7 @@ export async function POST(request: NextRequest) {
   console.log(`[task-reminders] sent ${totalSent} reminders at ${fromTime}–${toTime} MSK`);
   return NextResponse.json({
     sent: totalSent,
-    tasksChecked: dueTasks.length,
+    tasksChecked,
     time: `${fromTime}–${toTime} MSK`,
   });
 }

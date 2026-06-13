@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { getParentContext } from '@/lib/getParentContext';
 import type { ScheduleType } from '@/lib/schedule';
 import type { TaskIconName } from '@/components/ui/TaskIcon';
 
@@ -55,25 +55,15 @@ export async function createTask(input: TaskInput): Promise<Result<{ id: string 
   const validationError = validateTask(input);
   if (validationError) return { ok: false, error: validationError };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Не авторизован' };
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('id, family_id, role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!me || me.role !== 'parent') {
-    return { ok: false, error: 'Только родитель может создавать задачи' };
-  }
+  const auth = await getParentContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const { supabase, familyId, profileId } = auth.ctx;
 
   // Проверяем что все assigned_to — дети из этой семьи
   const { data: children } = await supabase
     .from('profiles')
     .select('id')
-    .eq('family_id', me.family_id)
+    .eq('family_id', familyId)
     .eq('role', 'child')
     .in('id', input.assigned_to);
 
@@ -84,7 +74,7 @@ export async function createTask(input: TaskInput): Promise<Result<{ id: string 
   const { data: newTask, error } = await supabase
     .from('tasks')
     .insert({
-      family_id: me.family_id,
+      family_id: familyId,
       title: input.title.trim(),
       description: input.description?.trim() || null,
       icon: input.icon,
@@ -94,7 +84,7 @@ export async function createTask(input: TaskInput): Promise<Result<{ id: string 
       requires_approval: input.requires_approval,
       requires_photo: input.requires_photo,
       assigned_to: input.assigned_to,
-      created_by: me.id,
+      created_by: profileId,
       remind_at: input.remind_at || null,
     })
     .select('id')
@@ -115,19 +105,9 @@ export async function updateTask(taskId: string, input: TaskInput): Promise<Resu
   const validationError = validateTask(input);
   if (validationError) return { ok: false, error: validationError };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Не авторизован' };
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('family_id, role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!me || me.role !== 'parent') {
-    return { ok: false, error: 'Только родитель' };
-  }
+  const auth = await getParentContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const { supabase, familyId } = auth.ctx;
 
   const { error } = await supabase
     .from('tasks')
@@ -144,7 +124,7 @@ export async function updateTask(taskId: string, input: TaskInput): Promise<Resu
       remind_at: input.remind_at || null,
     })
     .eq('id', taskId)
-    .eq('family_id', me.family_id);
+    .eq('family_id', familyId);
 
   if (error) {
     console.error('[updateTask]', error);
@@ -159,23 +139,15 @@ export async function updateTask(taskId: string, input: TaskInput): Promise<Resu
 
 // ─── ARCHIVE / UNARCHIVE ──────────────────────────────────────────────
 export async function archiveTask(taskId: string): Promise<Result> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Не авторизован' };
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('family_id, role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!me || me.role !== 'parent') return { ok: false, error: 'Только родитель' };
+  const auth = await getParentContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const { supabase, familyId } = auth.ctx;
 
   const { error } = await supabase
     .from('tasks')
     .update({ archived_at: new Date().toISOString() })
     .eq('id', taskId)
-    .eq('family_id', me.family_id);
+    .eq('family_id', familyId);
 
   if (error) {
     console.error('[archiveTask]', error);
@@ -188,23 +160,15 @@ export async function archiveTask(taskId: string): Promise<Result> {
 }
 
 export async function unarchiveTask(taskId: string): Promise<Result> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Не авторизован' };
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('family_id, role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!me || me.role !== 'parent') return { ok: false, error: 'Только родитель' };
+  const auth = await getParentContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const { supabase, familyId } = auth.ctx;
 
   const { error } = await supabase
     .from('tasks')
     .update({ archived_at: null })
     .eq('id', taskId)
-    .eq('family_id', me.family_id);
+    .eq('family_id', familyId);
 
   if (error) {
     console.error('[unarchiveTask]', error);

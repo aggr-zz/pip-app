@@ -41,7 +41,16 @@ export async function getChildContext(childId: string): Promise<ChildContext> {
       .eq('user_id', user.id)
       .single();
     if (me?.family_id) {
-      return { db: supabase, familyId: me.family_id, mode: 'parent' };
+      // Перепроверяем на чтении, что childId действительно ребёнок этой семьи,
+      // а не доверяем cookie pip_active_child (он мог устареть/быть подменён).
+      const { data: child } = await supabase
+        .from('profiles')
+        .select('family_id, role')
+        .eq('id', childId)
+        .single();
+      if (child?.role === 'child' && child.family_id === me.family_id) {
+        return { db: supabase, familyId: me.family_id, mode: 'parent' };
+      }
     }
   }
 

@@ -8,9 +8,26 @@
 
 import { createHmac } from 'crypto';
 
-const SECRET =
-  process.env.CHILD_SESSION_SECRET ||
-  'dev-secret-please-set-CHILD_SESSION_SECRET-in-env-32chars+';
+function resolveSecret(): string {
+  const fromEnv = process.env.CHILD_SESSION_SECRET;
+  if (fromEnv && fromEnv.length >= 32) return fromEnv;
+
+  // В production секрет обязателен и должен быть достаточно длинным —
+  // иначе токены детских сессий становятся подделываемыми. Падаем сразу,
+  // чтобы небезопасная конфигурация не уехала в прод.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'CHILD_SESSION_SECRET must be set to a random string of at least 32 characters in production'
+    );
+  }
+  // Только для локальной разработки.
+  console.warn(
+    '[childSession] CHILD_SESSION_SECRET не задан — использую небезопасный dev-секрет (только для разработки)'
+  );
+  return 'dev-secret-please-set-CHILD_SESSION_SECRET-in-env-32chars+';
+}
+
+const SECRET = resolveSecret();
 
 const TTL_DAYS = 30;
 
