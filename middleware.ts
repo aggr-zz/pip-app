@@ -1,57 +1,47 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
-import { verifyChildSession } from '@/lib/childSession';
+
+/**
+ * Лёгкое чтение childId из payload токена pip_child_direct — БЕЗ проверки
+ * подписи (в edge-рантайме middleware нет node:crypto). Используется только
+ * для маршрутизации /child/*. Криптографическую проверку HMAC делает
+ * getChildContext в серверном компоненте (Node-рантайм) — там же реальная
+ * граница безопасности. Подделанный токен пройдёт middleware, но будет
+ * отклонён на странице.
+ */
+function readChildClaim(token: string): string | null {
+  try {
+    const data = token.slice(0, token.lastIndexOf('.'));
+    if (!data) return null;
+    const b64 = data.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(b64));
+    if (typeof payload.exp === 'number' && payload.exp < Date.now() / 1000) return null;
+    return typeof payload.childId === 'string' ? payload.childId : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // / — лендинг, публичная страница (сам проверяет авторизацию)
-  if (pathname === '/') {
-    return NextResponse.next();
-  }
+  if (pathname === '/') return NextResponse.next();
+  if (pathname.startsWith('/.well-known/')) return NextResponse.next();
+  if (pathname.startsWith('/join/')) return NextResponse.next();
+  if (pathname.startsWith('/invite-family/')) return NextResponse.next();
+  if (pathname === '/forgot-password' || pathname === '/reset-password') return NextResponse.next();
+  if (pathname === '/terms' || pathname === '/privacy') return NextResponse.next();
 
-  // /.well-known/* — системные файлы (assetlinks.json и др.), без авторизации
-  if (pathname.startsWith('/.well-known/')) {
-    return NextResponse.next();
-  }
-
-  // /join/* — публичные страницы, не требуют никакой авторизации
-  if (pathname.startsWith('/join/')) {
-    return NextResponse.next();
-  }
-
-  // /invite-family/* — публичная страница принятия инвайта
-  if (pathname.startsWith('/invite-family/')) {
-    return NextResponse.next();
-  }
-
-  // Страницы сброса пароля — публичные (сессия создаётся через code из письма)
-  if (pathname === '/forgot-password' || pathname === '/reset-password') {
-    return NextResponse.next();
-  }
-
-  // Юридические страницы — публичные
-  if (pathname === '/terms' || pathname === '/privacy') {
-    return NextResponse.next();
-  }
-
-  // /child/* — разрешаем если есть валидный pip_child_direct токен
+  // /child/* — пропускаем, если childId в токене совпадает с URL.
+  // Подпись проверит getChildContext на странице.
   if (pathname.startsWith('/child/')) {
     const token = request.cookies.get('pip_child_direct')?.value;
-    if (token) {
-      const session = verifyChildSession(token);
-      if (session) {
-        // Дополнительная проверка: childId в URL должен совпадать с токеном
-        const segments = pathname.split('/'); // ['', 'child', '<id>', ...]
-        const childIdInUrl = segments[2];
-        if (childIdInUrl === session.childId) {
-          return NextResponse.next();
-        }
-      }
+    const childId = token ? readChildClaim(token) : null;
+    if (childId && pathname.split('/')[2] === childId) {
+      return NextResponse.next();
     }
   }
 
-  // Для всех остальных маршрутов — стандартная Supabase-авторизация
   try {
     return await updateSession(request);
   } catch (e) {
