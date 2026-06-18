@@ -15,14 +15,13 @@ async function resolveAuth(childId: string): Promise<
   const cookieStore = await cookies();
   const adminDb = createAdminClient();
 
-  // Режим 1: pip_child_direct
+  // Режим 1: pip_child_direct (только если токен ВАЛИДНЫЙ; иначе — не падаем,
+  // а пробуем родительский режим — устаревший/чужой cookie не должен блокировать
+  // залогиненного родителя в режиме ребёнка).
   const directToken = cookieStore.get('pip_child_direct')?.value;
-  if (directToken) {
-    const session = verifyChildSession(directToken);
-    if (!session || session.childId !== childId) {
-      return { ok: false, error: 'Сессия ребёнка недействительна' };
-    }
-    return { ok: true, adminDb, familyId: session.familyId };
+  const directSession = directToken ? verifyChildSession(directToken) : null;
+  if (directSession && directSession.childId === childId) {
+    return { ok: true, adminDb, familyId: directSession.familyId };
   }
 
   // Режим 2: родитель + pip_active_child

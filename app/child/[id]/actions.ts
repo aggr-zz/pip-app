@@ -47,15 +47,15 @@ export async function markTaskComplete(input: {
   let supabase: Awaited<ReturnType<typeof createClient>>;
   let familyId: string;
 
+  // Прямая детская сессия — только если токен ВАЛИДНЫЙ. Если cookie нет или он
+  // устарел/невалиден (напр. подписан старым секретом) — не падаем, а переходим
+  // к родительскому режиму, иначе залогиненный родитель не сможет отметить задачу.
   const directToken = cookieStore.get('pip_child_direct')?.value;
-  if (directToken) {
-    const session = verifyChildSession(directToken);
-    if (!session || session.childId !== input.childId) {
-      return { ok: false, error: 'Сессия ребёнка недействительна' };
-    }
+  const directSession = directToken ? verifyChildSession(directToken) : null;
+  if (directSession && directSession.childId === input.childId) {
     // Use admin client (bypasses RLS for direct child sessions)
     supabase = createAdminClient() as unknown as Awaited<ReturnType<typeof createClient>>;
-    familyId = session.familyId;
+    familyId = directSession.familyId;
   } else {
     // Mode 1: parent Supabase session
     supabase = await createClient();

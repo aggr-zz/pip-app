@@ -1,7 +1,7 @@
 // PIP Service Worker — v2
 // Handles: Web Push, offline cache (network-first)
 
-const CACHE_NAME = 'pip-v1';
+const CACHE_NAME = 'pip-v3';
 
 // Статика, которую кэшируем при установке
 const PRECACHE_URLS = [

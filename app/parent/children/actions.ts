@@ -174,13 +174,10 @@ export async function updateChildAvatar(input: {
 
   const cookieStore = await cookies();
 
-  // ── Режим 2: прямая сессия ребёнка ────────────────────────────────────
+  // ── Режим 2: прямая сессия ребёнка (только если токен валиден; иначе — в родительский режим) ──
   const directToken = cookieStore.get('pip_child_direct')?.value;
-  if (directToken) {
-    const session = verifyChildSession(directToken);
-    if (!session || session.childId !== input.profileId) {
-      return { ok: false, error: 'Сессия недействительна' };
-    }
+  const directSession = directToken ? verifyChildSession(directToken) : null;
+  if (directSession && directSession.childId === input.profileId) {
     const admin = createAdminClient();
     const { error } = await admin
       .from('profiles')
