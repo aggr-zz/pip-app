@@ -24,14 +24,19 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const next = safeNext(searchParams.get('next'));
 
+  // За обратным прокси (nginx) request.url содержит внутренний хост
+  // (localhost:3001), поэтому для редиректов используем канонический
+  // публичный адрес из NEXT_PUBLIC_SITE_URL. Фолбэк — origin запроса.
+  const base = process.env.NEXT_PUBLIC_SITE_URL || origin;
+
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${base}${next}`);
     }
   }
 
   // Что-то пошло не так — отправляем на логин
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+  return NextResponse.redirect(`${base}/login?error=auth_callback_failed`);
 }
