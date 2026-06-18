@@ -34,8 +34,8 @@ export async function sendTransactionalEmail(
         subject,
         from_email: FROM_EMAIL,
         from_name: FROM_NAME,
-        // транзакционные письма — без футера отписки и трекинга
-        skip_unsubscribe: 1,
+        // без трекинга. skip_unsubscribe не используем — требует флага
+        // allow_skip_unsubscribe у аккаунта Unisender; футер отписки добавится сам.
         track_links: 0,
         track_read: 0,
       },
