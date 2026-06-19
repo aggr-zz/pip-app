@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -27,7 +27,29 @@ function SignupContent() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [resend, setResend] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [cooldown, setCooldown] = useState(0);
   const [isPending, startTransition] = useTransition();
+
+  // Обратный отсчёт троттлинга повторной отправки письма.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  async function handleResend() {
+    if (resend === 'sending' || cooldown > 0) return;
+    setResend('sending');
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) {
+      setResend('error');
+      return;
+    }
+    setResend('sent');
+    setCooldown(60);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,11 +111,41 @@ function SignupContent() {
           <h1 className="auth__title">Проверь почту</h1>
           <p className="auth__sub">
             Мы отправили письмо на <strong>{email}</strong>. Кликни на ссылку,
-            чтобы подтвердить email и зайти.
+            чтобы подтвердить email и зайти. Ссылку можно открыть на любом
+            устройстве.
           </p>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 24 }}>
-            Не пришло? Проверь спам или <a href="/login" style={{ color: 'var(--color-coral)', fontWeight: 600 }}>попробуй войти</a>.
-          </p>
+
+          <div style={{ marginTop: 20 }}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              fullWidth
+              onClick={handleResend}
+              disabled={resend === 'sending' || cooldown > 0}
+            >
+              {resend === 'sending'
+                ? 'Отправляем…'
+                : cooldown > 0
+                  ? `Отправить ещё раз (${cooldown})`
+                  : 'Отправить письмо ещё раз'}
+            </Button>
+
+            {resend === 'sent' && (
+              <p style={{ fontSize: 13, color: 'var(--color-mint-deep, #0BAA72)', marginTop: 10 }}>
+                Готово — письмо отправлено повторно. Проверь почту и папку «Спам».
+              </p>
+            )}
+            {resend === 'error' && (
+              <p style={{ fontSize: 13, color: 'var(--status-danger)', marginTop: 10 }}>
+                Не удалось отправить. Попробуй чуть позже.
+              </p>
+            )}
+
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 14 }}>
+              Уже подтвердил? <a href="/login" style={{ color: 'var(--color-coral)', fontWeight: 600 }}>Войти</a>
+            </p>
+          </div>
         </div>
         <style>{authStyles}</style>
       </main>

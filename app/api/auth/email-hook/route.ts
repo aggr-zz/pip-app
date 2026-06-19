@@ -15,7 +15,8 @@ export const runtime = 'nodejs';
 
 // секрет = base64-часть из GOTRUE_HOOK_SEND_EMAIL_SECRETS (v1,whsec_<base64>)
 const HOOK_SECRET = (process.env.SEND_EMAIL_HOOK_SECRET || '').replace(/^whsec_/, '');
-const AUTH_API_BASE = process.env.AUTH_API_EXTERNAL_URL || 'https://api.pipup.ru';
+// Публичный адрес приложения — ссылки подтверждения ведут на /auth/confirm.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://pipup.ru';
 
 function verifySignature(
   id: string | null,

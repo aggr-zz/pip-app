@@ -203,6 +203,12 @@ export function BannerCarousel({ childId }: { childId: string }) {
   const [current, setCurrent] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [closed, setClosed] = useState(false);
+  const touchRef = useRef({ startX: 0, startY: 0, axisLocked: false, active: false });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ВАЖНО: все хуки объявляются ДО любого раннего return (Rules of Hooks).
+  // Раньше useRef/useCallback/useEffect стояли после `if (closed) return null`,
+  // из-за чего при закрытии баннера число хуков менялось → краш главной ребёнка.
 
   // Read localStorage after mount
   useEffect(() => {
@@ -210,15 +216,6 @@ export function BannerCarousel({ childId }: { childId: string }) {
       if (localStorage.getItem(STORAGE_KEY) === '1') setClosed(true);
     } catch {}
   }, []);
-
-  function handleClose() {
-    setClosed(true);
-    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
-  }
-
-  if (closed) return null;
-  const touchRef = useRef({ startX: 0, startY: 0, axisLocked: false, active: false });
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const goTo = useCallback((idx: number) => {
     if (isAnimating) return;
@@ -237,9 +234,17 @@ export function BannerCarousel({ childId }: { childId: string }) {
   }, [next]);
 
   useEffect(() => {
+    if (closed) return;
     timerRef.current = setInterval(next, AUTO_INTERVAL);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [next]);
+  }, [next, closed]);
+
+  function handleClose() {
+    setClosed(true);
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+  }
+
+  if (closed) return null;
 
   // Touch swipe
   function handleTouchStart(e: React.TouchEvent) {

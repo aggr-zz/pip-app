@@ -442,6 +442,7 @@ export function TaskRow({
           style={{ position: 'fixed', inset: 0, zIndex: 100, pointerEvents: 'auto' }}
         >
           <PhotoUpload
+            childId={childId}
             familyId={familyId}
             onUploaded={handlePhotoUploaded}
             onCancel={() => { setShowPhotoModal(false); setSwipeTriggered(false); }}

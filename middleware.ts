@@ -29,6 +29,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/.well-known/')) return NextResponse.next();
   if (pathname.startsWith('/join/')) return NextResponse.next();
   if (pathname.startsWith('/invite-family/')) return NextResponse.next();
+  if (pathname === '/auth/confirm') return NextResponse.next();
   if (pathname === '/forgot-password' || pathname === '/reset-password') return NextResponse.next();
   if (pathname === '/terms' || pathname === '/privacy') return NextResponse.next();
 

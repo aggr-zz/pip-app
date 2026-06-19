@@ -91,6 +91,24 @@ export async function acceptFamilyInvite(token: string): Promise<Result> {
     return { ok: true };
   }
 
+  // Защита от потери данных: если у принимающего уже есть СВОЯ семья с другими
+  // участниками (дети или второй родитель), смена family_id осиротила бы их —
+  // их профили остались бы в брошенной семье без доступа, без отката из UI.
+  // Свежий аккаунт из signup?invite имеет пустую авто-семью → проходит.
+  const { count: otherMembers } = await admin
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+    .eq('family_id', myProfile.family_id)
+    .neq('id', myProfile.id);
+
+  if ((otherMembers ?? 0) > 0) {
+    return {
+      ok: false,
+      error:
+        'У тебя уже есть своя семья с участниками — если присоединиться, твои дети и данные пропадут. Объединение семей пока не поддерживается. Напиши нам, если нужно перенести аккаунт.',
+    };
+  }
+
   // Запоминаем старую family_id чтобы потом попробовать убрать пустую семью
   const oldFamilyId = myProfile.family_id;
 

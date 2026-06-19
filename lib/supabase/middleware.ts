@@ -46,6 +46,14 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
+    // Ребёнок на /child/[id] без валидной прямой сессии: ведём на его вход
+    // по PIN/QR (/join/[childId]), а не на родительский /login (тупик).
+    const childMatch = request.nextUrl.pathname.match(/^\/child\/([^/]+)/);
+    if (childMatch) {
+      url.pathname = `/join/${childMatch[1]}`;
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
     url.pathname = '/login';
     url.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(url);

@@ -7,6 +7,7 @@ import { ParentBannerCarousel } from './ParentBannerCarousel';
 import { ChildrenPanel, type ChildData } from './ChildrenPanel';
 import { isTaskScheduledFor, todayInTimezone, nowInTimezone } from '@/lib/schedule';
 import { CreatedToast } from './CreatedToast';
+import { autoApproveSweep } from './approvals/actions';
 
 type Profile = {
   id: string;
@@ -40,6 +41,16 @@ type Completion = {
   completed_at: string;
 };
 
+type EmbeddedTask = { title: string; icon: string; coin_value: number };
+
+type PendingCompletion = {
+  id: string;
+  task_id: string;
+  profile_id: string;
+  photo_path: string | null;
+  completed_at: string;
+};
+
 export default async function ParentDashboardPage() {
   const supabase = await createClient();
 
@@ -62,6 +73,10 @@ export default async function ParentDashboardPage() {
   }
 
   if (me.role === 'child') redirect('/child');
+
+  // Лениво автоаппрувим заявки старше families.auto_approve_hours до подсчёта
+  // pending (RPC идемпотентен; раньше эта функция не вызывалась нигде).
+  await autoApproveSweep();
 
   // ── Family ──────────────────────────────────────────────────────────────
   const { data: family } = await supabase
@@ -105,13 +120,46 @@ export default async function ParentDashboardPage() {
     .is('archived_at', null)
     .returns<Task[]>();
 
-  // ── Today's completions ─────────────────────────────────────────────────
+  // ── Today's completions (для статусов задач «на сегодня») ────────────────
   const { data: todayCompletions = [] } = await supabase
     .from('task_completions')
     .select('id, task_id, profile_id, status, photo_path, completed_at')
     .in('profile_id', childIds)
     .eq('scheduled_for', today)
     .returns<Completion[]>();
+
+  // ── Все pending-заявки (любой день) — для блока «на проверку» ─────────────
+  // ВАЖНО: без фильтра по дате. Раньше дашборд брал pending только за сегодня,
+  // а бейдж в layout.tsx считал все pending → заявки прошлых дней «зависали»
+  // в счётчике, но были недостижимы в UI и монеты не начислялись. Теперь оба
+  // источника считают одно множество, и старые заявки видны/доступны.
+  const { data: pendingCompletions = [] } = await supabase
+    .from('task_completions')
+    .select('id, task_id, profile_id, photo_path, completed_at')
+    .in('profile_id', childIds)
+    .eq('status', 'pending')
+    .order('completed_at', { ascending: true })
+    .returns<PendingCompletion[]>();
+
+  // Названия/иконки/цена задач для pending — из активных задач, а для уже
+  // архивированных дозапрашиваем отдельно (чтобы карточка всё равно отрисовалась).
+  const taskInfoById = new Map<string, EmbeddedTask>();
+  (allTasks ?? []).forEach((t) =>
+    taskInfoById.set(t.id, { title: t.title, icon: t.icon, coin_value: t.coin_value })
+  );
+  const missingTaskIds = Array.from(
+    new Set((pendingCompletions ?? []).map((c) => c.task_id))
+  ).filter((id) => !taskInfoById.has(id));
+  if (missingTaskIds.length > 0) {
+    const { data: extraTasks } = await supabase
+      .from('tasks')
+      .select('id, title, icon, coin_value')
+      .in('id', missingTaskIds)
+      .returns<(EmbeddedTask & { id: string })[]>();
+    (extraTasks ?? []).forEach((t) =>
+      taskInfoById.set(t.id, { title: t.title, icon: t.icon, coin_value: t.coin_value })
+    );
+  }
 
   // ── Build per-child data ─────────────────────────────────────────────────
   const childrenWithTasks: ChildData[] = (children ?? []).map((child) => {
@@ -124,11 +172,11 @@ export default async function ParentDashboardPage() {
     );
     const completionsByTaskId = new Map(childCompletions.map((c) => [c.task_id, c]));
 
-    // Pending approvals
-    const pendingApprovals = childCompletions
-      .filter((c) => c.status === 'pending')
+    // Pending approvals — все pending этого ребёнка (любой день).
+    const pendingApprovals = (pendingCompletions ?? [])
+      .filter((c) => c.profile_id === child.id)
       .map((c) => {
-        const task = (allTasks ?? []).find((t) => t.id === c.task_id);
+        const task = taskInfoById.get(c.task_id);
         return {
           completionId: c.id,
           taskTitle: task?.title ?? 'Задание',

@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useRef, useTransition } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { uploadTaskPhoto } from './photoActions';
 import { Button } from '@/components/ui/Button';
 
 interface PhotoUploadProps {
-  /** family_id ребёнка, нужен для path в Storage */
-  familyId: string;
+  /** id ребёнка — нужен для серверной авторизации загрузки */
+  childId: string;
+  /** family_id ребёнка (оставлен для совместимости; путь задаётся на сервере) */
+  familyId?: string;
   /** Колбэк: возвращает photo_path в Storage после успешной загрузки */
   onUploaded: (photoPath: string) => void;
   /** Закрыть без загрузки */
@@ -26,7 +28,7 @@ interface PhotoUploadProps {
  * Bucket: task-photos (приватный)
  * Path:   {family_id}/{uuid}.{ext}
  */
-export function PhotoUpload({ familyId, onUploaded, onCancel }: PhotoUploadProps) {
+export function PhotoUpload({ childId, onUploaded, onCancel }: PhotoUploadProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,27 +69,22 @@ export function PhotoUpload({ familyId, onUploaded, onCancel }: PhotoUploadProps
 
     startUpload(async () => {
       setError(null);
-      const supabase = createClient();
 
-      // Генерируем путь: family_id/uuid.ext
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const filename = `${crypto.randomUUID()}.${ext}`;
-      const path = `${familyId}/${filename}`;
+      // Загрузка идёт серверным action на admin-клиенте: у ребёнка по PIN нет
+      // Supabase-сессии, и прямая anon-загрузка в приватный бакет падала.
+      const formData = new FormData();
+      formData.append('childId', childId);
+      formData.append('file', file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('task-photos')
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+      const result = await uploadTaskPhoto(formData);
 
-      if (uploadError) {
-        console.error('[PhotoUpload]', uploadError);
-        setError('Не получилось загрузить фото. Попробуй ещё раз.');
+      if (!result.ok) {
+        console.error('[PhotoUpload]', result.error);
+        setError(result.error || 'Не получилось загрузить фото. Попробуй ещё раз.');
         return;
       }
 
-      onUploaded(path);
+      onUploaded(result.path);
     });
   }
 

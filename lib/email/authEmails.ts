@@ -80,19 +80,30 @@ function wrap(t: Tpl, url: string): string {
 </body></html>`;
 }
 
+/**
+ * @param siteUrl публичный адрес приложения (NEXT_PUBLIC_SITE_URL), напр. https://pipup.ru
+ *
+ * Ссылка ведёт на наш роут /auth/confirm, который верифицирует token_hash через
+ * verifyOtp — это работает КРОСС-ДЕВАЙС. Раньше письмо вело на GoTrue
+ * /auth/v1/verify → ?code → exchangeCodeForSession, которому нужен code_verifier
+ * из того же браузера, поэтому подтверждение с другого устройства падало.
+ */
 export function renderAuthEmail(
   data: AuthEmailData,
-  apiBase: string,
+  siteUrl: string,
 ): { subject: string; html: string } {
   const actionType = data.email_action_type || 'signup';
-  const tpl = TEMPLATES[actionType] || TEMPLATES[verifyType(actionType)] || TEMPLATES.signup;
+  const vtype = verifyType(actionType);
+  const tpl = TEMPLATES[actionType] || TEMPLATES[vtype] || TEMPLATES.signup;
 
-  const redirectTo = data.redirect_to || data.site_url || 'https://pipup.ru';
+  // Куда вести после успешной верификации.
+  const next = vtype === 'recovery' ? '/reset-password' : '/parent';
+
   const url =
-    `${apiBase}/auth/v1/verify` +
-    `?token=${encodeURIComponent(data.token_hash || '')}` +
-    `&type=${encodeURIComponent(verifyType(actionType))}` +
-    `&redirect_to=${encodeURIComponent(redirectTo)}`;
+    `${siteUrl.replace(/\/$/, '')}/auth/confirm` +
+    `?token_hash=${encodeURIComponent(data.token_hash || '')}` +
+    `&type=${encodeURIComponent(vtype)}` +
+    `&next=${encodeURIComponent(next)}`;
 
   return { subject: tpl.subject, html: wrap(tpl, url) };
 }

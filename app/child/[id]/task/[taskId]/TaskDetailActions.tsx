@@ -158,6 +158,7 @@ export function TaskDetailActions({
       {/* Фото-модал */}
       {showPhoto && (
         <PhotoUpload
+          childId={childId}
           familyId={familyId}
           onUploaded={(path) => { setShowPhoto(false); submit(path); }}
           onCancel={() => setShowPhoto(false)}

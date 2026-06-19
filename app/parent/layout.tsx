@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ParentTabBar } from './ParentTabBar';
+import { autoApproveSweep } from './approvals/actions';
 
 export default async function ParentLayout({
   children,
@@ -18,6 +19,9 @@ export default async function ParentLayout({
     .single();
 
   if (!me || me.role !== 'parent') redirect('/');
+
+  // Автоаппрув просроченных заявок до подсчёта бейджа (RPC идемпотентен).
+  await autoApproveSweep();
 
   // ── Pending approvals count for Tasks badge ─────────────────────────────
   const { data: children_ } = await supabase

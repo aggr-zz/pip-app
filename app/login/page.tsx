@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, Suspense } from 'react';
+import { useState, useTransition, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PipLogo } from '@/components/ui/PipLogo';
@@ -23,24 +23,55 @@ function LoginContent() {
     ? `/invite-family/${encodeURIComponent(inviteToken)}`
     : searchParams.get('next') || '/parent';
 
+  // Колбэк подтверждения/сброса мог завершиться ошибкой и привести сюда.
+  const errorParam = searchParams.get('error');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    errorParam
+      ? 'Ссылка устарела или уже использована. Войди или запроси письмо ещё раз.'
+      : null
+  );
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [resend, setResend] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [cooldown, setCooldown] = useState(0);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNeedsConfirm(false);
     startTransition(async () => {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        if (error.message.includes('Email not confirmed')) setNeedsConfirm(true);
         setError(translateError(error.message));
         return;
       }
       router.push(next);
       router.refresh();
     });
+  }
+
+  async function handleResend() {
+    if (!email || resend === 'sending' || cooldown > 0) return;
+    setResend('sending');
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) {
+      setResend('error');
+      return;
+    }
+    setResend('sent');
+    setCooldown(60);
   }
 
   async function handleYandexLogin() {
@@ -122,6 +153,35 @@ function LoginContent() {
           </div>
 
           {error && <div className="auth__error" role="alert">{error}</div>}
+
+          {needsConfirm && (
+            <div style={{ marginTop: 10 }}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                fullWidth
+                onClick={handleResend}
+                disabled={resend === 'sending' || cooldown > 0}
+              >
+                {resend === 'sending'
+                  ? 'Отправляем…'
+                  : cooldown > 0
+                    ? `Отправить письмо ещё раз (${cooldown})`
+                    : 'Отправить письмо подтверждения ещё раз'}
+              </Button>
+              {resend === 'sent' && (
+                <p style={{ fontSize: 13, color: 'var(--color-mint-deep, #0BAA72)', marginTop: 8 }}>
+                  Письмо отправлено повторно. Проверь почту и папку «Спам».
+                </p>
+              )}
+              {resend === 'error' && (
+                <p style={{ fontSize: 13, color: 'var(--status-danger)', marginTop: 8 }}>
+                  Не удалось отправить. Попробуй чуть позже.
+                </p>
+              )}
+            </div>
+          )}
 
           <Button
             type="submit"
