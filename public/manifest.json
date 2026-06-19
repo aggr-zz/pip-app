@@ -54,18 +54,25 @@
 
   "screenshots": [
     {
-      "src": "/screenshot-child.png",
-      "sizes": "390x844",
+      "src": "/store/01-child.png",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Экран ребёнка: задания, баланс и цель-копилка"
+      "label": "Экран ребёнка: задания, монеты, стрик и цель-копилка"
     },
     {
-      "src": "/screenshot-parent.png",
-      "sizes": "390x844",
+      "src": "/store/02-parent.png",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Экран родителя: дети, прогресс и подтверждения"
+      "label": "Экран родителя: дети, прогресс и заявки на проверку"
+    },
+    {
+      "src": "/store/03-shop.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Магазин наград: копи монеты и меняй на награды"
     }
   ],
 
