@@ -1,0 +1,56 @@
+{
+  "packageId": "ru.pipup.twa",
+  "host": "pipup.ru",
+  "name": "pip — копилка хороших привычек",
+  "launcherName": "pip",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#EE6C4D",
+  "themeColorDark": "#1B2238",
+  "navigationColor": "#1B2238",
+  "navigationColorDark": "#1B2238",
+  "navigationDividerColor": "#1B2238",
+  "navigationDividerColorDark": "#1B2238",
+  "backgroundColor": "#F2EDE2",
+  "enableNotifications": true,
+  "startUrl": "/?source=twa",
+  "iconUrl": "https://pipup.ru/icon-512.png",
+  "maskableIconUrl": "https://pipup.ru/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "pip"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Подтверждения",
+      "shortName": "Подтвердить",
+      "url": "/parent/approvals",
+      "chosenIconUrl": "https://pipup.ru/icon-96.png"
+    },
+    {
+      "name": "Новая задача",
+      "shortName": "Задача",
+      "url": "/parent/tasks/new",
+      "chosenIconUrl": "https://pipup.ru/icon-96.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://pipup.ru/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://pipup.ru/",
+  "minSdkVersion": 21,
+  "orientationLock": false,
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "1.0.0"
+}
