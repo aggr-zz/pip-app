@@ -55,24 +55,31 @@
   "screenshots": [
     {
       "src": "/store/01-child.png",
-      "sizes": "1440x2560",
+      "sizes": "941x1672",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Экран ребёнка: задания, монеты, стрик и цель-копилка"
+      "label": "Ребёнок выполняет задания и копит PIP-монеты"
     },
     {
-      "src": "/store/02-parent.png",
-      "sizes": "1440x2560",
+      "src": "/store/02-streak.png",
+      "sizes": "941x1672",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Экран родителя: дети, прогресс и заявки на проверку"
+      "label": "Стрики мотивируют заниматься каждый день"
     },
     {
       "src": "/store/03-shop.png",
-      "sizes": "1440x2560",
+      "sizes": "941x1672",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Магазин наград: копи монеты и меняй на награды"
+      "label": "Магазин наград: меняй PIP-монеты на награды"
+    },
+    {
+      "src": "/store/04-profile.png",
+      "sizes": "941x1672",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Прогресс, достижения и любимые задания"
     }
   ],
 

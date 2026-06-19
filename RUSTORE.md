@@ -139,18 +139,20 @@ PIP помогает детям 6–16 лет учиться ответстве�
 
 | Ассет | Требование RuStore | Где взять |
 |-------|--------------------|-----------|
-| Иконка | 512×512 PNG | `public/icon-512.png` ✅ |
-| Скриншоты телефона | 2–8 шт, PNG/JPG, вертикальные | ✅ 3 шт, 1440×2560, готовы к загрузке |
-| (Опц.) Баннер/обложка | по требованиям RuStore | — |
+| Иконка | 512×512 PNG | ✅ монета PIP, `public/icon-512.png` (исходник `store-assets/icon-source.png`, набор иконок — `node scripts/render-icons.cjs`) |
+| Скриншоты телефона | 2–8 шт, PNG, вертикальные | ✅ 4 шт, 941×1672, финальная графика |
+| Обложка/баннер | по требованиям RuStore | ✅ постер с семьёй, `public/store/cover.png` |
 
-Готовые скриншоты (оформленные мокапы 1440×2560) — скачать напрямую:
-- https://pipup.ru/store/01-child.png — экран ребёнка
-- https://pipup.ru/store/02-parent.png — экран родителя
+Готовые ассеты (финальные, скачать напрямую):
+- https://pipup.ru/store/01-child.png — ребёнок выполняет, копит PIP
+- https://pipup.ru/store/02-streak.png — стрики
 - https://pipup.ru/store/03-shop.png — магазин наград
+- https://pipup.ru/store/04-profile.png — прогресс и достижения
+- https://pipup.ru/store/05-parents.png — альтернативный кадр (с родителями), опционально
+- https://pipup.ru/store/cover.png — обложка/баннер (семья + монета)
 
-Исходники (SVG) — `store-assets/screenshots/`; перегенерация PNG —
-`node scripts/render-store.cjs` (нужны `sharp` + шрифты DejaVu). Для лучшей конверсии
-позже можно заменить реальными снимками с устройства.
+Иконка регенерируется из `store-assets/icon-source.png` через `node scripts/render-icons.cjs`
+(sharp): icon-72…512, maskable-192/512 (с заливкой фона), apple-touch, favicon.
 
 ---
 
