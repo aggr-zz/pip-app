@@ -56,9 +56,11 @@ export async function POST(request: NextRequest) {
     .not('remind_at', 'is', null)
     .is('archived_at', null);
 
+  // Полуоткрытое окно [from, to): соседние запуски (каждые 30 мин, окно 30 мин)
+  // не перекрываются на границе → одно напоминание не уходит дважды.
   tasksQuery = wrapsMidnight
-    ? tasksQuery.or(`remind_at.gte.${fromTime},remind_at.lte.${toTime}`)
-    : tasksQuery.gte('remind_at', fromTime).lte('remind_at', toTime);
+    ? tasksQuery.or(`remind_at.gte.${fromTime},remind_at.lt.${toTime}`)
+    : tasksQuery.gte('remind_at', fromTime).lt('remind_at', toTime);
 
   const { data: tasks, error: tasksError } = await tasksQuery
     .returns<Array<{

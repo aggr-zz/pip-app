@@ -39,11 +39,11 @@ export async function joinAsChild(input: {
   if (child.role !== 'child') return { ok: false, error: 'Это не детский профиль' };
   if (child.archived_at) return { ok: false, error: 'Профиль удалён' };
   if (child.pin !== input.pin) {
-    recordPinFailure(input.childId);
+    await recordPinFailure(input.childId, ip);
     return { ok: false, error: 'Неверный PIN' };
   }
 
-  clearPinAttempts(input.childId);
+  await clearPinAttempts(input.childId, ip);
   const token = signChildSession(child.id, child.family_id);
   const cookieStore = await cookies();
   cookieStore.set('pip_child_direct', token, {
