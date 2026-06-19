@@ -55,21 +55,21 @@
   "screenshots": [
     {
       "src": "/store/01-child.png",
-      "sizes": "1080x1920",
+      "sizes": "1440x2560",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Экран ребёнка: задания, монеты, стрик и цель-копилка"
     },
     {
       "src": "/store/02-parent.png",
-      "sizes": "1080x1920",
+      "sizes": "1440x2560",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Экран родителя: дети, прогресс и заявки на проверку"
     },
     {
       "src": "/store/03-shop.png",
-      "sizes": "1080x1920",
+      "sizes": "1440x2560",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Магазин наград: копи монеты и меняй на награды"
