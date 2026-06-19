@@ -13,7 +13,7 @@
   "navigationDividerColorDark": "#1B2238",
   "backgroundColor": "#F2EDE2",
   "enableNotifications": true,
-  "startUrl": "/?source=twa",
+  "startUrl": "/app",
   "iconUrl": "https://pipup.ru/icon-512.png",
   "maskableIconUrl": "https://pipup.ru/icon-maskable-512.png",
   "splashScreenFadeOutDuration": 300,
@@ -21,8 +21,8 @@
     "path": "./android.keystore",
     "alias": "pip"
   },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "appVersionName": "1.0.1",
+  "appVersionCode": 2,
   "shortcuts": [
     {
       "name": "Подтверждения",
@@ -52,5 +52,5 @@
   "orientationLock": false,
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.0.0"
+  "appVersion": "1.0.1"
 }

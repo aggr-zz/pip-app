@@ -1,9 +1,9 @@
 {
-  "id": "/?source=pwa",
+  "id": "/app",
   "name": "pip — копилка хороших привычек",
   "short_name": "pip",
   "description": "Семейное приложение для детей 6–16 лет. Дети выполняют задания, получают pip-монеты и обменивают их на награды. Мотивация без денег и угроз.",
-  "start_url": "/?source=pwa",
+  "start_url": "/app?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

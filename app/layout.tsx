@@ -54,6 +54,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "try{if(sessionStorage.getItem('pip-splash-seen'))document.documentElement.classList.add('pip-splash-seen')}catch(e){}",
           }}
         />
+        {/* В установленном приложении (PWA/TWA) корень «/» — это маркетинговый
+            лендинг; внутри приложения он не нужен. Если запущены как standalone
+            и оказались на «/», уводим в приложение /app (до отрисовки). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(location.pathname==='/'&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||navigator.standalone))location.replace('/app')}catch(e){}",
+          }}
+        />
       </head>
       <body>
         <Splash />
