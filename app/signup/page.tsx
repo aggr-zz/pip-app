@@ -71,7 +71,11 @@ function SignupContent() {
         email,
         password,
         options: {
-          data: { name },
+          // invite_token переживёт подтверждение email: применим его в /auth/confirm,
+          // т.к. при включённом подтверждении сессии сразу после signUp нет.
+          data: { name, ...(inviteToken ? { invite_token: inviteToken } : {}) },
+          // Ссылку в письме строит хук (lib/email/authEmails.ts → /auth/confirm);
+          // это значение нужно лишь для прохождения allowlist GoTrue.
           emailRedirectTo: `${window.location.origin}/api/auth/callback`,
         },
       });

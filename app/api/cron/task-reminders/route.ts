@@ -95,60 +95,79 @@ export async function POST(request: NextRequest) {
   let totalSent = 0;
   let tasksChecked = 0;
 
+  // ── Все дети нужных семей — ОДНИМ запросом (раньше был запрос на каждую задачу) ──
+  const { data: allChildren } = await admin
+    .from('profiles')
+    .select('id, name, family_id')
+    .in('family_id', familyIds)
+    .eq('role', 'child')
+    .is('archived_at', null)
+    .returns<Array<{ id: string; name: string; family_id: string }>>();
+
+  const childrenByFamily = new Map<string, Array<{ id: string; name: string }>>();
+  for (const c of allChildren ?? []) {
+    const arr = childrenByFamily.get(c.family_id) ?? [];
+    arr.push({ id: c.id, name: c.name });
+    childrenByFamily.set(c.family_id, arr);
+  }
+
+  // ── Собираем кандидатов на напоминание (задача актуальна сегодня × целевые дети) ──
+  type Reminder = { taskId: string; title: string; childId: string; today: string };
+  const reminders: Reminder[] = [];
+  const taskIds = new Set<string>();
+  const childIds = new Set<string>();
+  const todays = new Set<string>();
+
   for (const task of tasks) {
     const tz = tzByFamily.get(task.family_id) || 'Europe/Moscow';
-
-    // Подходит ли сегодняшний день недели в часовом поясе семьи?
     if (!isTaskScheduledFor(
       { schedule_type: task.schedule_type as ScheduleType, schedule_days: task.schedule_days },
       nowInTimezone(tz),
     )) continue;
     tasksChecked++;
 
-    // Дата "сегодня" в часовом поясе семьи (совпадает со scheduled_for в task_completions)
     const today = todayInTimezone(tz);
-    // Находим детей для этого задания
-    const { data: children } = await admin
-      .from('profiles')
-      .select('id, name')
-      .eq('family_id', task.family_id)
-      .eq('role', 'child')
-      .is('archived_at', null)
-      .returns<Array<{ id: string; name: string }>>();
-
-    if (!children || children.length === 0) continue;
-
-    // Если assigned_to задан — берём только этих детей
+    const familyChildren = childrenByFamily.get(task.family_id) ?? [];
     const targetChildren = task.assigned_to && task.assigned_to.length > 0
-      ? children.filter((c) => task.assigned_to!.includes(c.id))
-      : children;
+      ? familyChildren.filter((c) => task.assigned_to!.includes(c.id))
+      : familyChildren;
 
     for (const child of targetChildren) {
-      // Проверяем — выполнил ли ребёнок это задание сегодня?
-      const { count } = await admin
-        .from('task_completions')
-        .select('id', { count: 'exact', head: true })
-        .eq('task_id', task.id)
-        .eq('profile_id', child.id)
-        .eq('scheduled_for', today)
-        .in('status', ['pending', 'approved', 'auto_approved']);
+      reminders.push({ taskId: task.id, title: task.title, childId: child.id, today });
+      taskIds.add(task.id);
+      childIds.add(child.id);
+      todays.add(today);
+    }
+  }
 
-      if ((count ?? 0) > 0) {
-        // Задача уже выполнена — не напоминаем
-        continue;
-      }
+  // ── Уже выполненные сегодня — ОДНИМ запросом; ключ task:child:date ──
+  const doneSet = new Set<string>();
+  if (reminders.length > 0) {
+    const { data: comps } = await admin
+      .from('task_completions')
+      .select('task_id, profile_id, scheduled_for')
+      .in('task_id', [...taskIds])
+      .in('profile_id', [...childIds])
+      .in('scheduled_for', [...todays])
+      .in('status', ['pending', 'approved', 'auto_approved'])
+      .returns<Array<{ task_id: string; profile_id: string; scheduled_for: string }>>();
+    for (const c of comps ?? []) {
+      doneSet.add(`${c.task_id}:${c.profile_id}:${c.scheduled_for}`);
+    }
+  }
 
-      // Отправляем push
-      try {
-        await sendPushToProfile(child.id, {
-          title: '⏰ Напоминание',
-          body: `Не забудь: ${task.title}`,
-          url: `/child/${child.id}`,
-        });
-        totalSent++;
-      } catch (e) {
-        console.warn(`[task-reminders] push failed for child ${child.id}:`, e);
-      }
+  // ── Шлём пуши тем, кто ещё не выполнил ──
+  for (const r of reminders) {
+    if (doneSet.has(`${r.taskId}:${r.childId}:${r.today}`)) continue;
+    try {
+      await sendPushToProfile(r.childId, {
+        title: '⏰ Напоминание',
+        body: `Не забудь: ${r.title}`,
+        url: `/child/${r.childId}`,
+      });
+      totalSent++;
+    } catch (e) {
+      console.warn(`[task-reminders] push failed for child ${r.childId}:`, e);
     }
   }
 

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyChildSession } from '@/lib/childSession';
 import { sendPushToProfile } from '@/lib/webpush';
+import { friendlyDbError } from '@/lib/friendlyError';
 
 const ACTIVE_CHILD_COOKIE = 'pip_active_child';
 
@@ -101,7 +102,7 @@ export async function orderReward(input: {
 
   if (error) {
     console.error('[orderReward]', error);
-    return { ok: false, error: error.message || 'Не получилось заказать' };
+    return { ok: false, error: friendlyDbError(error.message, 'Не получилось заказать') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;

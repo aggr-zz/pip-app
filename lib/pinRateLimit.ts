@@ -1,52 +1,72 @@
 /**
- * Ограничение попыток ввода PIN ребёнка — защита от перебора.
+ * Ограничение попыток ввода PIN ребёнка — защита от перебора и от DoS.
  *
- * PIN всего 4 цифры (10 000 комбинаций), а childId виден в публичной
- * ссылке /join/[childId], поэтому без лимита PIN перебирается за минуты.
+ * Хранилище — в БД (таблица auth_rate_limits + RPC), а не in-memory:
+ *   • переживает рестарты/редеплои (раньше счётчик обнулялся при каждом деплое);
+ *   • общий стор при нескольких процессах/инстансах.
  *
- * Реализация — in-memory на один процесс (приложение крутится одним
- * `next start` на VPS). При переходе на несколько инстансов вынести
- * в Redis/БД (общий стор между процессами).
+ * Ключ — childId + IP. childId виден в публичной ссылке /join/[childId], поэтому
+ * лок ТОЛЬКО по childId позволял любому со ссылкой залочить вход ребёнку (DoS).
+ * Привязка к IP оставляет лимит атакующему, не блокируя легитимного ребёнка.
+ *
+ * Fail-open: если БД недоступна — не блокируем (лучше пропустить, чем закрыть
+ * вход всем). Перебор всё равно ограничен 5 попытками за 15 минут на ключ.
  */
 
-const MAX_ATTEMPTS = 5;            // после стольких неудач — лок
-const LOCK_MS      = 15 * 60_000;  // на 15 минут
-const WINDOW_MS    = 15 * 60_000;  // окно подсчёта неудач
+import { createAdminClient } from '@/lib/supabase/admin';
 
-interface Entry {
-  fails: number;
-  first: number;       // начало текущего окна
-  lockedUntil: number; // 0 если не заблокирован
+const MAX_ATTEMPTS = 5;
+const LOCK_SECONDS = 15 * 60;
+const WINDOW_SECONDS = 15 * 60;
+
+/** Достаёт клиентский IP из заголовков (за nginx — x-forwarded-for/x-real-ip). */
+export function clientIpFromHeaders(h: { get(name: string): string | null }): string {
+  const xff = h.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return h.get('x-real-ip') || 'noip';
 }
 
-const store = new Map<string, Entry>();
-
-/** Заблокирован ли ключ сейчас. key — обычно childId. */
-export function isPinLocked(key: string): { locked: boolean; retryAfterSec: number } {
-  const e = store.get(key);
-  if (e && e.lockedUntil > Date.now()) {
-    return { locked: true, retryAfterSec: Math.ceil((e.lockedUntil - Date.now()) / 1000) };
-  }
-  return { locked: false, retryAfterSec: 0 };
+function key(childId: string, ip: string): string {
+  return `pin:${childId}:${ip || 'noip'}`;
 }
 
-/** Зафиксировать неудачную попытку; при достижении лимита — выставить лок. */
-export function recordPinFailure(key: string): void {
-  const now = Date.now();
-  let e = store.get(key);
-  if (!e || now - e.first > WINDOW_MS) {
-    e = { fails: 0, first: now, lockedUntil: 0 };
+/** Заблокирован ли (childId, ip) сейчас. */
+export async function isPinLocked(
+  childId: string,
+  ip: string,
+): Promise<{ locked: boolean; retryAfterSec: number }> {
+  try {
+    const db = createAdminClient();
+    const { data } = await db.rpc('rate_limit_check', { p_key: key(childId, ip) });
+    const sec = typeof data === 'number' ? data : 0;
+    return { locked: sec > 0, retryAfterSec: sec };
+  } catch (e) {
+    console.warn('[pinRateLimit.isPinLocked] fail-open:', e);
+    return { locked: false, retryAfterSec: 0 };
   }
-  e.fails += 1;
-  if (e.fails >= MAX_ATTEMPTS) {
-    e.lockedUntil = now + LOCK_MS;
-    e.fails = 0;
-    e.first = now;
+}
+
+/** Зафиксировать неудачную попытку; при достижении лимита БД выставит лок. */
+export async function recordPinFailure(childId: string, ip: string): Promise<void> {
+  try {
+    const db = createAdminClient();
+    await db.rpc('rate_limit_fail', {
+      p_key: key(childId, ip),
+      p_max: MAX_ATTEMPTS,
+      p_lock_seconds: LOCK_SECONDS,
+      p_window_seconds: WINDOW_SECONDS,
+    });
+  } catch (e) {
+    console.warn('[pinRateLimit.recordPinFailure]', e);
   }
-  store.set(key, e);
 }
 
 /** Сбросить счётчик (после успешного входа). */
-export function clearPinAttempts(key: string): void {
-  store.delete(key);
+export async function clearPinAttempts(childId: string, ip: string): Promise<void> {
+  try {
+    const db = createAdminClient();
+    await db.rpc('rate_limit_clear', { p_key: key(childId, ip) });
+  } catch (e) {
+    console.warn('[pinRateLimit.clearPinAttempts]', e);
+  }
 }

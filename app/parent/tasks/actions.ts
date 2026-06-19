@@ -109,6 +109,19 @@ export async function updateTask(taskId: string, input: TaskInput): Promise<Resu
   if (!auth.ok) return { ok: false, error: auth.error };
   const { supabase, familyId } = auth.ctx;
 
+  // Проверяем что все assigned_to — дети этой семьи (как в createTask), иначе
+  // в задачу можно записать чужой/мусорный uuid.
+  const { data: children } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('family_id', familyId)
+    .eq('role', 'child')
+    .in('id', input.assigned_to);
+
+  if (!children || children.length !== input.assigned_to.length) {
+    return { ok: false, error: 'Не все указанные дети найдены в семье' };
+  }
+
   const { error } = await supabase
     .from('tasks')
     .update({

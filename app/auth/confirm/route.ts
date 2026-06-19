@@ -1,6 +1,7 @@
 import { type EmailOtpType } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { applyInviteForUser } from '@/lib/invites';
 
 /**
  * Подтверждение email / сброса пароля по token_hash (OTP), а НЕ по ?code.
@@ -33,8 +34,17 @@ export async function GET(request: NextRequest) {
 
   if (tokenHash && type) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (!error) {
+      // Если регистрировались по инвайту (токен сохранён в user_metadata при
+      // signUp) — применяем его здесь, после подтверждения email. Используем
+      // user.id из verifyOtp напрямую: cookie сессии в этом же запросе ещё нет.
+      const inviteToken = data.user?.user_metadata?.invite_token as string | undefined;
+      if (type === 'signup' && inviteToken && data.user) {
+        const res = await applyInviteForUser(data.user.id, inviteToken);
+        if (!res.ok) console.warn('[auth/confirm] invite apply failed:', res.error);
+      }
+
       // Для recovery всегда ведём на форму нового пароля (сессия уже установлена).
       const dest = type === 'recovery' ? '/reset-password' : next;
       return NextResponse.redirect(`${base}${dest}`);

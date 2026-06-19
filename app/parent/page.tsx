@@ -74,30 +74,24 @@ export default async function ParentDashboardPage() {
 
   if (me.role === 'child') redirect('/child');
 
-  // Лениво автоаппрувим заявки старше families.auto_approve_hours до подсчёта
-  // pending (RPC идемпотентен; раньше эта функция не вызывалась нигде).
-  await autoApproveSweep();
-
-  // ── Family ──────────────────────────────────────────────────────────────
-  const { data: family } = await supabase
-    .from('families')
-    .select('timezone, name')
-    .eq('id', me.family_id)
-    .single();
+  // Автоаппрув просроченных заявок (идемпотентен) + семья + дети — параллельно,
+  // т.к. независимы. Раньше шли последовательно → лишний waterfall на каждом заходе.
+  const [, { data: family }, { data: children = [] }] = await Promise.all([
+    autoApproveSweep(),
+    supabase.from('families').select('timezone, name').eq('id', me.family_id).single(),
+    supabase
+      .from('profiles')
+      .select('id, name, avatar_color, avatar_emoji, avatar_url, balance, current_streak, family_id, role')
+      .eq('family_id', me.family_id)
+      .eq('role', 'child')
+      .is('archived_at', null)
+      .order('name')
+      .returns<Profile[]>(),
+  ]);
 
   const tz = family?.timezone || 'Europe/Moscow';
   const today = todayInTimezone(tz);
   const dateInTz = nowInTimezone(tz);
-
-  // ── Children ────────────────────────────────────────────────────────────
-  const { data: children = [] } = await supabase
-    .from('profiles')
-    .select('id, name, avatar_color, avatar_emoji, avatar_url, balance, current_streak, family_id, role')
-    .eq('family_id', me.family_id)
-    .eq('role', 'child')
-    .is('archived_at', null)
-    .order('name')
-    .returns<Profile[]>();
 
   const childIds = (children ?? []).map((c) => c.id);
 
@@ -112,34 +106,34 @@ export default async function ParentDashboardPage() {
     );
   }
 
-  // ── All active tasks for this family ────────────────────────────────────
-  const { data: allTasks = [] } = await supabase
-    .from('tasks')
-    .select('id, title, icon, coin_value, schedule_type, schedule_days, assigned_to, requires_photo')
-    .eq('family_id', me.family_id)
-    .is('archived_at', null)
-    .returns<Task[]>();
-
-  // ── Today's completions (для статусов задач «на сегодня») ────────────────
-  const { data: todayCompletions = [] } = await supabase
-    .from('task_completions')
-    .select('id, task_id, profile_id, status, photo_path, completed_at')
-    .in('profile_id', childIds)
-    .eq('scheduled_for', today)
-    .returns<Completion[]>();
-
-  // ── Все pending-заявки (любой день) — для блока «на проверку» ─────────────
-  // ВАЖНО: без фильтра по дате. Раньше дашборд брал pending только за сегодня,
-  // а бейдж в layout.tsx считал все pending → заявки прошлых дней «зависали»
-  // в счётчике, но были недостижимы в UI и монеты не начислялись. Теперь оба
-  // источника считают одно множество, и старые заявки видны/доступны.
-  const { data: pendingCompletions = [] } = await supabase
-    .from('task_completions')
-    .select('id, task_id, profile_id, photo_path, completed_at')
-    .in('profile_id', childIds)
-    .eq('status', 'pending')
-    .order('completed_at', { ascending: true })
-    .returns<PendingCompletion[]>();
+  // Задачи + завершения за сегодня + все pending — параллельно (независимы).
+  // pending — БЕЗ фильтра по дате, чтобы совпадать с бейджем в layout.tsx; раньше
+  // дашборд брал только сегодня → заявки прошлых дней «зависали» недостижимыми.
+  const [
+    { data: allTasks = [] },
+    { data: todayCompletions = [] },
+    { data: pendingCompletions = [] },
+  ] = await Promise.all([
+    supabase
+      .from('tasks')
+      .select('id, title, icon, coin_value, schedule_type, schedule_days, assigned_to, requires_photo')
+      .eq('family_id', me.family_id)
+      .is('archived_at', null)
+      .returns<Task[]>(),
+    supabase
+      .from('task_completions')
+      .select('id, task_id, profile_id, status, photo_path, completed_at')
+      .in('profile_id', childIds)
+      .eq('scheduled_for', today)
+      .returns<Completion[]>(),
+    supabase
+      .from('task_completions')
+      .select('id, task_id, profile_id, photo_path, completed_at')
+      .in('profile_id', childIds)
+      .eq('status', 'pending')
+      .order('completed_at', { ascending: true })
+      .returns<PendingCompletion[]>(),
+  ]);
 
   // Названия/иконки/цена задач для pending — из активных задач, а для уже
   // архивированных дозапрашиваем отдельно (чтобы карточка всё равно отрисовалась).

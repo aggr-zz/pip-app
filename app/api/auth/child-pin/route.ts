@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signChildSession } from '@/lib/childSession';
-import { isPinLocked, recordPinFailure, clearPinAttempts } from '@/lib/pinRateLimit';
+import { isPinLocked, recordPinFailure, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
 
 /**
  * POST /api/auth/child-pin
@@ -19,8 +19,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'PIN — 4 цифры' }, { status: 400 });
     }
 
-    // Защита от перебора PIN
-    const lock = isPinLocked(childId);
+    // Защита от перебора PIN — лимит по (childId + IP), переживает рестарт.
+    const ip = clientIpFromHeaders(req.headers);
+    const lock = await isPinLocked(childId, ip);
     if (lock.locked) {
       return NextResponse.json(
         { error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` },
@@ -39,11 +40,11 @@ export async function POST(req: NextRequest) {
     if (child.role !== 'child') return NextResponse.json({ error: 'Это не детский профиль' }, { status: 403 });
     if (child.archived_at)    return NextResponse.json({ error: 'Профиль удалён' }, { status: 403 });
     if (child.pin !== pin) {
-      recordPinFailure(childId);
+      await recordPinFailure(childId, ip);
       return NextResponse.json({ error: 'Неверный PIN' }, { status: 401 });
     }
 
-    clearPinAttempts(childId);
+    await clearPinAttempts(childId, ip);
     const token = signChildSession(child.id, child.family_id);
 
     // Возвращаем 200 + Set-Cookie (без редиректа).

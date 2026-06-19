@@ -56,7 +56,7 @@ export function TaskDetailActions({
         taskTitle,
         awarded: result.awarded,
         requiresApproval: result.status === 'pending',
-        currentStreak,
+        currentStreak: result.newStreak ?? currentStreak,
         availableLeft: 0,
       });
       router.refresh();

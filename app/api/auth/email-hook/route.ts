@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { sendTransactionalEmail } from '@/lib/email/unisender';
 import { renderAuthEmail, type AuthEmailData } from '@/lib/email/authEmails';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+// Лимит писем на один адрес (защита баланса Unisender и репутации отправителя
+// от спама signup/recover, которые ходят из браузера напрямую в GoTrue).
+const MAX_EMAILS_PER_HOUR = 8;
 
 /**
  * Send Email Hook для GoTrue (Supabase Auth).
@@ -61,13 +66,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'missing email/email_data' }, { status: 400 });
   }
 
-  const { subject, html } = renderAuthEmail(emailData, AUTH_API_BASE);
+  // Троттлинг по адресу: не больше MAX_EMAILS_PER_HOUR писем в час. При превышении
+  // тихо не отправляем (отдаём 200, чтобы GoTrue не зациклился на ретраях).
+  const limitKey = `email:${email.toLowerCase()}`;
+  try {
+    const db = createAdminClient();
+    const { data: lockedSec } = await db.rpc('rate_limit_check', { p_key: limitKey });
+    if (typeof lockedSec === 'number' && lockedSec > 0) {
+      console.warn('[email-hook] throttled:', email);
+      return NextResponse.json({});
+    }
+  } catch (e) {
+    // Fail-open: при недоступности лимитера письма всё равно шлём.
+    console.warn('[email-hook] rate check failed (open):', e);
+  }
+
+  const { subject, html } = renderAuthEmail(emailData, SITE_URL);
 
   try {
     await sendTransactionalEmail(email, subject, html);
   } catch (e) {
     console.error('[email-hook] send failed:', e);
     return NextResponse.json({ error: 'send failed' }, { status: 500 });
+  }
+
+  // Учитываем успешную отправку (после MAX за час адрес временно блокируется).
+  try {
+    const db = createAdminClient();
+    await db.rpc('rate_limit_fail', {
+      p_key: limitKey,
+      p_max: MAX_EMAILS_PER_HOUR,
+      p_lock_seconds: 3600,
+      p_window_seconds: 3600,
+    });
+  } catch (e) {
+    console.warn('[email-hook] rate record failed:', e);
   }
 
   return NextResponse.json({});

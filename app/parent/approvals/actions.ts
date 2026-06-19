@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { sendPushToProfile } from '@/lib/webpush';
+import { friendlyDbError } from '@/lib/friendlyError';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -73,7 +74,7 @@ export async function approveCompletion(input: {
 
   if (error) {
     console.error('[approveCompletion]', error);
-    return { ok: false, error: error.message || 'Не получилось подтвердить' };
+    return { ok: false, error: friendlyDbError(error.message, 'Не получилось подтвердить') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
@@ -123,7 +124,7 @@ export async function rejectCompletion(input: {
 
   if (error) {
     console.error('[rejectCompletion]', error);
-    return { ok: false, error: error.message || 'Не получилось отклонить' };
+    return { ok: false, error: friendlyDbError(error.message, 'Не получилось отклонить') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
@@ -166,20 +167,27 @@ export async function rejectCompletion(input: {
  */
 export async function approveAllCompletions(input: {
   completionIds: string[];
-}): Promise<Result<{ count: number }>> {
-  if (!input.completionIds.length) return { ok: true, count: 0 };
+}): Promise<Result<{ count: number; failed: number }>> {
+  if (!input.completionIds.length) return { ok: true, count: 0, failed: 0 };
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Не авторизован' };
 
   let approved = 0;
+  let failed = 0;
   for (const completionId of input.completionIds) {
     const { data, error } = await supabase.rpc('approve_task_completion', {
       p_completion_id: completionId,
       p_awarded: null, // полная сумма
     });
-    if (error) continue;
+    if (error) {
+      // Раньше ошибки молча проглатывались (`continue`) → родитель думал, что
+      // подтвердил всё, а часть детей монет не получала. Теперь считаем и логируем.
+      failed++;
+      console.error('[approveAllCompletions]', completionId, error.message);
+      continue;
+    }
     approved++;
     // То же, что в одиночном подтверждении: фото/достижения/пуш.
     const row = Array.isArray(data) ? data[0] : data;
@@ -189,7 +197,7 @@ export async function approveAllCompletions(input: {
   revalidatePath('/parent/approvals');
   revalidatePath('/parent');
 
-  return { ok: true, count: approved };
+  return { ok: true, count: approved, failed };
 }
 
 

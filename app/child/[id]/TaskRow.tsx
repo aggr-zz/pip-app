@@ -175,7 +175,7 @@ export function TaskRow({
         taskTitle: title,
         awarded: result.awarded,
         requiresApproval: result.status === 'pending',
-        currentStreak,
+        currentStreak: result.newStreak ?? currentStreak,
         availableLeft: Math.max(0, availableCount - 1),
       });
 

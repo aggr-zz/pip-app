@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { applyInviteForUser } from '@/lib/invites';
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -50,97 +51,15 @@ export async function createFamilyInvite(): Promise<
 // ─── Принять инвайт (вызывается вторым родителем) ────────────────────────────
 
 export async function acceptFamilyInvite(token: string): Promise<Result> {
-  const admin = createAdminClient();
-
-  // 1. Найти и проверить инвайт
-  const { data: invite } = await admin
-    .from('family_invites')
-    .select('id, family_id, expires_at, used_at')
-    .eq('token', token)
-    .single<{
-      id: string;
-      family_id: string;
-      expires_at: string;
-      used_at: string | null;
-    }>();
-
-  if (!invite) return { ok: false, error: 'Ссылка недействительна' };
-  if (invite.used_at) return { ok: false, error: 'Эта ссылка уже была использована' };
-  if (new Date(invite.expires_at) < new Date()) {
-    return { ok: false, error: 'Срок действия ссылки истёк' };
-  }
-
-  // 2. Получить текущего юзера
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Сначала войди в аккаунт' };
 
-  // 3. Найти профиль юзера (мог быть создан триггером при регистрации)
-  const { data: myProfile } = await admin
-    .from('profiles')
-    .select('id, family_id, role')
-    .eq('user_id', user.id)
-    .single<{ id: string; family_id: string; role: string }>();
-
-  if (!myProfile) return { ok: false, error: 'Профиль не найден' };
-
-  // Если уже в этой семье — ничего делать не нужно
-  if (myProfile.family_id === invite.family_id) {
-    return { ok: true };
-  }
-
-  // Защита от потери данных: если у принимающего уже есть СВОЯ семья с другими
-  // участниками (дети или второй родитель), смена family_id осиротила бы их —
-  // их профили остались бы в брошенной семье без доступа, без отката из UI.
-  // Свежий аккаунт из signup?invite имеет пустую авто-семью → проходит.
-  const { count: otherMembers } = await admin
-    .from('profiles')
-    .select('id', { count: 'exact', head: true })
-    .eq('family_id', myProfile.family_id)
-    .neq('id', myProfile.id);
-
-  if ((otherMembers ?? 0) > 0) {
-    return {
-      ok: false,
-      error:
-        'У тебя уже есть своя семья с участниками — если присоединиться, твои дети и данные пропадут. Объединение семей пока не поддерживается. Напиши нам, если нужно перенести аккаунт.',
-    };
-  }
-
-  // Запоминаем старую family_id чтобы потом попробовать убрать пустую семью
-  const oldFamilyId = myProfile.family_id;
-
-  // 4. Обновить family_id профиля
-  const { error: updateError } = await admin
-    .from('profiles')
-    .update({ family_id: invite.family_id })
-    .eq('id', myProfile.id);
-
-  if (updateError) {
-    console.error('[acceptFamilyInvite] update profile', updateError);
-    return { ok: false, error: 'Не удалось присоединиться к семье' };
-  }
-
-  // 5. Пометить инвайт как использованный
-  await admin
-    .from('family_invites')
-    .update({ used_at: new Date().toISOString(), used_by: myProfile.id })
-    .eq('id', invite.id);
-
-  // 6. Если старая семья опустела (нет других профилей) — удалить её
-  const { count } = await admin
-    .from('profiles')
-    .select('id', { count: 'exact', head: true })
-    .eq('family_id', oldFamilyId);
-
-  if (count === 0) {
-    await admin.from('families').delete().eq('id', oldFamilyId);
-  }
-
-  revalidatePath('/parent');
-  return { ok: true };
+  const result = await applyInviteForUser(user.id, token);
+  if (result.ok) revalidatePath('/parent');
+  return result;
 }
 
 // ─── Получить публичную инфо об инвайте (для страницы invite-family) ─────────
@@ -151,6 +70,8 @@ export async function getInviteInfo(token: string): Promise<{
   used?: boolean;
   familyName?: string;
   inviterName?: string;
+  /** Залогиненный зритель уже состоит в этой семье (показываем «это твоя семья»). */
+  alreadyMember?: boolean;
 }> {
   const admin = createAdminClient();
 
@@ -170,8 +91,9 @@ export async function getInviteInfo(token: string): Promise<{
   if (invite.used_at) return { valid: false, used: true };
   if (new Date(invite.expires_at) < new Date()) return { valid: false, expired: true };
 
-  // Шаг 2: имя пригласившего и название семьи — параллельно
-  const [{ data: inviter }, { data: family }] = await Promise.all([
+  // Шаг 2: имя пригласившего, название семьи + проверка членства зрителя — параллельно
+  const supabase = await createClient();
+  const [{ data: inviter }, { data: family }, { data: { user } }] = await Promise.all([
     admin
       .from('profiles')
       .select('name')
@@ -182,11 +104,23 @@ export async function getInviteInfo(token: string): Promise<{
       .select('name')
       .eq('id', invite.family_id)
       .single<{ name: string }>(),
+    supabase.auth.getUser(),
   ]);
+
+  let alreadyMember = false;
+  if (user) {
+    const { data: me } = await admin
+      .from('profiles')
+      .select('family_id')
+      .eq('user_id', user.id)
+      .single<{ family_id: string }>();
+    alreadyMember = me?.family_id === invite.family_id;
+  }
 
   return {
     valid: true,
     familyName: family?.name ?? 'Наша семья',
     inviterName: inviter?.name ?? 'Родитель',
+    alreadyMember,
   };
 }

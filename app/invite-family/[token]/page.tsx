@@ -121,7 +121,26 @@ export default async function InviteFamilyPage({
         </div>
 
         {/* CTA */}
-        {isLoggedIn ? (
+        {isLoggedIn && info.alreadyMember ? (
+          // Зритель уже в этой семье — делиться ссылкой с собой не нужно.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '14px 16px',
+                background: 'var(--bg-surface-2)',
+                borderRadius: 'var(--radius-lg)',
+                color: 'var(--text-soft)',
+                fontSize: 13.5,
+                lineHeight: 1.5,
+              }}
+            >
+              Это твоя семья — ты уже в ней. Перешли эту ссылку второму родителю,
+              чтобы он присоединился.
+            </div>
+            <a href="/parent" style={linkButtonStyle}>На главную</a>
+          </div>
+        ) : isLoggedIn ? (
           // Уже залогинен — кнопка принять
           <AcceptInviteButton token={token} />
         ) : (

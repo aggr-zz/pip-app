@@ -2,9 +2,8 @@
 
 import { useState, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Avatar } from './Avatar';
-import { updateChildAvatar } from '@/app/parent/children/actions';
+import { updateChildAvatar, uploadChildAvatar } from '@/app/parent/children/actions';
 
 // ─── Данные ──────────────────────────────────────────────────────────────────
 
@@ -77,20 +76,18 @@ export function AvatarPicker({
     setUploadError(null);
 
     try {
-      const supabase = createClient();
-      const ext = file.name.split('.').pop() ?? 'jpg';
-      const path = `${familyId}/${profileId}.${ext}`;
-
-      const { error: uploadErr } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { upsert: true, contentType: file.type });
-
-      if (uploadErr) throw uploadErr;
-
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-      setUploadedUrl(publicUrl);
-      setDraft((d) => ({ ...d, avatarUrl: publicUrl, avatarEmoji: null }));
+      // Серверная загрузка (admin-клиент) — работает и для ребёнка по PIN,
+      // у которого нет Supabase-сессии для прямой записи в бакет.
+      const fd = new FormData();
+      fd.append('profileId', profileId);
+      fd.append('file', file);
+      const result = await uploadChildAvatar(fd);
+      if (!result.ok) {
+        setUploadError(result.error || 'Не получилось загрузить фото. Попробуй ещё раз.');
+        return;
+      }
+      setUploadedUrl(result.url);
+      setDraft((d) => ({ ...d, avatarUrl: result.url, avatarEmoji: null }));
     } catch (err) {
       console.error('[AvatarPicker] upload error', err);
       setUploadError('Не получилось загрузить фото. Попробуй ещё раз.');

@@ -73,13 +73,15 @@ export default async function TaskDetailPage({
   // Статус выполнения сегодня
   let completion: TaskCompletion | null = null;
   if (isScheduledToday) {
+    // maybeSingle: для «доступной» задачи строки нет — .single() давал бы
+    // ложную 406/PGRST116-ошибку в логах на каждом открытии карточки.
     const { data: row } = await supabase
       .from('task_completions')
       .select('task_id, status')
       .eq('profile_id', childId)
       .eq('task_id', taskId)
       .eq('scheduled_for', today)
-      .single<TaskCompletion>();
+      .maybeSingle<TaskCompletion>();
     completion = row;
   }
 

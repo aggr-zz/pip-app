@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { sendPushToProfile } from '@/lib/webpush';
+import { friendlyDbError } from '@/lib/friendlyError';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -23,7 +24,7 @@ export async function fulfillOrder(orderId: string): Promise<Result> {
 
   if (error) {
     console.error('[fulfillOrder]', error);
-    return { ok: false, error: error.message || 'Не получилось выдать' };
+    return { ok: false, error: friendlyDbError(error.message, 'Не получилось выдать') };
   }
 
   // Проверяем достижения ребёнка (нужен profile_id из заказа)
@@ -81,7 +82,7 @@ export async function cancelOrder(input: {
 
   if (error) {
     console.error('[cancelOrder]', error);
-    return { ok: false, error: error.message || 'Не получилось отменить' };
+    return { ok: false, error: friendlyDbError(error.message, 'Не получилось отменить') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;

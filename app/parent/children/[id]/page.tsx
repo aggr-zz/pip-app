@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { EnterChildMode } from './EnterChildMode';
 import { EditAvatarButton } from './EditAvatarButton';
 import { JoinLinkCard } from './JoinLinkCard';
+import { ManageChild } from './ManageChild';
 
 type Profile = {
   id: string;
@@ -224,6 +225,9 @@ export default async function ChildDetailPage({
 
         {/* Enter child mode (client component с PIN) */}
         <EnterChildMode childId={child.id} childName={child.name} />
+
+        {/* Управление профилем: имя/возраст, сброс PIN, архивация */}
+        <ManageChild childId={child.id} name={child.name} age={age} />
 
         {/* Cash payout link */}
         <Link

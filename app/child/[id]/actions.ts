@@ -15,6 +15,8 @@ export type MarkTaskCompleteResult = Result<{
   status: string;
   awarded: number;
   balance: number;
+  /** Актуальный стрик ПОСЛЕ выполнения (для корректной модалки-празднования) */
+  newStreak: number;
   /** Типы достижений, разблокированных прямо сейчас */
   newlyUnlocked: string[];
 }>;
@@ -132,6 +134,18 @@ export async function markTaskComplete(input: {
     console.warn('[markTaskComplete] check_achievements failed:', e);
   }
 
+  // Актуальный стрик после RPC (для модалки-празднования). complete_task_atomic
+  // уже обновил current_streak при auto-approve; для pending он не меняется.
+  let newStreak = 0;
+  {
+    const { data: prof } = await (supabase as ReturnType<typeof createAdminClient>)
+      .from('profiles')
+      .select('current_streak')
+      .eq('id', input.childId)
+      .single();
+    newStreak = prof?.current_streak ?? 0;
+  }
+
   revalidatePath(`/child/${input.childId}`);
   revalidatePath(`/child/${input.childId}/achievements`);
 
@@ -140,6 +154,7 @@ export async function markTaskComplete(input: {
     status: row.status,
     awarded: row.awarded ?? 0,
     balance: row.new_balance ?? 0,
+    newStreak,
     newlyUnlocked,
   };
 }

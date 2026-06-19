@@ -20,16 +20,16 @@ export default async function ParentLayout({
 
   if (!me || me.role !== 'parent') redirect('/');
 
-  // Автоаппрув просроченных заявок до подсчёта бейджа (RPC идемпотентен).
-  await autoApproveSweep();
-
-  // ── Pending approvals count for Tasks badge ─────────────────────────────
-  const { data: children_ } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('family_id', me.family_id)
-    .eq('role', 'child')
-    .is('archived_at', null);
+  // Автоаппрув просроченных заявок (идемпотентен) + список детей — параллельно.
+  const [, { data: children_ }] = await Promise.all([
+    autoApproveSweep(),
+    supabase
+      .from('profiles')
+      .select('id')
+      .eq('family_id', me.family_id)
+      .eq('role', 'child')
+      .is('archived_at', null),
+  ]);
 
   const childIds = (children_ ?? []).map((c) => c.id);
 
@@ -37,18 +37,20 @@ export default async function ParentLayout({
   let pendingOrders = 0;
 
   if (childIds.length > 0) {
-    const { count: pc } = await supabase
-      .from('task_completions')
-      .select('id', { count: 'exact', head: true })
-      .in('profile_id', childIds)
-      .eq('status', 'pending');
+    // Оба счётчика бейджа — параллельно.
+    const [{ count: pc }, { count: po }] = await Promise.all([
+      supabase
+        .from('task_completions')
+        .select('id', { count: 'exact', head: true })
+        .in('profile_id', childIds)
+        .eq('status', 'pending'),
+      supabase
+        .from('reward_orders')
+        .select('id', { count: 'exact', head: true })
+        .in('profile_id', childIds)
+        .eq('status', 'pending'),
+    ]);
     pendingCount = pc ?? 0;
-
-    const { count: po } = await supabase
-      .from('reward_orders')
-      .select('id', { count: 'exact', head: true })
-      .in('profile_id', childIds)
-      .eq('status', 'pending');
     pendingOrders = po ?? 0;
   }
 

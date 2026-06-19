@@ -1,9 +1,9 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signChildSession } from '@/lib/childSession';
-import { isPinLocked, recordPinFailure, clearPinAttempts } from '@/lib/pinRateLimit';
+import { isPinLocked, recordPinFailure, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -21,7 +21,8 @@ export async function joinAsChild(input: {
     return { ok: false, error: 'PIN — 4 цифры' };
   }
 
-  const lock = isPinLocked(input.childId);
+  const ip = clientIpFromHeaders(await headers());
+  const lock = await isPinLocked(input.childId, ip);
   if (lock.locked) {
     return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
   }
