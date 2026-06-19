@@ -45,6 +45,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Self-hosted fonts (no external Google Fonts dependency — works in RU without VPN) */}
         <link rel="stylesheet" href="/fonts/fonts.css" />
+        {/* Сплеш — только один раз за сессию. Гейт в <head> (до отрисовки body),
+            чтобы на переходах/перезагрузках не было даже короткой вспышки. */}
+        <style>{`html.pip-splash-seen .pip-splash{display:none!important}`}</style>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(sessionStorage.getItem('pip-splash-seen'))document.documentElement.classList.add('pip-splash-seen')}catch(e){}",
+          }}
+        />
       </head>
       <body>
         <Splash />

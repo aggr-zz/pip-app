@@ -14,6 +14,18 @@ export function Splash() {
   const [gone, setGone] = useState(false);
 
   useEffect(() => {
+    // Показываем сплеш только один раз за сессию (первое открытие). На переходах
+    // между экранами (в т.ч. полные перезагрузки <a href>) — пропускаем.
+    let seen = false;
+    try {
+      seen = !!sessionStorage.getItem('pip-splash-seen');
+      sessionStorage.setItem('pip-splash-seen', '1');
+    } catch {}
+
+    if (seen) {
+      setGone(true);
+      return;
+    }
     const t = setTimeout(() => setGone(true), 1700);
     return () => clearTimeout(t);
   }, []);
