@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './../styles/globals.css';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
+import { Splash } from '@/components/ui/Splash';
 
 export const metadata: Metadata = {
   title: 'PIP — копилка хороших привычек',
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/fonts/fonts.css" />
       </head>
       <body>
+        <Splash />
         <ServiceWorkerRegistration />
         <PageTransition>{children}</PageTransition>
       </body>
