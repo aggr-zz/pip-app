@@ -77,11 +77,14 @@ as $$
   delete from public.auth_rate_limits where key = p_key;
 $$;
 
--- Только service_role (admin-клиент приложения) может дёргать лимитер —
--- иначе anon/authenticated могли бы гриферски лочить чужие ключи.
-revoke all on function public.rate_limit_check(text)            from public;
-revoke all on function public.rate_limit_fail(text,int,int,int) from public;
-revoke all on function public.rate_limit_clear(text)            from public;
+-- Только service_role (admin-клиент приложения) может дёргать лимитер — иначе
+-- anon/authenticated могли бы гриферски лочить чужие ключи ИЛИ сбрасывать свой
+-- лок (rate_limit_clear), обходя защиту от перебора PIN.
+-- ВАЖНО: revoke from public НЕ снимает грант, который Supabase выдаёт ролям
+-- anon/authenticated через ALTER DEFAULT PRIVILEGES — поэтому отзываем явно.
+revoke all on function public.rate_limit_check(text)            from public, anon, authenticated;
+revoke all on function public.rate_limit_fail(text,int,int,int) from public, anon, authenticated;
+revoke all on function public.rate_limit_clear(text)            from public, anon, authenticated;
 grant execute on function public.rate_limit_check(text)            to service_role;
 grant execute on function public.rate_limit_fail(text,int,int,int) to service_role;
 grant execute on function public.rate_limit_clear(text)            to service_role;
