@@ -80,6 +80,13 @@
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Прогресс, достижения и любимые задания"
+    },
+    {
+      "src": "/store/05-parents.png",
+      "sizes": "941x1672",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Полезные привычки у детей копятся, как монетки"
     }
   ],
 
