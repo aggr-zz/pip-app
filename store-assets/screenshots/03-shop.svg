@@ -40,8 +40,8 @@
   <text x="368" y="1106" font-size="80" text-anchor="middle" fill="#7A6FE0">★</text>
   <text x="236" y="1202" font-size="32" font-weight="bold" fill="#1B2238">Поход в кино</text>
   <text x="236" y="1242" font-size="26" font-weight="bold" fill="#9A6A12">200 PIP</text>
-  <rect x="236" y="1260" width="264" height="64" rx="20" fill="#F0F1F5"/>
-  <text x="368" y="1302" font-size="28" font-weight="bold" fill="#9AA0B0" text-anchor="middle">ещё 0 PIP</text>
+  <rect x="236" y="1260" width="264" height="64" rx="20" fill="#EE6C4D"/>
+  <text x="368" y="1302" font-size="30" font-weight="bold" fill="#ffffff" text-anchor="middle">Купить</text>
 
   <!-- reward card 4 (goal) -->
   <rect x="552" y="978" width="320" height="330" rx="26" fill="#FFFBF0" stroke="#F2C14E" stroke-width="3"/>
