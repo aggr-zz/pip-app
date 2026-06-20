@@ -122,26 +122,10 @@ async function createVapidJwt(audience: string, publicKeyRaw: string): Promise<s
 
   const signingInput = `${header}.${payload}`;
 
-  // Import private key for ECDSA signing
-  const privateKeyBuffer = base64urlToBuffer(privateKeyRaw);
-
-  // For ECDSA we need a different import format
-  const ecPrivate = await crypto.subtle.importKey(
-    'jwk',
-    {
-      kty: 'EC',
-      crv: 'P-256',
-      d: privateKeyRaw,
-      x: publicKeyRaw.slice(2, 46),  // approximate — will use proper extraction
-      y: publicKeyRaw.slice(46),
-      key_ops: ['sign'],
-    } as any,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign']
-  );
-
-  // Actually import properly via raw public key extraction
+  // Импортируем приватный ключ для ECDSA-подписи: x/y берём из RAW публичного
+  // ключа (65 байт, uncompressed: 0x04 || X || Y), d — сам приватный ключ.
+  // (Раньше здесь был ещё один importKey с «приблизительными» x/y из подстроки
+  //  base64 — он бросал DataError и ломал ВСЕ push-уведомления.)
   const pubBuf = base64urlToBuffer(publicKeyRaw); // 65 bytes uncompressed
   const xBuf = pubBuf.slice(1, 33);
   const yBuf = pubBuf.slice(33, 65);
