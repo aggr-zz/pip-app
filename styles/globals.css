@@ -27,6 +27,14 @@ button {
   cursor: pointer;
 }
 
+/* Элементы форм учитывают padding/border внутри своей ширины. Иначе input
+   с flex:1 + padding вылезает за свою колонку грида (правое поле уезжало
+   за край экрана на странице выдачи наличных). */
+input, textarea, select, button {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-coral);
   outline-offset: 3px;

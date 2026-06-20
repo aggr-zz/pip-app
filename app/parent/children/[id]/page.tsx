@@ -8,6 +8,7 @@ import { EnterChildMode } from './EnterChildMode';
 import { EditAvatarButton } from './EditAvatarButton';
 import { JoinLinkCard } from './JoinLinkCard';
 import { ManageChild } from './ManageChild';
+import { TaskIcon, type TaskIconName } from '@/components/ui/TaskIcon';
 
 type Profile = {
   id: string;
@@ -427,14 +428,7 @@ export default async function ChildDetailPage({
                   }}
                 >
                   {/* Icon */}
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 10,
-                    background: 'var(--bg-surface-2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, flexShrink: 0,
-                  }}>
-                    {task.icon}
-                  </div>
+                  <TaskIcon name={task.icon as TaskIconName} size={38} />
 
                   {/* Title + schedule */}
                   <div style={{ flex: 1, minWidth: 0 }}>

@@ -128,7 +128,7 @@ export const ICON_LABELS: Record<TaskIconName, string> = {
 // ─── Компонент ────────────────────────────────────────────────────────────────
 
 interface TaskIconProps {
-  name: TaskIconName;
+  name: string;
   size?: number;
   colored?: boolean;
 }
@@ -137,10 +137,13 @@ interface TaskIconProps {
  * Иконка задачи — объёмный эмодзи на цветном фоне.
  * size    — размер контейнера (px), по умолчанию 38
  * colored — цветной фон (true по умолчанию)
+ *
+ * name — ключ из TASK_ICONS. Если значение неизвестно (легаси/эмодзи прямо
+ * в БД), показываем его как есть на нейтральном фоне — лучше, чем пустота.
  */
 export function TaskIcon({ name, size = 38, colored = true }: TaskIconProps) {
-  const colors  = ICON_COLORS[name];
-  const emoji   = ICON_EMOJI[name];
+  const colors  = ICON_COLORS[name as TaskIconName] ?? { bg: '#EAEDF3', fg: '#4A5066' };
+  const emoji   = ICON_EMOJI[name as TaskIconName] ?? name;
   const fontSize = Math.round(size * 0.52);
 
   return (
