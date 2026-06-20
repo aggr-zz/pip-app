@@ -40,9 +40,21 @@ export function PushToggle({ profileId }: Props) {
 
     navigator.serviceWorker.ready.then(async (reg) => {
       const sub = await reg.pushManager.getSubscription();
-      setStatus(sub ? 'subscribed' : 'unsubscribed');
+      if (sub) {
+        setStatus('subscribed');
+        // Самовосстановление: подписка в браузере уже есть, но в БД её могло не
+        // оказаться (например, прошлый POST упал с ошибкой). Идемпотентно
+        // до-отправляем её на сервер — upsert не создаёт дублей.
+        fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileId, subscription: sub.toJSON() }),
+        }).catch(() => {});
+      } else {
+        setStatus('unsubscribed');
+      }
     }).catch(() => setStatus('unsubscribed'));
-  }, []);
+  }, [profileId]);
 
   async function registerSW(): Promise<ServiceWorkerRegistration> {
     const existing = await navigator.serviceWorker.getRegistration('/sw.js');
