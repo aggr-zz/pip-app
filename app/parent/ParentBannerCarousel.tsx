@@ -182,11 +182,11 @@ export function BannerCard({
         {/* Скрим для читаемости текста слева */}
         <div aria-hidden style={{ position: 'absolute', inset: 0, background: scrim, pointerEvents: 'none' }} />
 
-        {/* Текст слева */}
+        {/* Текст слева (заголовок + описание), центрирован над нижней строкой */}
         <div style={{
           position: 'absolute', left: 0, top: 0, bottom: 0, width: '60%',
-          padding: '0 8px 0 18px',
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6,
+          padding: '0 8px 34px 18px',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5,
           zIndex: 1,
         }}>
           <div style={{
@@ -201,25 +201,29 @@ export function BannerCard({
           }}>
             {slide.body}
           </div>
+        </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
-            <div style={{ display: 'flex', gap: 5 }}>
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  aria-label={`Слайд ${i + 1}`}
-                  onClick={(e) => { e.stopPropagation(); onDot(i); }}
-                  style={{
-                    width: i === current ? 16 : 6, height: 6, borderRadius: 100,
-                    background: slide.dark ? '#7A5A28' : '#fff',
-                    opacity: i === current ? 1 : 0.4, border: 'none', padding: 0, cursor: 'pointer',
-                    transition: 'width 0.25s ease, opacity 0.25s ease',
-                  }}
-                />
-              ))}
-            </div>
-            {renderCta(slide)}
+        {/* Пейджер + CTA — закреплены по нижней границе (одно место на всех слайдах) */}
+        <div style={{
+          position: 'absolute', left: 18, bottom: 11, zIndex: 2,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <div style={{ display: 'flex', gap: 5 }}>
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                aria-label={`Слайд ${i + 1}`}
+                onClick={(e) => { e.stopPropagation(); onDot(i); }}
+                style={{
+                  width: i === current ? 16 : 6, height: 6, borderRadius: 100,
+                  background: slide.dark ? '#7A5A28' : '#fff',
+                  opacity: i === current ? 1 : 0.4, border: 'none', padding: 0, cursor: 'pointer',
+                  transition: 'width 0.25s ease, opacity 0.25s ease',
+                }}
+              />
+            ))}
           </div>
+          {renderCta(slide)}
         </div>
 
         {/* Закрыть */}
