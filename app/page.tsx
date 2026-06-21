@@ -1,16 +1,16 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { LandingLoginForm } from '@/components/landing/LandingLoginForm';
-import { PipLogo } from '@/components/ui/PipLogo';
+import { LandingGallery } from '@/components/landing/LandingGallery';
 
 export const metadata = {
-  title: 'PIP — копилка хороших привычек',
+  title: 'PIP — полезные привычки у детей копятся, как монетки',
   description:
-    'Приложение для семей с детьми 6–16 лет. Превращает рутинные домашние дела в игру с монетами, стриками и наградами.',
+    'PIP превращает домашние дела и рутину в игру с монетами, стриками и наградами. Приложение для семей с детьми 6–16 лет.',
   openGraph: {
-    title: 'PIP — копилка хороших привычек',
-    description: 'Приложение для семей с детьми 6–16 лет.',
+    title: 'PIP — полезные привычки у детей копятся, как монетки',
+    description: 'Обязанности как игра. Приложение для семей с детьми 6–16 лет.',
     type: 'website',
+    url: 'https://pipup.ru',
   },
 };
 
@@ -29,340 +29,135 @@ export default async function RootPage() {
     redirect(profile?.role === 'child' ? '/child' : '/parent');
   }
 
-  return <LandingPage />;
+  return <Landing />;
 }
 
-/* ─────────────────────────────────────────────────────────
-   Landing page — рендерится только для неавторизованных
-   ───────────────────────────────────────────────────────── */
+// ─── Данные секций ──────────────────────────────────────────────────────────────
 
-function LandingPage() {
+const PROBLEMS = [
+  { img: '/landing/p-buy.jpg', tag: 'В магазине', tilt: '-1deg', pos: 'center 32%', title: '«Купи! Ну купи!»', body: 'Ребёнок видит игрушку — и немедленно хочет её. «Денег нет» не работает, разговор заходит в тупик снова и снова.' },
+  { img: '/landing/p-screen.jpg', tag: 'Экраны', tilt: '0.8deg', pos: 'center 28%', title: 'Экранное время как валюта торга', body: '«Ещё 5 минут» превращается в час. Каждое ограничение — скандал. Приходится быть то полицейским, то виноватым.' },
+  { img: '/landing/p-money.jpg', tag: 'Деньги', tilt: '-0.8deg', pos: 'center 30%', title: 'Деньги появляются из воздуха', body: 'Карманные тратятся в первый же день. Понятий «накопить» и «выбрать что важнее» просто нет.' },
+  { img: '/landing/p-mess.jpg', tag: 'Беспорядок', tilt: '1deg', pos: 'center 26%', title: '«Это не моя работа»', body: 'Просишь убрать комнату — нытьё или игнор. Будто порядок дома — чужая проблема, а не дело всей семьи.' },
+];
+
+const BENEFITS = [
+  { icon: '🚀', title: 'Понятная мотивация для детей', body: 'Баланс, прогресс к цели и стрик — всё на одном экране. Не «потому что надо», а «потому что хочу заработать».', tags: ['Стрики', 'Прогресс к цели', 'Достижения'] },
+  { icon: '⚙️', title: 'Гибкие настройки под семью', body: 'Свои задачи, свои награды, свои правила. Фото-доказательство, подтверждение родителем или авто-зачисление.', tags: ['Фото-подтверждение', 'Расписание'] },
+  { icon: '📲', title: 'Удобно обоим', body: 'Два интерфейса — родительский и детский. Ребёнок заходит по PIN или QR со своего телефона, без логинов.', tags: ['QR-вход', 'PIN-код'] },
+  { icon: '👁', title: 'Родитель всегда в курсе', body: 'История задач, начислений и трат. Видно, кто старается, а кто пропускает — без слежки, но прозрачно.', tags: ['История', 'Баланс в реальном времени'] },
+];
+
+const REGISTER = '/login?mode=register';
+
+// ─── Лендинг ────────────────────────────────────────────────────────────────────
+
+function Landing() {
   return (
-    <div className="lp">
-
-      {/* ── NAV ─────────────────────────────────────────── */}
-      <nav className="lp-nav">
-        <div className="lp-nav__inner">
-          <a href="/" aria-label="pip"><PipLogo size={28} color="#1B2238" /></a>
-          <div className="lp-nav__links">
-            <a href="#problem" className="lp-nav__link">Как устроено</a>
-            <a href="#why" className="lp-nav__link">Почему pip</a>
-          </div>
+    <div className="pip-lp">
+      {/* HEADER */}
+      <header className="lp-header">
+        <div className="lp-header-in">
+          <a href="#top" className="lp-brand">
+            <img src="/landing/coin.png" alt="PIP" width={34} height={34} />
+            <span>pip</span>
+          </a>
+          <nav className="lp-nav">
+            <a href="#problem" className="nav-link">Знакомо?</a>
+            <a href="#how" className="nav-link">Как работает</a>
+            <a href="#why" className="nav-link">Почему pip</a>
+            <a href="/login" className="lp-login-btn">Войти</a>
+          </nav>
         </div>
-      </nav>
+      </header>
 
-      {/* ── HERO ────────────────────────────────────────── */}
-      <section className="lp-hero">
-        <div className="lp-hero__inner">
+      {/* HERO */}
+      <section id="top" className="lp-hero">
+        <img src="/landing/coin.png" width={78} height={78} alt="" aria-hidden className="hero-deco lp-coin" style={{ top: '14%', left: '5%', ['--r' as string]: '-12deg', animation: 'floatY 6s ease-in-out infinite' }} />
+        <img src="/landing/coin.png" width={46} height={46} alt="" aria-hidden className="hero-deco lp-coin" style={{ top: '62%', left: '2.5%', ['--r' as string]: '10deg', animation: 'floatY2 5s ease-in-out infinite' }} />
+        <img src="/landing/coin.png" width={54} height={54} alt="" aria-hidden className="hero-deco lp-coin" style={{ top: '8%', right: '3%', ['--r' as string]: '8deg', animation: 'floatY2 7s ease-in-out infinite' }} />
+        <span className="hero-deco lp-spark" style={{ top: '24%', left: '46%', fontSize: 26, animation: 'twinkle 3.2s ease-in-out infinite' }}>✦</span>
+        <span className="hero-deco lp-spark" style={{ top: '70%', right: '46%', fontSize: 18, animation: 'twinkle 2.6s ease-in-out infinite .6s' }}>✦</span>
+        <span className="hero-deco lp-spark" style={{ top: '14%', right: '30%', fontSize: 20, animation: 'twinkle 3.6s ease-in-out infinite .3s' }}>✦</span>
 
-          {/* LEFT — текст + форма входа */}
-          <div className="lp-hero__copy">
-            <div className="lp-badge">
-              <span className="lp-badge__dot" />
-              Закрытая бета · лето 2026
-            </div>
-            <h1 className="lp-hero__title">
-              Полезные привычки у детей <em>копятся</em>,<br />как монетки.
+        <div className="lp-hero-in">
+          <div>
+            <div className="lp-badge"><i />Закрытая бета · лето 2026</div>
+            <h1 className="lp-h1">
+              Полезные привычки у детей <span className="grad">копятся, как монетки.</span>
             </h1>
-            <p className="lp-hero__lede">
-              Приложение для семей с детьми 6–16 лет. Превращает домашние дела
-              в игру с монетами, стриками и наградами.
+            <p className="lp-sub">
+              PIP превращает домашние дела и скучную рутину в увлекательную игру с монетами и наградами. Приложение для семей с детьми&nbsp;6–16&nbsp;лет.
             </p>
-            <LandingLoginForm />
+            <div className="lp-cta-row">
+              <a href={REGISTER} className="lp-btn-gold">
+                <img src="/landing/coin.png" width={22} height={22} alt="" /> Создать аккаунт
+              </a>
+              <a href="/login" className="lp-btn-ghost">Войти</a>
+            </div>
+            <div className="lp-hint"><span style={{ fontSize: 16 }}>⚡</span> Настройки за 5 минут</div>
           </div>
 
-          {/* RIGHT — иллюстрация телефона */}
-          <div className="lp-hero__art" aria-hidden="true">
-            <div className="lp-phone-wrap">
-              <div className="lp-popup">+5 pip за уборку! 🎉</div>
-              <div className="lp-popup lp-popup--2">🔥 Стрик 5 дней!</div>
-
-              <div className="lp-phone">
-                <div className="lp-phone__bar"><div className="lp-phone__pill" /></div>
-                <div className="lp-phone__body">
-                  <div className="lp-phone__header">
-                    <PipLogo size={18} />
-                    <div className="lp-phone__av">🦁</div>
-                  </div>
-                  <div className="lp-phone__greeting">Привет, Лука! 👋</div>
-                  <div className="lp-phone__balance">
-                    <div className="lp-phone__bal-row">
-                      <div>
-                        <div className="lp-phone__bal-label">Твой баланс</div>
-                        <div className="lp-phone__bal-val">42 pip</div>
-                      </div>
-                      <div className="lp-phone__bal-right">3 из 5<br />задач</div>
-                    </div>
-                    <div className="lp-phone__streak">🔥 5 дней подряд</div>
-                    <div className="lp-phone__prog"><div className="lp-phone__prog-fill" /></div>
-                  </div>
-                  {[
-                    { icon: '🪥', bg: '#DBEAE3', name: 'Почистить зубы',       done: true },
-                    { icon: '📚', bg: '#FBEFC9', name: 'Домашнее задание',      coins: '+8 pip' },
-                    { icon: '🛏', bg: '#FCE5DC', name: 'Заправить кровать',     done: true },
-                    { icon: '🍽', bg: '#E6E8EE', name: 'Убрать посуду',         coins: '+5 pip' },
-                  ].map((t) => (
-                    <div key={t.name} className="lp-phone__task">
-                      <div className="lp-phone__task-icon" style={{ background: t.bg }}>{t.icon}</div>
-                      <div className="lp-phone__task-name">{t.name}</div>
-                      {t.done
-                        ? <div className="lp-phone__task-done">✓</div>
-                        : <div className="lp-phone__task-coins">{t.coins}</div>
-                      }
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Floating coins */}
-              {['lp-fc lp-fc--1','lp-fc lp-fc--2','lp-fc lp-fc--3','lp-fc lp-fc--4','lp-fc lp-fc--5','lp-fc lp-fc--6','lp-fc lp-fc--7'].map((cls, i) => (
-                <div key={i} className={cls}><div className="lp-fc__shine" /></div>
-              ))}
-
-              {/* Coin trail */}
-              <div className="lp-coin-trail">
-                {[1,2,3,4,5,6].map((n) => (
-                  <div key={n} className={`lp-ct lp-ct--${n}`} />
-                ))}
-              </div>
+          <div className="lp-hero-art">
+            <div className="lp-poster">
+              <img src="/landing/family-poster.jpg" alt="Семья PIP" />
             </div>
+            <div className="lp-chip-streak">🔥 Стрик 5 дней</div>
+            <div className="lp-chip-coin"><img src="/landing/coin.png" width={20} height={20} alt="" /> +5 pip за уборку</div>
           </div>
         </div>
       </section>
 
-      {/* ── PROBLEM ─────────────────────────────────────── */}
-      <section id="problem" className="lp-section lp-section--dark">
-        <div className="lp-container">
-          <div className="lp-sec-num lp-sec-num--gold">00 · Знакомо?</div>
-          <h2 className="lp-sec-title" style={{ color: 'white' }}>
-            Каждая семья через это проходит
-          </h2>
-          <p className="lp-sec-sub lp-sec-sub--light">
-            Мы не придумали проблему — мы сами родители и знаем это изнутри.
-          </p>
+      {/* GALLERY (клиентский — горизонтальный скролл) */}
+      <LandingGallery />
 
-          <div className="lp-pains">
-            {[
-              { emoji: '🛒', title: '«Купи! Ну купи! Почему нет?»',
-                text: 'Ребёнок видит игрушку — и немедленно хочет её. Объяснение «денег нет» не работает. Разговор заходит в тупик снова и снова.' },
-              { emoji: '📱', title: 'Экранное время как валюта торга',
-                text: '«Ещё 5 минут» превращается в час. Каждое ограничение — скандал. Приходится быть то полицейским, то виноватым. Это изматывает.' },
-              { emoji: '💸', title: 'Деньги появляются из воздуха',
-                text: 'Карманные деньги тратятся в первый же день. Понятий «накопить» и «выбрать что важнее» просто нет. Финансовая грамотность не появляется сама.' },
-              { emoji: '😤', title: '«Это не моя работа» и точка',
-                text: 'Просишь убрать комнату — нытьё или игнор. Ощущение что дети считают порядок дома чужой проблемой, а не делом всей семьи.' },
-            ].map((p) => (
-              <div key={p.title} className="lp-pain">
-                <span className="lp-pain__emoji">{p.emoji}</span>
-                <div className="lp-pain__title">{p.title}</div>
-                <p className="lp-pain__text">{p.text}</p>
+      {/* PROBLEM */}
+      <section id="problem" className="lp-sec-tan">
+        <div className="lp-wrap">
+          <div className="lp-eyebrow">02 · Знакомо?</div>
+          <h2 className="lp-h2">Каждая семья через это проходит</h2>
+          <p className="lp-lead">Мы не придумали проблему — мы сами родители и знаем это изнутри.</p>
+
+          <div className="lp-prob-grid">
+            {PROBLEMS.map((p) => (
+              <div className="lp-prob" key={p.title} style={{ transform: `rotate(${p.tilt})` }}>
+                <div className="lp-prob-img">
+                  <img src={p.img} alt={p.title} loading="lazy" style={{ objectPosition: p.pos }} />
+                  <div className="lp-prob-grad" />
+                  <div className="lp-prob-cap">
+                    <span className="lp-tag">{p.tag}</span>
+                    <h3>{p.title}</h3>
+                  </div>
+                </div>
+                <p>{p.body}</p>
               </div>
             ))}
           </div>
 
-          <div className="lp-bridge">
-            <div className="lp-bridge__icon">💡</div>
-            <div>
-              <div className="lp-bridge__title">pip переводит это на язык, который дети понимают</div>
-              <p className="lp-bridge__text">
-                Не наказания и угрозы, а понятная система: сделал → заработал → потратил на то,
-                что сам выбрал. Мотивация изнутри, а не давление снаружи.
-              </p>
+          <div className="lp-prob-cta">
+            <img src="/landing/coin.png" width={72} height={72} alt="" className="lp-prob-cta-coin" />
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <h3>pip переводит это на язык, который дети понимают</h3>
+              <p>Не наказания и угрозы, а понятная система: сделал → заработал → потратил на то, что сам выбрал. Мотивация изнутри, а не давление снаружи.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ────────────────────────────────── */}
-      <section id="how" className="lp-section">
-        <div className="lp-container">
-          <div className="lp-sec-num lp-sec-num--coral">01 · Как работает</div>
-          <h2 className="lp-sec-title">Три простых шага</h2>
+      {/* WHY */}
+      <section id="why" className="lp-sec-cream">
+        <div className="lp-wrap">
+          <div className="lp-eyebrow">03 · Почему pip</div>
+          <h2 className="lp-h2">Чем pip отличается</h2>
 
-          <div className="lp-steps">
-
-            {/* Step 1 */}
-            <div className="lp-step">
-              <div className="lp-step__screen">
-                <div className="lp-mp">
-                  <div className="lp-mp__bar"><div className="lp-mp__pill" /></div>
-                  <div className="lp-mp__body">
-                    <div className="lp-mps-hdr">
-                      <PipLogo size={12} />
-                      <span style={{ fontSize: 7, color: '#9CA1B6' }}>👋 Анна</span>
-                    </div>
-                    <div className="lp-mps-title">Мои дети</div>
-                    {[
-                      { emoji: '🦁', color: '#EE6C4D', name: 'Лука', sub: '2 из 4 задач', bal: '42' },
-                      { emoji: '🐼', color: '#5BA890', name: 'Соня', sub: '4 из 4 ✓',    bal: '78' },
-                    ].map((c) => (
-                      <div key={c.name} className="lp-mps-child">
-                        <div className="lp-mps-av" style={{ background: c.color }}>{c.emoji}</div>
-                        <div style={{ flex: 1 }}>
-                          <div className="lp-mps-cname">{c.name}</div>
-                          <div className="lp-mps-csub">{c.sub}</div>
-                        </div>
-                        <div className="lp-mps-cbal">{c.bal}</div>
-                      </div>
-                    ))}
-                    <div className="lp-mps-title" style={{ marginTop: 6 }}>Задачи</div>
-                    {[
-                      { icon: '🪥', bg: '#DBEAE3', name: 'Зубы',   ok: true  },
-                      { icon: '📚', bg: '#FBEFC9', name: 'Домашка', ok: false },
-                      { icon: '🛏', bg: '#FCE5DC', name: 'Кровать', ok: true  },
-                    ].map((t, idx) => (
-                      <div key={t.name} className="lp-mps-trow" style={{ borderBottom: idx === 2 ? 'none' : undefined }}>
-                        <div className="lp-mps-tico" style={{ background: t.bg }}>{t.icon}</div>
-                        <div className="lp-mps-tname">{t.name}</div>
-                        <div className={`lp-mps-badge ${t.ok ? 'lp-mps-badge--ok' : 'lp-mps-badge--wait'}`}>
-                          {t.ok ? '✓' : '⏳'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="lp-step__body">
-                <div className="lp-step__num">1</div>
-                <h3 className="lp-step__title">Родитель собирает список дел</h3>
-                <p className="lp-step__text">Назначаешь задачи и стоимость в pip. Есть готовый стартовый набор — запустить можно за 5 минут.</p>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="lp-step">
-              <div className="lp-step__screen">
-                <div className="lp-mp">
-                  <div className="lp-mp__bar"><div className="lp-mp__pill" /></div>
-                  <div className="lp-mp__body">
-                    <div className="lp-mps-greeting">Привет, Лука! 👋</div>
-                    <div className="lp-mps-bal2">
-                      <div className="lp-mps-bal2-lbl">Твой баланс</div>
-                      <div className="lp-mps-bal2-val">42 pip</div>
-                      <div className="lp-mps-bal2-streak">🔥 5 дней подряд</div>
-                    </div>
-                    {[
-                      { icon: '🪥', bg: '#DBEAE3', name: 'Почистить зубы',   done: true },
-                      { icon: '📚', bg: '#FBEFC9', name: 'Домашнее задание', coins: '+8 pip' },
-                      { icon: '🛏', bg: '#FCE5DC', name: 'Заправить кровать',done: true },
-                      { icon: '🍽', bg: '#E6E8EE', name: 'Убрать посуду',    coins: '+5 pip' },
-                    ].map((t) => (
-                      <div key={t.name} className="lp-mps-trow2">
-                        <div className="lp-mps-tico2" style={{ background: t.bg }}>{t.icon}</div>
-                        <div className="lp-mps-tname2">{t.name}</div>
-                        {t.done
-                          ? <div className="lp-mps-done">✓</div>
-                          : <div className="lp-mps-coins">{t.coins}</div>
-                        }
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="lp-step__body">
-                <div className="lp-step__num">2</div>
-                <h3 className="lp-step__title">Ребёнок выполняет — копит pip</h3>
-                <p className="lp-step__text">Сделал — тапнул «готово», монетки на счету. Стрики за серии без пропусков мотивируют делать это каждый день.</p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="lp-step">
-              <div className="lp-step__screen">
-                <div className="lp-mp">
-                  <div className="lp-mp__bar"><div className="lp-mp__pill" /></div>
-                  <div className="lp-mp__body">
-                    <div className="lp-mps-shop-title">Магазин 🎁</div>
-                    <div className="lp-mps-shop-bal">
-                      <span style={{ fontSize: 6.5, color: '#D4A12E', fontWeight: 600 }}>У тебя</span>
-                      <span style={{ fontFamily: 'var(--font-display,sans-serif)', fontWeight: 700, fontSize: 12, color: '#D4A12E' }}>42 pip</span>
-                    </div>
-                    {[
-                      { icon: '🍕', name: 'Пицца на ужин',  cost: 30,  balance: 42 },
-                      { icon: '🎮', name: 'Игровой вечер',  cost: 80,  balance: 42 },
-                      { icon: '💰', name: 'Подарок на выбор', cost: 150, balance: 42 },
-                    ].map((r) => {
-                      const pct    = Math.min(100, Math.round((r.balance / r.cost) * 100));
-                      const enough = r.balance >= r.cost;
-                      return (
-                        <div key={r.name} className="lp-mps-reward">
-                          <div className="lp-mps-reward-top">
-                            <div className="lp-mps-reward-ico">{r.icon}</div>
-                            <div className="lp-mps-reward-name">{r.name}</div>
-                            <div className="lp-mps-reward-cost">{r.cost}</div>
-                          </div>
-                          <div className="lp-mps-reward-bar">
-                            <div className="lp-mps-reward-fill" style={{
-                              width: `${pct}%`,
-                              background: enough
-                                ? '#5BA890'
-                                : 'linear-gradient(90deg,#EE6C4D,#F2C14E)',
-                            }} />
-                          </div>
-                          <div className="lp-mps-reward-lbl">
-                            <span style={{ color: enough ? '#3D7A66' : undefined }}>
-                              {enough ? '✓ хватает!' : `ещё ${r.cost - r.balance} pip`}
-                            </span>
-                            <span>{pct}%</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-              <div className="lp-step__body">
-                <div className="lp-step__num">3</div>
-                <h3 className="lp-step__title">Обменивает на награды</h3>
-                <p className="lp-step__text">Магазин наград создаёшь сам. Шкала показывает сколько осталось до мечты — дети видят цель и стараются сильнее.</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY PIP ─────────────────────────────────────── */}
-      <section id="why" className="lp-section lp-section--cream">
-        <div className="lp-container">
-          <div className="lp-sec-num lp-sec-num--coral">02 · Почему pip</div>
-          <h2 className="lp-sec-title">Чем pip отличается</h2>
-
-          <div className="lp-features">
-            {[
-              {
-                icon: '🚀', cls: 'lp-fi--coral',
-                title: 'Понятная мотивация для детей',
-                text:  'Ребёнок видит баланс, прогресс к цели и стрик — всё на одном экране. Не «потому что надо», а «потому что хочу заработать».',
-                tags:  [{ label: 'Стрики', cls: 'lp-ft--coral' }, { label: 'Прогресс к цели', cls: 'lp-ft--coral' }, { label: 'Достижения', cls: 'lp-ft--coral' }],
-              },
-              {
-                icon: '⚙️', cls: 'lp-fi--mint',
-                title: 'Гибкие настройки под семью',
-                text:  'Свои задачи, свои награды, свои правила. Фото-доказательство, подтверждение родителем или автоматическое зачисление — выбираешь сам.',
-                tags:  [{ label: 'Фото-подтверждение', cls: 'lp-ft--mint' }, { label: 'Расписание', cls: 'lp-ft--mint' }, { label: 'Свои правила', cls: 'lp-ft--mint' }],
-              },
-              {
-                icon: '📱', cls: 'lp-fi--gold',
-                title: 'Удобный дизайн для обоих',
-                text:  'Два отдельных интерфейса — родительский и детский. Ребёнок заходит по PIN или QR-коду со своего телефона, без логинов.',
-                tags:  [{ label: 'QR-вход', cls: 'lp-ft--gold' }, { label: 'PIN-код', cls: 'lp-ft--gold' }, { label: 'Свой экран', cls: 'lp-ft--gold' }],
-              },
-              {
-                icon: '👁', cls: 'lp-fi--ink',
-                title: 'Родитель всегда в курсе',
-                text:  'История задач, начислений и трат. Видно кто старается, а кто пропускает — без слежки, но прозрачно.',
-                tags:  [{ label: 'История задач', cls: 'lp-ft--ink' }, { label: 'Баланс в реальном времени', cls: 'lp-ft--ink' }],
-              },
-            ].map((f) => (
-              <div key={f.title} className="lp-feature">
-                <div className={`lp-fi ${f.cls}`}>{f.icon}</div>
-                <h3 className="lp-feature__title">{f.title}</h3>
-                <p className="lp-feature__text">{f.text}</p>
-                <div className="lp-feature__tags">
-                  {f.tags.map((t) => (
-                    <span key={t.label} className={`lp-ftag ${t.cls}`}>{t.label}</span>
-                  ))}
+          <div className="lp-why-grid">
+            {BENEFITS.map((b) => (
+              <div className="lp-benefit" key={b.title}>
+                <div className="lp-benefit-ic">{b.icon}</div>
+                <h3>{b.title}</h3>
+                <p>{b.body}</p>
+                <div className="lp-btags">
+                  {b.tags.map((t) => <span className="lp-btag" key={t}>{t}</span>)}
                 </div>
               </div>
             ))}
@@ -370,244 +165,165 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ──────────────────────────────────────── */}
+      {/* CTA */}
+      <section id="login" className="lp-cta-sec">
+        <div className="lp-cta-box">
+          <img src="/landing/coin.png" width={64} height={64} alt="" aria-hidden className="lp-coin" style={{ top: '14%', left: '8%', ['--r' as string]: '-14deg', animation: 'floatY 6s ease-in-out infinite' }} />
+          <img src="/landing/coin.png" width={44} height={44} alt="" aria-hidden className="lp-coin" style={{ bottom: '16%', left: '16%', ['--r' as string]: '12deg', animation: 'floatY2 5s ease-in-out infinite' }} />
+          <img src="/landing/coin.png" width={58} height={58} alt="" aria-hidden className="lp-coin" style={{ top: '20%', right: '9%', ['--r' as string]: '10deg', animation: 'floatY2 7s ease-in-out infinite' }} />
+          <img src="/landing/coin.png" width={38} height={38} alt="" aria-hidden className="lp-coin" style={{ bottom: '20%', right: '18%', ['--r' as string]: '-8deg', animation: 'floatY 5.5s ease-in-out infinite' }} />
+          <h2 className="lp-cta-h2">Готовы превратить обязанности в игру?</h2>
+          <p className="lp-cta-p">Создайте семейный аккаунт за пять минут и запустите первые задания уже сегодня.</p>
+          <div className="lp-cta-actions">
+            <a href={REGISTER} className="lp-btn-ink">Создать аккаунт →</a>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
       <footer className="lp-footer">
-        <div className="lp-container">
-          <div className="lp-footer__row">
-            <div>
-              <a href="/"><PipLogo size={24} /></a>
-              <p className="lp-footer__tag">Обязанности как игра.</p>
+        <div className="lp-footer-in">
+          <div style={{ maxWidth: 300 }}>
+            <div className="lp-footer-brand">
+              <img src="/landing/coin.png" width={32} height={32} alt="" />
+              <span>pip</span>
             </div>
-            <div className="lp-footer__links">
+            <p className="lp-footer-tag">Обязанности как игра. Полезные привычки у детей копятся, как монетки.</p>
+          </div>
+          <div className="lp-footer-cols">
+            <div className="lp-footer-col">
+              <span className="lp-footer-h">Продукт</span>
+              <a href="#how">Как работает</a>
+              <a href="#why">Почему pip</a>
+              <a href={REGISTER}>Создать аккаунт</a>
+            </div>
+            <div className="lp-footer-col">
+              <span className="lp-footer-h">Контакты</span>
               <a href="mailto:hello@pipup.ru">hello@pipup.ru</a>
               <a href="/privacy">Политика конфиденциальности</a>
               <a href="/terms">Условия использования</a>
             </div>
           </div>
-          <div className="lp-footer__bottom">© 2026 pip. Все права защищены.</div>
         </div>
+        <div className="lp-footer-copy">© 2026 pip. Все права защищены.</div>
       </footer>
 
-      <style>{`
-        /* ── Landing page — scope all styles under .lp ─── */
-
-        /* CSS vars — landing always light, independent of system theme */
-        .lp {
-          --lp-coral:      #EE6C4D;
-          --lp-coral-deep: #D85535;
-          --lp-coral-soft: #FCE5DC;
-          --lp-ink:        #1B2238;
-          --lp-ink-2:      #3D4663;
-          --lp-ink-soft:   #6B7290;
-          --lp-ink-mute:   #9CA1B6;
-          --lp-cream:      #F2EDE2;
-          --lp-cream-deep: #ECE5D6;
-          --lp-surface:    #FFFFFF;
-          --lp-gold:       #F2C14E;
-          --lp-gold-deep:  #D4A12E;
-          --lp-gold-light: #FFEDB0;
-          --lp-gold-soft:  #FBEFC9;
-          --lp-mint:       #5BA890;
-          --lp-mint-deep:  #3D7A66;
-          --lp-mint-soft:  #DBEAE3;
-          --lp-line:       #E8E1D0;
-          --lp-line-soft:  #F0EBDD;
-
-          background: var(--lp-cream);
-          color:      var(--lp-ink);
-          font-family: var(--font-body, 'Geist', system-ui, sans-serif);
-          background-image:
-            radial-gradient(ellipse 80% 50% at top left, rgba(238,108,77,.06), transparent 60%),
-            radial-gradient(ellipse 60% 40% at bottom right, rgba(91,168,144,.05), transparent 60%);
-          background-attachment: fixed;
-          min-height: 100vh;
-        }
-
-        /* Container */
-        .lp-container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
-        @media (max-width: 720px) { .lp-container { padding: 0 20px; } }
-
-        /* Nav */
-        .lp-nav { background: rgba(242,237,226,.93); border-bottom: 1px solid var(--lp-line-soft); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); }
-        .lp-nav__inner { max-width: 1100px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
-        .lp-nav__links { display: flex; gap: 22px; align-items: center; }
-        .lp-nav__link { font-size: 14px; font-weight: 500; color: var(--lp-ink-2); text-decoration: none; transition: color .15s; }
-        .lp-nav__link:hover { color: var(--lp-ink); }
-        @media (max-width: 600px) { .lp-nav__link { display: none; } }
-
-        /* Badge (hero) */
-        .lp-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--lp-surface); border: 1px solid var(--lp-line); padding: 7px 15px; border-radius: 100px; font-size: 12px; font-weight: 500; color: var(--lp-ink-2); margin-bottom: 24px; }
-        .lp-badge__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lp-coral); box-shadow: 0 0 0 3px var(--lp-coral-soft); flex-shrink: 0; }
-
-        /* Hero */
-        .lp-hero { padding: 72px 28px 0; overflow: hidden; }
-        .lp-hero__inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
-        @media (max-width: 900px) { .lp-hero__inner { grid-template-columns: 1fr; gap: 40px; } .lp-hero { padding: 48px 20px 0; } }
-        .lp-hero__copy { padding-bottom: 72px; }
-        @media (max-width: 900px) { .lp-hero__copy { padding-bottom: 0; } }
-        .lp-hero__title { font-family: var(--font-display, 'Bricolage Grotesque', sans-serif); font-weight: 600; font-size: clamp(40px, 5.5vw, 60px); line-height: .97; letter-spacing: -.03em; margin: 0 0 20px; }
-        .lp-hero__title em { font-style: italic; font-weight: 500; color: var(--lp-coral); }
-        .lp-hero__lede { font-size: 16.5px; line-height: 1.55; color: var(--lp-ink-2); max-width: 440px; margin: 0 0 28px; }
-
-        /* Hero art */
-        .lp-hero__art { display: flex; justify-content: center; align-items: flex-end; min-height: 520px; }
-        @media (max-width: 900px) { .lp-hero__art { min-height: 380px; } }
-
-        /* Phone */
-        .lp-phone-wrap { position: relative; width: 256px; }
-        .lp-phone { width: 256px; background: #F8F6F0; border-radius: 36px; border: 4px solid var(--lp-ink); box-shadow: 0 32px 64px rgba(27,34,56,.2); overflow: hidden; }
-        .lp-phone__bar { height: 18px; background: var(--lp-ink); display: flex; justify-content: center; align-items: center; }
-        .lp-phone__pill { width: 54px; height: 7px; background: rgba(255,255,255,.15); border-radius: 3px; }
-        .lp-phone__body { padding: 16px 14px 20px; }
-        .lp-phone__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .lp-phone__av { width: 32px; height: 32px; border-radius: 50%; background: var(--lp-coral); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .lp-phone__greeting { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 14px; color: var(--lp-ink); margin-bottom: 10px; }
-        .lp-phone__balance { background: var(--lp-ink); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; }
-        .lp-phone__bal-row { display: flex; justify-content: space-between; align-items: flex-end; }
-        .lp-phone__bal-label { font-size: 10px; color: rgba(255,255,255,.5); margin-bottom: 2px; }
-        .lp-phone__bal-val { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 28px; color: var(--lp-gold); line-height: 1; }
-        .lp-phone__bal-right { font-size: 10px; color: rgba(255,255,255,.5); text-align: right; }
-        .lp-phone__streak { font-size: 10px; color: rgba(255,255,255,.65); margin-top: 5px; }
-        .lp-phone__prog { height: 4px; background: rgba(255,255,255,.15); border-radius: 100px; overflow: hidden; margin-top: 7px; }
-        .lp-phone__prog-fill { height: 100%; width: 60%; border-radius: 100px; background: linear-gradient(90deg, var(--lp-coral), var(--lp-gold)); }
-        .lp-phone__task { display: flex; align-items: center; gap: 9px; padding: 9px 10px; background: white; border-radius: 11px; border: 1px solid var(--lp-line-soft); margin-bottom: 6px; }
-        .lp-phone__task-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-        .lp-phone__task-name { font-size: 11px; font-weight: 600; color: var(--lp-ink); flex: 1; }
-        .lp-phone__task-coins { font-size: 10px; font-weight: 700; color: var(--lp-gold-deep); }
-        .lp-phone__task-done { width: 22px; height: 22px; border-radius: 50%; background: var(--lp-mint-soft); color: var(--lp-mint-deep); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
-
-        /* Floating coins */
-        .lp-fc { position: absolute; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #FFEDB0 0%, #F2C14E 45%, #D4A12E 100%); box-shadow: inset 0 -3px 6px rgba(139,90,11,.25); }
-        .lp-fc__shine { position: absolute; top: 14%; left: 18%; width: 30%; height: 22%; background: rgba(255,255,255,.5); border-radius: 100px; filter: blur(2px); }
-        .lp-fc--1 { width: 44px; height: 44px; top: 16px; right: -24px; animation: lp-fcf 5s ease-in-out infinite; }
-        .lp-fc--2 { width: 26px; height: 26px; top: 90px; left: -22px; animation: lp-fcf 6.5s ease-in-out infinite .8s; }
-        .lp-fc--3 { width: 56px; height: 56px; bottom: 70px; right: -32px; animation: lp-fcf 4.5s ease-in-out infinite 1.3s; opacity: .9; }
-        .lp-fc--4 { width: 20px; height: 20px; bottom: 44px; left: -15px; animation: lp-fcf 7s ease-in-out infinite .4s; }
-        .lp-fc--5 { width: 32px; height: 32px; top: 160px; right: -42px; animation: lp-fcf 5.5s ease-in-out infinite .6s; opacity: .75; }
-        .lp-fc--6 { width: 18px; height: 18px; top: 50px; left: -32px; animation: lp-fcf 4s ease-in-out infinite 1.8s; opacity: .6; }
-        .lp-fc--7 { width: 38px; height: 38px; bottom: 160px; left: -46px; animation: lp-fcf 6s ease-in-out infinite .2s; opacity: .8; }
-        @keyframes lp-fcf { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
-
-        /* Coin trail */
-        .lp-coin-trail { position: absolute; right: -50px; top: 40px; bottom: 80px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; pointer-events: none; }
-        .lp-ct { border-radius: 50%; background: radial-gradient(circle at 32% 28%, #FFEDB0 0%, #F2C14E 45%, #D4A12E 100%); opacity: 0; animation: lp-trail 2.4s ease-in-out infinite; }
-        .lp-ct--1 { width: 10px; height: 10px; animation-delay: .1s; }
-        .lp-ct--2 { width: 7px; height: 7px; animation-delay: .4s; }
-        .lp-ct--3 { width: 12px; height: 12px; animation-delay: .7s; }
-        .lp-ct--4 { width: 8px; height: 8px; animation-delay: 1s; }
-        .lp-ct--5 { width: 10px; height: 10px; animation-delay: 1.3s; }
-        .lp-ct--6 { width: 7px; height: 7px; animation-delay: 1.6s; }
-        @keyframes lp-trail { 0% { opacity: 0; transform: translateY(8px); } 30% { opacity: .65; } 70% { opacity: .3; } 100% { opacity: 0; transform: translateY(-20px); } }
-
-        /* Popups */
-        .lp-popup { position: absolute; top: 22px; left: -130px; background: white; border: 1px solid var(--lp-line); border-radius: 14px; padding: 8px 14px; font-size: 12px; font-weight: 600; color: var(--lp-ink); white-space: nowrap; box-shadow: 0 6px 20px rgba(27,34,56,.1); animation: lp-popin .5s ease; }
-        .lp-popup::after { content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); border: 5px solid transparent; border-left-color: var(--lp-line); }
-        .lp-popup--2 { top: auto; bottom: 120px; left: auto; right: -140px; background: var(--lp-mint-soft); border-color: var(--lp-mint); color: var(--lp-mint-deep); animation-delay: .3s; }
-        .lp-popup--2::after { display: none; }
-        .lp-popup--2::before { content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); border: 5px solid transparent; border-right-color: var(--lp-mint); }
-        @keyframes lp-popin { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
-
-        /* Sections */
-        .lp-section { padding: 80px 28px; }
-        .lp-section--dark { background: var(--lp-ink); color: white; padding: 80px 28px; }
-        .lp-section--cream { background: var(--lp-cream-deep); }
-        @media (max-width: 720px) { .lp-section, .lp-section--dark, .lp-section--cream { padding: 56px 20px; } }
-        .lp-sec-num { font-family: var(--font-display, sans-serif); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
-        .lp-sec-num--coral { color: var(--lp-coral); }
-        .lp-sec-num--gold  { color: var(--lp-gold); }
-        .lp-sec-title { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: clamp(30px, 4vw, 44px); letter-spacing: -.02em; margin: 0 0 12px; line-height: 1.05; }
-        .lp-sec-sub { font-size: 17px; line-height: 1.55; color: var(--lp-ink-soft); max-width: 600px; margin: 0 0 48px; }
-        .lp-sec-sub--light { color: rgba(255,255,255,.6); }
-
-        /* Pains */
-        .lp-pains { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 40px; }
-        @media (max-width: 640px) { .lp-pains { grid-template-columns: 1fr; } }
-        .lp-pain { border-radius: 20px; padding: 24px 22px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
-        .lp-pain__emoji { font-size: 40px; margin-bottom: 14px; display: block; }
-        .lp-pain__title { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 19px; margin: 0 0 8px; line-height: 1.2; color: white; }
-        .lp-pain__text { font-size: 14px; line-height: 1.55; margin: 0; color: rgba(255,255,255,.65); }
-        .lp-bridge { background: var(--lp-coral); border-radius: 24px; padding: 32px 36px; display: flex; align-items: center; gap: 28px; }
-        .lp-bridge__icon { font-size: 40px; flex-shrink: 0; }
-        .lp-bridge__title { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 22px; color: white; margin: 0 0 6px; }
-        .lp-bridge__text { font-size: 15px; color: rgba(255,255,255,.88); margin: 0; line-height: 1.5; }
-        @media (max-width: 640px) { .lp-bridge { flex-direction: column; gap: 16px; padding: 24px; } }
-
-        /* Steps */
-        .lp-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        @media (max-width: 880px) { .lp-steps { grid-template-columns: 1fr; } }
-        .lp-step { background: var(--lp-surface); border-radius: 22px; border: 1px solid var(--lp-line-soft); overflow: hidden; }
-        .lp-step__screen { background: linear-gradient(160deg, #252e4a 0%, var(--lp-ink) 100%); padding: 24px 16px 20px; display: flex; justify-content: center; min-height: 248px; align-items: center; }
-        .lp-step__body { padding: 22px 22px 24px; }
-        .lp-step__num { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 14px; color: white; background: var(--lp-ink); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-        .lp-step__title { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 18px; margin: 0 0 10px; line-height: 1.2; }
-        .lp-step__text { font-size: 13.5px; line-height: 1.55; color: var(--lp-ink-soft); margin: 0; }
-
-        /* Mini phone (inside steps) */
-        .lp-mp { width: 136px; background: #F8F6F0; border-radius: 20px; overflow: hidden; border: 3px solid #2a3350; box-shadow: 0 12px 32px rgba(0,0,0,.3); }
-        .lp-mp__bar { height: 12px; background: #1a2035; display: flex; justify-content: center; align-items: center; }
-        .lp-mp__pill { width: 28px; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; }
-        .lp-mp__body { padding: 9px; }
-        .lp-mps-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
-        .lp-mps-title { font-size: 8px; font-weight: 700; color: var(--lp-ink); margin-bottom: 5px; font-family: var(--font-display, sans-serif); }
-        .lp-mps-child { border-radius: 9px; padding: 6px 8px; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; background: var(--lp-ink); }
-        .lp-mps-av { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
-        .lp-mps-cname { font-size: 7.5px; font-weight: 600; color: white; font-family: var(--font-display, sans-serif); }
-        .lp-mps-csub { font-size: 6px; color: rgba(255,255,255,.5); }
-        .lp-mps-cbal { font-size: 9px; font-weight: 700; color: var(--lp-gold); }
-        .lp-mps-trow { display: flex; align-items: center; gap: 5px; padding: 4px 0; border-bottom: 1px solid var(--lp-line-soft); }
-        .lp-mps-tico { width: 17px; height: 17px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
-        .lp-mps-tname { font-size: 7px; color: var(--lp-ink); flex: 1; font-weight: 500; }
-        .lp-mps-badge { font-size: 6px; font-weight: 700; padding: 2px 4px; border-radius: 100px; }
-        .lp-mps-badge--ok   { background: var(--lp-mint-soft); color: var(--lp-mint-deep); }
-        .lp-mps-badge--wait { background: var(--lp-gold-soft); color: #7A5A00; }
-        .lp-mps-greeting { font-size: 10px; font-weight: 700; color: var(--lp-ink); margin-bottom: 6px; font-family: var(--font-display, sans-serif); }
-        .lp-mps-bal2 { background: var(--lp-ink); border-radius: 8px; padding: 7px 8px; margin-bottom: 6px; }
-        .lp-mps-bal2-lbl { font-size: 6.5px; color: rgba(255,255,255,.5); margin-bottom: 1px; }
-        .lp-mps-bal2-val { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 16px; color: var(--lp-gold); line-height: 1; }
-        .lp-mps-bal2-streak { font-size: 6.5px; color: rgba(255,255,255,.6); margin-top: 2px; }
-        .lp-mps-trow2 { display: flex; align-items: center; gap: 5px; padding: 4px 6px; background: white; border-radius: 7px; border: 1px solid var(--lp-line-soft); margin-bottom: 4px; }
-        .lp-mps-tico2 { width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
-        .lp-mps-tname2 { font-size: 7.5px; font-weight: 600; color: var(--lp-ink); flex: 1; }
-        .lp-mps-done  { width: 15px; height: 15px; border-radius: 50%; background: var(--lp-mint-soft); color: var(--lp-mint-deep); display: flex; align-items: center; justify-content: center; font-size: 9px; }
-        .lp-mps-coins { font-size: 7px; font-weight: 700; color: var(--lp-gold-deep); }
-        .lp-mps-shop-title { font-size: 10px; font-weight: 700; color: var(--lp-ink); margin-bottom: 6px; font-family: var(--font-display, sans-serif); }
-        .lp-mps-shop-bal { background: var(--lp-gold-soft); border-radius: 7px; padding: 5px 7px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
-        .lp-mps-reward { background: white; border: 1px solid var(--lp-line-soft); border-radius: 8px; padding: 6px; margin-bottom: 4px; }
-        .lp-mps-reward-top { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
-        .lp-mps-reward-ico { width: 24px; height: 24px; border-radius: 6px; background: var(--lp-gold-soft); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
-        .lp-mps-reward-name { font-size: 7.5px; font-weight: 600; color: var(--lp-ink); flex: 1; }
-        .lp-mps-reward-cost { font-size: 7.5px; font-weight: 700; color: var(--lp-gold-deep); }
-        .lp-mps-reward-bar { height: 3px; background: var(--lp-line-soft); border-radius: 100px; overflow: hidden; }
-        .lp-mps-reward-fill { height: 100%; border-radius: 100px; }
-        .lp-mps-reward-lbl { display: flex; justify-content: space-between; font-size: 6px; color: var(--lp-ink-mute); margin-top: 2px; }
-
-        /* Features */
-        .lp-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        @media (max-width: 640px) { .lp-features { grid-template-columns: 1fr; } }
-        .lp-feature { background: var(--lp-surface); padding: 28px 24px; border-radius: 22px; border: 1px solid var(--lp-line-soft); }
-        .lp-fi { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; font-size: 30px; }
-        .lp-fi--coral { background: var(--lp-coral-soft); }
-        .lp-fi--gold  { background: var(--lp-gold-soft); }
-        .lp-fi--mint  { background: var(--lp-mint-soft); }
-        .lp-fi--ink   { background: #E6E8EE; }
-        .lp-feature__title { font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 19px; letter-spacing: -.01em; margin: 0 0 8px; line-height: 1.2; }
-        .lp-feature__text { font-size: 13.5px; line-height: 1.55; color: var(--lp-ink-soft); margin: 0 0 12px; }
-        .lp-feature__tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .lp-ftag { font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 100px; }
-        .lp-ft--coral { background: var(--lp-coral-soft); color: var(--lp-coral-deep); }
-        .lp-ft--gold  { background: var(--lp-gold-soft);  color: var(--lp-gold-deep);  }
-        .lp-ft--mint  { background: var(--lp-mint-soft);  color: var(--lp-mint-deep);  }
-        .lp-ft--ink   { background: #E6E8EE; color: var(--lp-ink-2); }
-
-        /* Footer */
-        .lp-footer { background: var(--lp-cream-deep); padding: 52px 28px 32px; }
-        .lp-footer__row { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--lp-line); flex-wrap: wrap; }
-        .lp-footer__tag { font-size: 13px; color: var(--lp-ink-soft); margin: 8px 0 0; }
-        .lp-footer__links { display: flex; gap: 20px; flex-wrap: wrap; }
-        .lp-footer__links a { font-size: 13px; color: var(--lp-ink-2); transition: color .15s; }
-        .lp-footer__links a:hover { color: var(--lp-ink); }
-        .lp-footer__bottom { margin-top: 20px; font-size: 12px; color: var(--lp-ink-mute); }
-      `}</style>
+      <style>{LP_CSS}</style>
     </div>
   );
 }
+
+const LP_CSS = `
+.pip-lp { font-family: var(--font-body, system-ui); background:#F4ECDC; color:#1C2742; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+.pip-lp * { box-sizing:border-box; }
+.pip-lp ::selection { background:#F4C95A; color:#1C2742; }
+.pip-lp h1, .pip-lp h2, .pip-lp h3 { font-family: var(--font-display), system-ui; }
+.pip-lp a { -webkit-tap-highlight-color: transparent; }
+@keyframes floatY { 0%,100%{transform:translateY(0) rotate(var(--r,0deg));} 50%{transform:translateY(-18px) rotate(var(--r,0deg));} }
+@keyframes floatY2 { 0%,100%{transform:translateY(0) rotate(var(--r,0deg));} 50%{transform:translateY(14px) rotate(var(--r,0deg));} }
+@keyframes twinkle { 0%,100%{opacity:.25;transform:scale(.8);} 50%{opacity:1;transform:scale(1.1);} }
+
+/* header */
+.lp-header { position:sticky; top:0; z-index:50; background:rgba(244,236,220,0.82); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); border-bottom:1px solid #E6DAC2; }
+.lp-header-in { max-width:1180px; margin:0 auto; padding:14px clamp(18px,4vw,40px); display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; }
+.lp-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.lp-brand img { border-radius:50%; filter:drop-shadow(0 4px 10px rgba(200,134,28,.4)); }
+.lp-brand span { font-weight:800; font-size:23px; letter-spacing:-0.5px; color:#1C2742; }
+.lp-nav { display:flex; align-items:center; gap:clamp(16px,2.4vw,30px); }
+.lp-nav .nav-link { text-decoration:none; color:#4A5168; font-weight:600; font-size:15px; }
+.lp-login-btn { text-decoration:none; color:#1C2742; font-weight:700; font-size:15px; padding:9px 18px; border-radius:999px; border:1.5px solid #DAC9A4; }
+
+/* hero */
+.lp-hero { position:relative; background:radial-gradient(120% 90% at 80% 0%,#FBF3E2 0%,#F4ECDC 45%,#EFE4CE 100%); overflow:hidden; }
+.lp-coin { position:absolute; border-radius:50%; filter:drop-shadow(0 10px 18px rgba(200,134,28,.3)); }
+.lp-spark { position:absolute; color:#E0A02E; }
+.lp-hero-in { position:relative; max-width:1180px; margin:0 auto; padding:clamp(40px,6vw,84px) clamp(18px,4vw,40px); display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:clamp(32px,5vw,64px); align-items:center; }
+.lp-badge { display:inline-flex; align-items:center; gap:8px; background:#FFFCF6; border:1px solid #E6DAC2; border-radius:999px; padding:7px 14px; font-size:13px; font-weight:700; color:#C07F18; letter-spacing:.2px; }
+.lp-badge i { width:7px; height:7px; border-radius:50%; background:#34B27B; display:inline-block; }
+.lp-h1 { margin:20px 0 0; font-size:clamp(34px,5.2vw,58px); line-height:1.05; font-weight:900; letter-spacing:-1.5px; color:#1C2742; }
+.lp-h1 .grad { background:linear-gradient(180deg,#F4C95A 10%,#C8861C 90%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.lp-sub { margin:22px 0 0; font-size:clamp(17px,1.6vw,20px); line-height:1.5; color:#5A6178; max-width:500px; font-weight:500; }
+.lp-cta-row { margin-top:32px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+.lp-btn-gold { text-decoration:none; display:inline-flex; align-items:center; gap:9px; color:#1C2742; font-weight:800; font-size:17px; padding:15px 26px; border-radius:999px; background:linear-gradient(180deg,#F4C95A,#DF9E2C); box-shadow:0 10px 24px rgba(200,134,28,.42); }
+.lp-btn-gold img { border-radius:50%; }
+.lp-btn-ghost { text-decoration:none; color:#1C2742; font-weight:700; font-size:17px; padding:15px 24px; border-radius:999px; border:1.5px solid #D6C49C; background:#FFFCF6; }
+.lp-hint { margin-top:18px; display:flex; align-items:center; gap:8px; color:#8A8470; font-size:14px; font-weight:600; }
+.lp-hero-art { position:relative; justify-self:center; width:100%; max-width:430px; }
+.lp-poster { position:relative; border-radius:28px; overflow:hidden; box-shadow:0 30px 70px rgba(70,48,12,.28),0 4px 14px rgba(70,48,12,.12); border:6px solid #FFFCF6; transform:rotate(-1.4deg); }
+.lp-poster img { display:block; width:100%; height:auto; }
+.lp-chip-streak { position:absolute; top:24%; right:-6%; background:#FFFCF6; border-radius:16px; padding:10px 14px; box-shadow:0 14px 30px rgba(70,48,12,.22); font-weight:800; color:#1C2742; font-size:15px; transform:rotate(3deg); }
+.lp-chip-coin { position:absolute; bottom:8%; left:-7%; background:#FFFCF6; border-radius:16px; padding:10px 14px; box-shadow:0 14px 30px rgba(70,48,12,.22); font-weight:800; color:#C07F18; font-size:15px; transform:rotate(-3deg); display:flex; align-items:center; gap:7px; }
+.lp-chip-coin img { border-radius:50%; }
+
+/* sections common */
+.lp-sec-cream { background:#FFFCF6; border-top:1px solid #EAE0CB; padding:clamp(54px,7vw,96px) 0; }
+.lp-sec-tan { background:#F4ECDC; padding:clamp(54px,7vw,96px) 0; }
+.lp-wrap { max-width:1180px; margin:0 auto; padding:0 clamp(18px,4vw,40px); }
+.lp-eyebrow { font-size:13px; font-weight:800; letter-spacing:1.5px; color:#C07F18; text-transform:uppercase; }
+.lp-h2 { margin:12px 0 0; font-size:clamp(28px,3.8vw,46px); font-weight:900; letter-spacing:-1px; color:#1C2742; line-height:1.05; max-width:640px; }
+.lp-lead { margin:14px 0 0; font-size:17px; color:#5A6178; max-width:540px; font-weight:500; }
+
+/* gallery */
+.lp-gal-head { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.lp-gal-btns { display:flex; gap:10px; }
+.lp-gal-btn { width:48px; height:48px; border-radius:50%; border:1.5px solid #D6C49C; background:#FFFCF6; color:#1C2742; font-size:20px; cursor:pointer; font-weight:700; }
+.lp-gal-btn--gold { border:none; background:linear-gradient(180deg,#F4C95A,#DF9E2C); box-shadow:0 6px 16px rgba(200,134,28,.4); }
+.lp-gal { margin-top:36px; display:flex; gap:22px; overflow-x:auto; scroll-snap-type:x mandatory; padding:6px 2px 18px; scrollbar-width:thin; }
+.lp-gal-item { flex:none; width:clamp(248px,72vw,300px); scroll-snap-align:start; }
+.lp-gal-card { border-radius:24px; overflow:hidden; background:#F4ECDC; box-shadow:0 18px 40px rgba(70,48,12,.16); border:1px solid #EAE0CB; }
+.lp-gal-card img { display:block; width:100%; height:auto; }
+.lp-gal-label { margin-top:14px; display:flex; align-items:center; gap:9px; font-weight:800; color:#1C2742; font-size:16px; }
+.gallery-scroll::-webkit-scrollbar { height:8px; }
+.gallery-scroll::-webkit-scrollbar-thumb { background:#D8C49A; border-radius:8px; }
+.gallery-scroll::-webkit-scrollbar-track { background:transparent; }
+
+/* problem */
+.lp-prob-grid { margin-top:40px; display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:22px; }
+.lp-prob { position:relative; border-radius:24px; overflow:hidden; background:#FFFCF6; border:1px solid #EAE0CB; box-shadow:0 12px 30px rgba(70,48,12,.12); }
+.lp-prob-img { position:relative; aspect-ratio:4/5; overflow:hidden; }
+.lp-prob-img img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.lp-prob-grad { position:absolute; inset:0; background:linear-gradient(180deg,rgba(28,39,66,0) 38%,rgba(28,39,66,.18) 62%,rgba(20,28,48,.9) 100%); }
+.lp-prob-cap { position:absolute; left:18px; right:18px; bottom:16px; }
+.lp-tag { display:inline-block; font-size:12px; font-weight:800; letter-spacing:.4px; color:#1C2742; background:#F4C95A; border-radius:999px; padding:5px 11px; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+.lp-prob-cap h3 { margin:11px 0 0; font-size:21px; font-weight:900; color:#FFFCF6; line-height:1.12; letter-spacing:-.4px; text-shadow:0 2px 10px rgba(0,0,0,.4); }
+.lp-prob > p { margin:0; padding:18px 20px 22px; font-size:15px; line-height:1.5; color:#5A6178; font-weight:500; }
+.lp-prob-cta { margin-top:22px; background:linear-gradient(135deg,#1C2742,#26365E); border-radius:24px; padding:clamp(26px,4vw,40px); display:flex; gap:22px; align-items:center; flex-wrap:wrap; box-shadow:0 18px 44px rgba(28,39,66,.3); }
+.lp-prob-cta-coin { border-radius:50%; flex:none; filter:drop-shadow(0 8px 18px rgba(200,134,28,.5)); }
+.lp-prob-cta h3 { margin:0; font-size:clamp(20px,2.4vw,26px); font-weight:800; color:#FFFCF6; line-height:1.2; }
+.lp-prob-cta p { margin:10px 0 0; font-size:16px; line-height:1.5; color:#C6CBDA; font-weight:500; }
+
+/* why */
+.lp-why-grid { margin-top:40px; display:grid; grid-template-columns:repeat(auto-fit,minmax(246px,1fr)); gap:20px; }
+.lp-benefit { background:#F4ECDC; border:1px solid #EAE0CB; border-radius:22px; padding:26px; }
+.lp-benefit-ic { width:52px; height:52px; border-radius:15px; background:linear-gradient(180deg,#F4C95A,#DF9E2C); display:flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 6px 16px rgba(200,134,28,.35); }
+.lp-benefit h3 { margin:18px 0 0; font-size:19px; font-weight:800; color:#1C2742; line-height:1.2; }
+.lp-benefit p { margin:10px 0 0; font-size:15px; line-height:1.5; color:#5A6178; font-weight:500; }
+.lp-btags { margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; }
+.lp-btag { font-size:12.5px; font-weight:700; color:#C07F18; background:#FBF3E2; border:1px solid #EAD9B4; border-radius:999px; padding:5px 11px; }
+
+/* cta */
+.lp-cta-sec { background:#F4ECDC; padding:clamp(54px,7vw,100px) clamp(18px,4vw,40px); }
+.lp-cta-box { position:relative; max-width:1000px; margin:0 auto; border-radius:32px; overflow:hidden; background:linear-gradient(135deg,#F4C95A 0%,#E0A02E 55%,#C8861C 100%); padding:clamp(40px,6vw,72px) clamp(26px,5vw,64px); text-align:center; box-shadow:0 28px 60px rgba(200,134,28,.4); }
+.lp-cta-h2 { position:relative; margin:0; font-size:clamp(28px,4.4vw,52px); font-weight:900; letter-spacing:-1.2px; color:#1C2742; line-height:1.04; }
+.lp-cta-p { position:relative; margin:16px auto 0; font-size:clamp(16px,1.8vw,19px); color:#5A3A06; max-width:520px; font-weight:600; }
+.lp-cta-actions { position:relative; margin-top:30px; display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+.lp-btn-ink { text-decoration:none; display:inline-flex; align-items:center; gap:9px; color:#FFFCF6; font-weight:800; font-size:17px; padding:16px 30px; border-radius:999px; background:#1C2742; box-shadow:0 12px 26px rgba(28,39,66,.4); }
+
+/* footer */
+.lp-footer { background:#1C2742; color:#C6CBDA; padding:clamp(40px,5vw,64px) clamp(18px,4vw,40px) 36px; }
+.lp-footer-in { max-width:1180px; margin:0 auto; display:flex; justify-content:space-between; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+.lp-footer-brand { display:flex; align-items:center; gap:10px; }
+.lp-footer-brand img { border-radius:50%; }
+.lp-footer-brand span { font-weight:800; font-size:22px; color:#FFFCF6; letter-spacing:-0.5px; }
+.lp-footer-tag { margin:14px 0 0; font-size:15px; color:#9AA1B5; font-weight:500; }
+.lp-footer-cols { display:flex; gap:clamp(36px,7vw,80px); flex-wrap:wrap; }
+.lp-footer-col { display:flex; flex-direction:column; gap:11px; }
+.lp-footer-h { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#7A8199; }
+.lp-footer-col a { color:#C6CBDA; text-decoration:none; font-size:15px; font-weight:500; }
+.lp-footer-copy { max-width:1180px; margin:36px auto 0; padding-top:24px; border-top:1px solid rgba(255,255,255,.1); font-size:14px; color:#7A8199; }
+
+@media (max-width:680px) {
+  .nav-link { display:none !important; }
+  .hero-deco { display:none !important; }
+}
+`;
