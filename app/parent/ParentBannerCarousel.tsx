@@ -6,156 +6,77 @@ const STORAGE_KEY = 'pip-parent-banner-closed';
 
 type Slide = {
   id: string;
-  gradient: string;
-  illustration: React.ReactNode;
+  image: string;
+  dark?: boolean; // тёмный текст (для светлых баннеров)
   title: string;
   body: string;
   href?: string;
   ctaLabel?: string;
 };
 
-function IllustrationCamera() {
-  return (
-    <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-      <circle cx="55" cy="60" r="36" fill="rgba(255,255,255,0.12)" />
-      {/* Camera body */}
-      <rect x="22" y="44" width="66" height="46" rx="8" fill="white" fillOpacity="0.22" stroke="white" strokeWidth="2.5" strokeOpacity="0.7"/>
-      {/* Lens */}
-      <circle cx="55" cy="67" r="16" fill="white" fillOpacity="0.18" stroke="white" strokeWidth="2.5" strokeOpacity="0.8"/>
-      <circle cx="55" cy="67" r="9" fill="white" fillOpacity="0.25"/>
-      {/* Viewfinder bump */}
-      <rect x="40" y="36" width="30" height="12" rx="4" fill="white" fillOpacity="0.35" stroke="white" strokeWidth="2" strokeOpacity="0.7"/>
-      {/* Flash dot */}
-      <circle cx="79" cy="52" r="4" fill="white" fillOpacity="0.6"/>
-      <text x="8" y="28" fontSize="14" fill="white" fillOpacity="0.7">📸</text>
-      <text x="78" y="22" fontSize="10" fill="white" fillOpacity="0.5">✦</text>
-    </svg>
-  );
-}
-
-function IllustrationTarget() {
-  return (
-    <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-      <circle cx="55" cy="58" r="36" fill="rgba(255,255,255,0.12)" />
-      <circle cx="55" cy="58" r="30" fill="none" stroke="white" strokeWidth="2.5" strokeOpacity="0.5"/>
-      <circle cx="55" cy="58" r="20" fill="none" stroke="white" strokeWidth="2.5" strokeOpacity="0.65"/>
-      <circle cx="55" cy="58" r="10" fill="white" fillOpacity="0.35" stroke="white" strokeWidth="2.5" strokeOpacity="0.8"/>
-      {/* Arrow */}
-      <line x1="78" y1="32" x2="58" y2="56" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-      <path d="M72 28 L82 28 L82 38" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-      <text x="10" y="30" fontSize="12" fill="white" fillOpacity="0.6">🎯</text>
-      <text x="78" y="88" fontSize="10" fill="white" fillOpacity="0.4">✦</text>
-    </svg>
-  );
-}
-
-function IllustrationLightning() {
-  return (
-    <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-      <circle cx="55" cy="58" r="36" fill="rgba(255,255,255,0.12)" />
-      {/* Lightning bolt */}
-      <path d="M62 25 L40 60 L54 60 L48 90 L75 52 L60 52 Z"
-        fill="white" fillOpacity="0.35" stroke="white" strokeWidth="2" strokeOpacity="0.8" strokeLinejoin="round"/>
-      {/* Glow dots */}
-      <circle cx="32" cy="48" r="4" fill="white" fillOpacity="0.3"/>
-      <circle cx="78" cy="68" r="3" fill="white" fillOpacity="0.25"/>
-      <text x="8" y="32" fontSize="14" fill="white" fillOpacity="0.7">⚡</text>
-      <text x="80" y="28" fontSize="10" fill="white" fillOpacity="0.4">✦</text>
-    </svg>
-  );
-}
-
-function IllustrationGift() {
-  return (
-    <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-      <circle cx="55" cy="62" r="36" fill="rgba(255,255,255,0.12)" />
-      <rect x="28" y="55" width="54" height="36" rx="4" fill="white" fillOpacity="0.22" stroke="white" strokeWidth="2.5" strokeOpacity="0.7"/>
-      <rect x="24" y="44" width="62" height="14" rx="4" fill="white" fillOpacity="0.32" stroke="white" strokeWidth="2.5" strokeOpacity="0.8"/>
-      <rect x="50" y="44" width="10" height="47" rx="2" fill="white" fillOpacity="0.45"/>
-      {/* Bow */}
-      <path d="M55 44 Q44 36 44 28 Q44 22 52 22 Q58 22 55 30" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" strokeOpacity="0.8"/>
-      <path d="M55 44 Q66 36 66 28 Q66 22 58 22 Q52 22 55 30" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" strokeOpacity="0.8"/>
-      <text x="8" y="28" fontSize="14" fill="white" fillOpacity="0.7">🎁</text>
-      <text x="78" y="92" fontSize="10" fill="white" fillOpacity="0.4">✦</text>
-    </svg>
-  );
-}
-
-function IllustrationCalendar() {
-  return (
-    <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-      <circle cx="55" cy="60" r="36" fill="rgba(255,255,255,0.12)" />
-      <rect x="22" y="36" width="66" height="54" rx="8" fill="white" fillOpacity="0.2" stroke="white" strokeWidth="2.5" strokeOpacity="0.7"/>
-      {/* Header bar */}
-      <rect x="22" y="36" width="66" height="18" rx="8" fill="white" fillOpacity="0.3"/>
-      {/* Pin left */}
-      <rect x="35" y="28" width="8" height="16" rx="4" fill="white" fillOpacity="0.7"/>
-      {/* Pin right */}
-      <rect x="67" y="28" width="8" height="16" rx="4" fill="white" fillOpacity="0.7"/>
-      {/* Grid dots */}
-      {[36,48,60,72].map(x => [60,72,82].map(y => (
-        <circle key={`${x}${y}`} cx={x} cy={y} r="3.5" fill="white" fillOpacity="0.4"/>
-      )))}
-      {/* Checkmark on first */}
-      <path d="M33 62 l3 3 6-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <text x="78" y="26" fontSize="12" fill="white" fillOpacity="0.5">✦</text>
-    </svg>
-  );
-}
-
+// Баннеры: иллюстрация «вшита» в картинку справа, текст — в пустой левой части.
 const SLIDES: Slide[] = [
   {
     id: 'photo',
-    gradient: 'linear-gradient(135deg, #EE6C4D 0%, #D85535 100%)',
-    illustration: <IllustrationCamera />,
+    image: '/banners/banner-photo.jpg',
     title: 'Задания с фото',
-    body: 'Включи «Требует фото» — ребёнок загрузит доказательство. Больше никаких «я уже сделал»!',
+    body: 'Включи «Нужно фото» — ребёнок пришлёт доказательство.',
     href: '/parent/tasks/new',
     ctaLabel: 'Создать задание',
   },
   {
-    id: 'goals',
-    gradient: 'linear-gradient(135deg, #5B85C9 0%, #3D6BC4 100%)',
-    illustration: <IllustrationTarget />,
+    id: 'habits',
+    image: '/banners/banner-habits.jpg',
+    title: 'Ежедневные привычки',
+    body: 'Повторяющиеся дела — и PIP сам считает серию.',
+    href: '/parent/tasks/new',
+    ctaLabel: 'Создать',
+  },
+  {
+    id: 'fast',
+    image: '/banners/banner-fast.jpg',
+    dark: true,
+    title: 'Подтверждай быстро',
+    body: 'Ребёнок ждёт! Быстрый ответ держит мотивацию.',
+    href: '/parent/approvals',
+    ctaLabel: 'К подтверждениям',
+  },
+  {
+    id: 'dream',
+    image: '/banners/banner-dream.jpg',
     title: 'Ставьте цели вместе',
-    body: 'Обсудите с ребёнком, на что он хочет копить PIP. Когда цель его — мотивация в разы выше.',
+    body: 'Когда цель — его, мотивация в разы выше.',
     href: '/parent/rewards/new',
     ctaLabel: 'Добавить награду',
   },
   {
-    id: 'approve',
-    gradient: 'linear-gradient(135deg, #D4A12E 0%, #B88C20 100%)',
-    illustration: <IllustrationLightning />,
-    title: 'Подтверждай быстро',
-    body: 'Ребёнок ждёт! Быстрое подтверждение поддерживает энтузиазм и помогает сохранить стрик.',
-    href: '/parent/approvals',
-    ctaLabel: 'К заданиям',
-  },
-  {
     id: 'rewards',
-    gradient: 'linear-gradient(135deg, #E27396 0%, #C45A80 100%)',
-    illustration: <IllustrationGift />,
-    title: 'Придумай крутую награду',
-    body: 'Поход в кино, особое блюдо, час игры — маленькие мечты работают лучше денег.',
+    image: '/banners/banner-rewards.jpg',
+    title: 'Награды как мечта',
+    body: 'Кино, игра, пицца — работают лучше денег.',
     href: '/parent/rewards/new',
     ctaLabel: 'Добавить',
   },
   {
-    id: 'habits',
-    gradient: 'linear-gradient(135deg, #5BA890 0%, #3D8C76 100%)',
-    illustration: <IllustrationCalendar />,
-    title: 'Ежедневные привычки',
-    body: 'Создай повторяющиеся задания — чистка зубов, уборка, помощь — и PIP сам считает серию.',
-    href: '/parent/tasks/new',
-    ctaLabel: 'Создать',
+    id: 'save',
+    image: '/banners/banner-save.jpg',
+    title: 'Цель-копилка',
+    body: 'Ребёнок копит на награду и видит прогресс.',
+    href: '/parent/rewards/new',
+    ctaLabel: 'Создать цель',
+  },
+  {
+    id: 'honesty',
+    image: '/banners/banner-honesty.jpg',
+    title: 'Всё под контролем',
+    body: 'Подтверждение, история, баланс — каждый шаг виден вам.',
   },
 ];
 
 export function ParentBannerCarousel() {
   const [closed, setClosed] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const touchRef = useRef({ startX: 0, startY: 0, locked: false });
+  const touchRef = useRef({ startX: 0, startY: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -184,12 +105,10 @@ export function ParentBannerCarousel() {
   }
 
   function handleTouchStart(e: React.TouchEvent) {
-    touchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, locked: false };
-    setIsSwiping(true);
+    touchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY };
   }
 
   function handleTouchEnd(e: React.TouchEvent) {
-    setIsSwiping(false);
     const dx = e.changedTouches[0].clientX - touchRef.current.startX;
     const dy = e.changedTouches[0].clientY - touchRef.current.startY;
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
@@ -203,126 +122,133 @@ export function ParentBannerCarousel() {
   const slide = SLIDES[current];
 
   return (
-    <div
+    <BannerCard
+      slide={slide}
+      slides={SLIDES}
+      current={current}
+      onDot={(i) => { setCurrent(i); resetTimer(); }}
+      onClose={handleClose}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 0,
-        userSelect: 'none',
-      }}
-    >
+      renderCta={(s) =>
+        s.href && s.ctaLabel ? (
+          <a href={s.href} className="bc-cta" onClick={(e) => e.stopPropagation()}>
+            {s.ctaLabel} →
+          </a>
+        ) : null
+      }
+    />
+  );
+}
+
+// ─── Общая карточка баннера ───────────────────────────────────────────────────
+
+export function BannerCard({
+  slide, slides, current, onDot, onClose, onTouchStart, onTouchEnd, renderCta,
+}: {
+  slide: Slide;
+  slides: Slide[];
+  current: number;
+  onDot: (i: number) => void;
+  onClose: () => void;
+  onTouchStart: (e: React.TouchEvent) => void;
+  onTouchEnd: (e: React.TouchEvent) => void;
+  renderCta: (s: Slide) => React.ReactNode;
+}) {
+  const titleColor = slide.dark ? '#3A2A12' : '#FFFFFF';
+  const bodyColor = slide.dark ? 'rgba(58,42,18,0.82)' : 'rgba(255,255,255,0.92)';
+  const scrim = slide.dark
+    ? 'linear-gradient(90deg, rgba(255,255,255,0.45), rgba(255,255,255,0.12) 42%, transparent 62%)'
+    : 'linear-gradient(90deg, rgba(0,0,0,0.30), rgba(0,0,0,0.08) 44%, transparent 64%)';
+  const textShadow = slide.dark ? 'none' : '0 1px 4px rgba(0,0,0,0.28)';
+
+  return (
+    <div style={{ position: 'relative', userSelect: 'none' }}>
       <div
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         style={{
-          background: slide.gradient,
-          padding: '20px 16px 22px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          minHeight: 130,
-          transition: isSwiping ? 'none' : 'background 0.4s ease',
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '1080 / 369',
+          minHeight: 116,
+          overflow: 'hidden',
+          backgroundImage: `url(${slide.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center right',
+          backgroundRepeat: 'no-repeat',
         }}
       >
-        {/* Illustration */}
-        <div style={{ flexShrink: 0, width: 88, display: 'flex', justifyContent: 'center' }}>
-          {slide.illustration}
-        </div>
+        {/* Скрим для читаемости текста слева */}
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: scrim, pointerEvents: 'none' }} />
 
-        {/* Text */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 700,
-              fontSize: 16,
-              color: 'white',
-              letterSpacing: '-0.01em',
-              marginBottom: 5,
-              lineHeight: 1.2,
-            }}
-          >
+        {/* Текст слева */}
+        <div style={{
+          position: 'absolute', left: 0, top: 0, bottom: 0, width: '60%',
+          padding: '0 8px 0 18px',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6,
+          zIndex: 1,
+        }}>
+          <div style={{
+            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16,
+            lineHeight: 1.18, letterSpacing: '-0.01em', color: titleColor, textShadow,
+          }}>
             {slide.title}
           </div>
-          <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 10 }}>
+          <div style={{
+            fontSize: 12, lineHeight: 1.4, color: bodyColor, textShadow,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
             {slide.body}
           </div>
-          {slide.href && slide.ctaLabel && (
-            <a
-              href={slide.href}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                background: 'rgba(255,255,255,0.25)',
-                borderRadius: 100,
-                padding: '5px 12px',
-                color: 'white',
-                fontSize: 12,
-                fontWeight: 700,
-                textDecoration: 'none',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              {slide.ctaLabel} →
-            </a>
-          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  aria-label={`Слайд ${i + 1}`}
+                  onClick={(e) => { e.stopPropagation(); onDot(i); }}
+                  style={{
+                    width: i === current ? 16 : 6, height: 6, borderRadius: 100,
+                    background: slide.dark ? '#7A5A28' : '#fff',
+                    opacity: i === current ? 1 : 0.4, border: 'none', padding: 0, cursor: 'pointer',
+                    transition: 'width 0.25s ease, opacity 0.25s ease',
+                  }}
+                />
+              ))}
+            </div>
+            {renderCta(slide)}
+          </div>
         </div>
+
+        {/* Закрыть */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          aria-label="Закрыть"
+          style={{
+            position: 'absolute', top: 10, right: 10, zIndex: 10,
+            width: 26, height: 26, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.22)', border: 'none', color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', backdropFilter: 'blur(4px)',
+          }}
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
 
-      {/* Close button */}
-      <button
-        onClick={handleClose}
-        aria-label="Закрыть"
-        style={{
-          position: 'absolute',
-          top: 10,
-          right: 10,
-          width: 26,
-          height: 26,
-          borderRadius: '50%',
-          background: 'rgba(0,0,0,0.2)',
-          border: 'none',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          fontSize: 14,
-          lineHeight: 1,
-          zIndex: 10,
-        }}
-      >
-        ✕
-      </button>
-
-      {/* Dots */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 8,
-          right: 14,
-          display: 'flex',
-          gap: 5,
-        }}
-      >
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => { setCurrent(i); resetTimer(); }}
-            style={{
-              width: i === current ? 16 : 6,
-              height: 6,
-              borderRadius: 100,
-              background: i === current ? 'white' : 'rgba(255,255,255,0.4)',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              transition: 'width 0.25s ease, background 0.25s ease',
-            }}
-          />
-        ))}
-      </div>
+      <style>{`
+        .bc-cta {
+          display: inline-flex; align-items: center; white-space: nowrap;
+          background: ${slide.dark ? 'rgba(58,42,18,0.14)' : 'rgba(255,255,255,0.25)'};
+          color: ${slide.dark ? '#3A2A12' : '#fff'};
+          border-radius: 100px; padding: 4px 12px; font-size: 12px; font-weight: 700;
+          text-decoration: none; backdrop-filter: blur(4px);
+        }
+      `}</style>
     </div>
   );
 }
