@@ -59,10 +59,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Если залогинен и идёт на /login или /signup — отправляем на /parent
+  // Если залогинен и идёт на /login или /signup — отправляем на /parent.
+  // Но если в ссылке есть ?invite=TOKEN (письмо-приглашение второго родителя,
+  // открытое уже залогиненным) — ведём на публичную /invite-family/[token],
+  // где инвайт корректно примется, иначе токен молча терялся бы.
   if (user && ['/login', '/signup'].includes(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = '/parent';
+    const invite = request.nextUrl.searchParams.get('invite');
+    url.pathname = invite ? `/invite-family/${invite}` : '/parent';
+    url.search = '';
     return NextResponse.redirect(url);
   }
 
