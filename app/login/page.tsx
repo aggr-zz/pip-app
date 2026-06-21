@@ -295,7 +295,7 @@ function LoginEntry() {
                 />
               </Field>
 
-              <Field label="Пароль" htmlFor="lg-pw">
+              <Field label="Пароль" htmlFor="lg-pw" action={authView === 'login' ? <a href="/forgot-password" className="lg-forgot">Забыли пароль?</a> : undefined}>
                 <div className="lg-input-wrap">
                   <input
                     id="lg-pw" className="lg-input lg-input--pw" type={showPw ? 'text' : 'password'}
@@ -323,12 +323,6 @@ function LoginEntry() {
                     {pwMatch ? 'Пароли совпадают' : pwMismatch ? 'Пароли не совпадают' : '·'}
                   </div>
                 </Field>
-              )}
-
-              {authView === 'login' && (
-                <div style={{ textAlign: 'right', marginTop: -8 }}>
-                  <a href="/forgot-password" className="lg-forgot">Забыли пароль?</a>
-                </div>
               )}
 
               {authView === 'register' && (
@@ -447,10 +441,13 @@ function LoginEntry() {
   );
 }
 
-function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
+function Field({ label, htmlFor, action, children }: { label: string; htmlFor: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="lg-field">
-      <label className="lg-label" htmlFor={htmlFor}>{label}</label>
+      <div className="lg-field-head">
+        <label className="lg-label" htmlFor={htmlFor}>{label}</label>
+        {action}
+      </div>
       {children}
     </div>
   );
@@ -488,18 +485,19 @@ const styles = `
   border-radius: 32px 32px 0 0;
   border-top: 1px solid rgba(255,255,255,0.8);
   box-shadow: 0 -10px 44px rgba(74,46,12,0.20);
-  padding: 14px 22px calc(28px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 22px calc(20px + env(safe-area-inset-bottom, 0px));
 }
 .lg-fade { position: absolute; left: 0; right: 0; top: -90px; height: 90px; pointer-events: none; background: linear-gradient(180deg, rgba(255,248,236,0), rgba(255,248,236,0.55)); }
-.lg-grabber { width: 42px; height: 5px; border-radius: 99px; background: #E4D2B2; margin: 0 auto 16px; }
-.lg-seg { position: relative; display: flex; background: #F1E2C6; border-radius: 14px; padding: 4px; margin-bottom: 20px; }
+.lg-grabber { width: 42px; height: 5px; border-radius: 99px; background: #E4D2B2; margin: 0 auto 12px; }
+.lg-seg { position: relative; display: flex; background: #F1E2C6; border-radius: 14px; padding: 4px; margin-bottom: 16px; }
 .lg-seg-slider { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); width: calc(50% - 4px); background: #fff; border-radius: 11px; box-shadow: 0 2px 6px rgba(120,80,20,0.14); transition: transform .32s cubic-bezier(.34,1.3,.5,1); }
 .lg-seg-btn { position: relative; z-index: 1; flex: 1; height: 42px; border: none; background: transparent; font-family: var(--font-display); font-weight: 700; font-size: 15.5px; color: #5C4A2E; cursor: pointer; border-radius: 11px; -webkit-tap-highlight-color: transparent; }
 .lg-seg-btn.is-active { color: #4A3A22; }
 .lg-invite { display: flex; align-items: center; gap: 8px; padding: 10px 13px; margin-bottom: 14px; background: #FBEFD6; border: 1px solid #F0DFBE; border-radius: 12px; font-size: 13px; color: #6B563A; }
-.lg-form { display: flex; flex-direction: column; gap: 14px; animation: lgFade .3s ease; }
+.lg-form { display: flex; flex-direction: column; gap: 11px; animation: lgFade .3s ease; }
 @keyframes lgFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.lg-field { display: flex; flex-direction: column; gap: 7px; }
+.lg-field { display: flex; flex-direction: column; gap: 6px; }
+.lg-field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .lg-label { font-family: var(--font-body, inherit); font-weight: 700; font-size: 13px; color: #6E5836; padding-left: 4px; }
 .lg-input-wrap { position: relative; }
 .lg-input {
@@ -520,7 +518,7 @@ const styles = `
   font-family: var(--font-body, inherit); font-weight: 700; font-size: 13.5px; color: #A66C12;
 }
 .lg-vhint { font-family: var(--font-body, inherit); font-weight: 700; font-size: 12.5px; min-height: 15px; padding-left: 4px; }
-.lg-forgot { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 4px; font-family: var(--font-body, inherit); font-weight: 700; font-size: 13.5px; color: #A66C12; text-decoration: underline; text-underline-offset: 2px; }
+.lg-forgot { display: inline-flex; align-items: center; padding: 2px 2px; font-family: var(--font-body, inherit); font-weight: 700; font-size: 12.5px; color: #A66C12; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
 .lg-agree { display: flex; align-items: flex-start; gap: 9px; font-size: 12.8px; color: #6B563A; line-height: 1.45; cursor: pointer; padding: 0 2px; }
 .lg-agree input { flex-shrink: 0; margin-top: 2px; width: 17px; height: 17px; accent-color: #E59A28; cursor: pointer; }
 .lg-agree a { color: #3B2C1A; text-decoration: underline; text-underline-offset: 2px; }
