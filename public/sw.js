@@ -5,7 +5,7 @@
 // деплоя установленный PWA отдавал из кэша старые чанки и server-action id →
 // "Failed to find Server Action" / ChunkLoadError, пока вручную не очистишь кэш.
 
-const CACHE_NAME = 'pip-v4';
+const CACHE_NAME = 'pip-v5';
 
 // Статика, которую кэшируем при установке (без HTML — '/' тут быть НЕ должно).
 const PRECACHE_URLS = [

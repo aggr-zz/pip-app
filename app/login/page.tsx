@@ -198,7 +198,6 @@ function LoginEntry() {
       <div className="lg-screen">
         <div className="lg">
           <img className="lg-poster" src="/login-poster.jpg" alt="" aria-hidden="true" />
-          <div className="lg-underlay" />
           <div className="lg-sheet">
             <div className="lg-fade" />
             <div className="lg-grabber" />
@@ -242,7 +241,6 @@ function LoginEntry() {
     <div className="lg-screen">
       <div className="lg" aria-hidden={childOpen || undefined}>
         <img className="lg-poster" src="/login-poster.jpg" alt="PIP — полезные привычки у детей копятся, как монетки" />
-        <div className="lg-underlay" />
 
         <div className="lg-sheet">
           <div className="lg-fade" />
@@ -482,8 +480,7 @@ const styles = `
   position: relative; width: 100%; max-width: 480px; min-height: 100dvh;
   display: flex; flex-direction: column; justify-content: flex-end; overflow-x: hidden;
 }
-.lg-poster { position: absolute; top: 0; left: 0; width: 100%; height: auto; z-index: 1; margin-top: max(30px, calc(env(safe-area-inset-top, 0px) + 4px)); user-select: none; pointer-events: none; }
-.lg-underlay { position: absolute; top: 0; left: 0; right: 0; height: 52px; z-index: 2; pointer-events: none; background: linear-gradient(180deg, #F6ECD7 60%, rgba(246,236,215,0)); }
+.lg-poster { position: absolute; top: 0; left: 0; width: 100%; height: auto; z-index: 1; user-select: none; pointer-events: none; }
 .lg-sheet {
   position: relative; z-index: 3; margin-top: auto;
   background: rgba(255,248,236,0.97);
