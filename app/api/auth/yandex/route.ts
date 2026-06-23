@@ -33,13 +33,20 @@ export async function GET(request: NextRequest) {
     `&state=${state}`;
 
   const res = NextResponse.redirect(authUrl);
-  // state + next переживут редирект на Яндекс и вернутся в колбэк
+  // state + next переживут редирект на Яндекс и вернутся в колбэк.
+  // Домен ставим на apex (.pipup.ru), чтобы cookie доходила и на www, и без www
+  // (колбэк всегда приходит на pipup.ru, а старт могли открыть с www.pipup.ru).
+  const host = new URL(base).hostname;
+  const cookieDomain = host.includes('.') && !host.endsWith('localhost')
+    ? '.' + host.replace(/^www\./, '')
+    : undefined;
   res.cookies.set('yandex_oauth', `${state}|${next}`, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
     maxAge: 600,
     path: '/',
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
   });
   return res;
 }

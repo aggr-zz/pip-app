@@ -27,14 +27,21 @@ export async function GET(request: NextRequest) {
   const saved = cookieStore.get('yandex_oauth')?.value || '';
   const [savedState, savedNext] = saved.split('|');
   const next = safeNext(savedNext);
-  cookieStore.set('yandex_oauth', '', { maxAge: 0, path: '/' });
+  const host = new URL(base).hostname;
+  const cookieDomain = host.includes('.') && !host.endsWith('localhost')
+    ? '.' + host.replace(/^www\./, '')
+    : undefined;
+  cookieStore.set('yandex_oauth', '', { maxAge: 0, path: '/', ...(cookieDomain ? { domain: cookieDomain } : {}) });
 
   const fail = (reason: string) => NextResponse.redirect(`${base}/login?error=${reason}`);
 
   const code = params.get('code');
   const state = params.get('state');
   if (params.get('error')) return fail('yandex_denied');
-  if (!code || !state || !savedState || state !== savedState) return fail('yandex_state');
+  if (!code || !state || !savedState || state !== savedState) {
+    console.error('[yandex] state fail', { hasCode: !!code, hasState: !!state, hasSavedCookie: !!savedState, match: state === savedState });
+    return fail('yandex_state');
+  }
 
   const clientId = process.env.YANDEX_CLIENT_ID;
   const clientSecret = process.env.YANDEX_SECRET;
