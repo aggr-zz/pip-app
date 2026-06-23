@@ -276,6 +276,7 @@ function LoginEntry() {
 
           {/* ── Родитель ─────────────────────────────────────────────── */}
           {mode === 'parent' && (
+            <>
             <form className="lg-form" onSubmit={authView === 'login' ? handleLogin : handleRegister} noValidate key={authView}>
               {authView === 'register' && (
                 <Field label="Как тебя зовут" htmlFor="lg-name">
@@ -371,6 +372,12 @@ function LoginEntry() {
                 </p>
               )}
             </form>
+
+            <div className="lg-or"><span>или</span></div>
+            <a className="lg-yandex" href={`/api/auth/yandex?next=${encodeURIComponent(next)}`}>
+              <span className="lg-ya" aria-hidden="true">Я</span> Войти через Яндекс
+            </a>
+            </>
           )}
 
           {/* ── Ребёнок ──────────────────────────────────────────────── */}
@@ -540,6 +547,11 @@ const styles = `
   transition: background .12s; -webkit-tap-highlight-color: transparent;
 }
 .lg-secondary:active:not(:disabled) { background: #F6ECD8; }
+.lg-or { display: flex; align-items: center; gap: 12px; color: #A99B7E; font-size: 12.5px; margin: 14px 0 2px; }
+.lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: #E7DAC0; }
+.lg-yandex { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 16px; background: #fff; border: 1.5px solid #E7D6B6; color: #3B2C1A; font-family: var(--font-display); font-weight: 700; font-size: 15.5px; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.lg-yandex:active { background: #F6ECD8; }
+.lg-ya { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #FC3F1D; color: #fff; font-weight: 800; font-size: 15px; font-family: Arial, sans-serif; }
 .lg-switch { text-align: center; font-family: var(--font-body, inherit); font-weight: 500; font-size: 14.5px; color: #6E5836; margin: 2px 0 0; }
 .lg-link { border: none; background: transparent; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14.5px; color: #A66C12; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
 .lg-h1 { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: #3B2C1A; margin: 0 0 8px; letter-spacing: -0.01em; }
