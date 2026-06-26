@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
     email_confirm: true,
     user_metadata: { name, provider: 'yandex' },
   });
+  const newlyCreated = !created.error;
   if (created.error && !/registered|already|exists/i.test(created.error.message)) {
     console.error('[yandex] createUser:', created.error.message);
     return fail('yandex_create');
@@ -102,6 +103,17 @@ export async function GET(request: NextRequest) {
   if (link.error || !tokenHash) {
     console.error('[yandex] generateLink:', link.error?.message);
     return fail('yandex_link');
+  }
+
+  // Защита от захвата чужого аккаунта по совпадению email: пускаем через Яндекс
+  // ТОЛЬКО если пользователь только что создан этим входом ИЛИ изначально заведён
+  // через Яндекс (provider в метаданных). Аккаунт, созданный по email+паролю,
+  // нельзя открыть Яндексом без подтверждения владения — иначе при AUTOCONFIRM
+  // заранее подготовленный парольный аккаунт на чужой адрес = account takeover.
+  const existingProvider = (link.data?.user?.user_metadata as Record<string, unknown> | undefined)?.provider;
+  if (!newlyCreated && existingProvider !== 'yandex') {
+    console.error('[yandex] refuse takeover: email already registered via another method');
+    return fail('yandex_account_exists');
   }
 
   const supabase = await createClient();

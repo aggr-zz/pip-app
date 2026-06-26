@@ -29,6 +29,28 @@ type AuthView = 'login' | 'register';
 
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
+/** Текст ошибки по коду из ?error= (после редиректов колбэков). */
+function mapErrorParam(code: string | null): string | null {
+  if (!code) return null;
+  switch (code) {
+    case 'yandex_account_exists':
+      return 'Аккаунт с этой почтой уже зарегистрирован по email и паролю. Войдите этим способом.';
+    case 'yandex_denied':
+      return 'Вход через Яндекс отменён.';
+    case 'yandex_state':
+    case 'yandex_token':
+    case 'yandex_info':
+    case 'yandex_noemail':
+    case 'yandex_create':
+    case 'yandex_link':
+    case 'yandex_verify':
+    case 'yandex_not_configured':
+      return 'Не удалось войти через Яндекс. Попробуйте ещё раз или войдите по email.';
+    default:
+      return 'Ссылка устарела или уже использована. Войди или запроси письмо ещё раз.';
+  }
+}
+
 function LoginEntry() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,9 +74,7 @@ function LoginEntry() {
   const [showPw, setShowPw] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
-  const [error, setError] = useState<string | null>(
-    errorParam ? 'Ссылка устарела или уже использована. Войди или запроси письмо ещё раз.' : null
-  );
+  const [error, setError] = useState<string | null>(mapErrorParam(errorParam));
   const [isPending, startTransition] = useTransition();
 
   // Подтверждение email
