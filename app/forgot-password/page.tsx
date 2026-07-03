@@ -43,7 +43,9 @@ export default function ForgotPasswordPage() {
               <strong>{email}</strong>. Проверь почту — письмо придёт в течение минуты.
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>
-              Не нашёл? Проверь папку «Спам».
+              Не нашёл? Проверь папку «Спам». Если письма нет — напиши на{' '}
+              <a href="mailto:saymien1@gmail.com" style={{ color: 'var(--color-coral)', fontWeight: 600 }}>saymien1@gmail.com</a>,
+              поможем восстановить доступ вручную.
             </p>
             <a href="/login" style={{ display: 'block', marginTop: 24, textAlign: 'center', fontSize: 14, color: 'var(--color-coral)', fontWeight: 600 }}>
               ← Вернуться ко входу

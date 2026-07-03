@@ -17,7 +17,7 @@ const PACKAGE_NAME = process.env.TWA_PACKAGE_NAME || 'ru.pipup.twa';
 
 const FINGERPRINTS = (
   process.env.TWA_SHA256_FINGERPRINTS ||
-  '50:C4:4F:2C:EE:19:46:E9:8A:7E:16:83:CD:15:4D:ED:EA:10:C6:FE:DC:E4:50:D7:6F:AE:33:23:47:1A:6E:41'
+  'D0:F5:E7:13:6F:77:2E:A7:6A:68:EA:BC:02:4E:A7:1B:23:CE:B1:AB:31:88:66:A8:3E:5A:BE:8D:31:37:EC:02'
 )
   .split(',')
   .map((s) => s.trim().toUpperCase())
