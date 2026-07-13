@@ -5,9 +5,10 @@ import { useState } from 'react';
 type Props = {
   joinUrl: string;
   childName: string;
+  pin: string;
 };
 
-export function JoinLinkCard({ joinUrl, childName }: Props) {
+export function JoinLinkCard({ joinUrl, childName, pin }: Props) {
   const [copied, setCopied] = useState(false);
 
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(joinUrl)}`;
@@ -51,10 +52,45 @@ export function JoinLinkCard({ joinUrl, childName }: Props) {
           📲
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: 14.5 }}>Ссылка для {childName}</div>
+          <div style={{ fontWeight: 600, fontSize: 14.5 }}>Как {childName} войдёт</div>
           <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 1 }}>
-            Отправь или покажи QR-код — ребёнок войдёт сам
+            Со своего телефона: открыть ссылку или QR и ввести PIN
           </div>
+        </div>
+      </div>
+
+      {/* PIN — назвать ребёнку */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          background: 'var(--color-gold-soft)',
+          border: '1px solid var(--color-gold)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '10px 14px',
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-gold-deep)' }}>
+            PIN для входа
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-soft)', marginTop: 1 }}>
+            назови его ребёнку
+          </div>
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: 26,
+            letterSpacing: '0.22em',
+            color: 'var(--color-gold-deep)',
+          }}
+        >
+          {pin}
         </div>
       </div>
 
@@ -149,7 +185,7 @@ export function JoinLinkCard({ joinUrl, childName }: Props) {
       </div>
 
       <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '12px 0 0', lineHeight: 1.5 }}>
-        После перехода по ссылке ребёнок введёт свой PIN и попадёт на свой экран.
+        Ребёнок откроет ссылку со своего телефона, введёт этот PIN и попадёт на свой экран. PIN можно сменить в «Управление профилем».
       </p>
     </section>
   );

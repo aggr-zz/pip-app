@@ -83,9 +83,53 @@ export function ChildrenPanel({ children, defaultExpandedId }: Props) {
         >
           Добавь первого ребёнка
         </div>
-        <p style={{ color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.55, margin: '0 0 24px' }}>
+        <p style={{ color: 'var(--text-soft)', fontSize: 14, lineHeight: 1.55, margin: '0 0 18px' }}>
           PIP начинает работать когда в семье появляется ребёнок. Создадим его профиль!
         </p>
+
+        {/* Как это работает — 3 шага */}
+        <div
+          style={{
+            textAlign: 'left',
+            background: 'var(--bg-surface-2)',
+            border: '1px solid var(--border-soft)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '14px 16px',
+            margin: '0 auto 22px',
+            maxWidth: 320,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}
+        >
+          {[
+            { n: '1', t: 'Добавь ребёнка и дай ему ссылку с PIN' },
+            { n: '2', t: 'Создай задания — за них капают PIP-монеты' },
+            { n: '3', t: 'Придумай награды, на которые ребёнок копит' },
+          ].map((s) => (
+            <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  background: 'var(--color-coral-soft)',
+                  color: 'var(--color-coral-deep)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {s.n}
+              </div>
+              <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.35 }}>{s.t}</span>
+            </div>
+          ))}
+        </div>
+
         <a
           href="/parent/children/new"
           style={{

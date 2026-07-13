@@ -341,10 +341,21 @@ export default async function ChildHomePage({
                 color: 'var(--text-soft)',
               }}
             >
-              <div style={{ fontSize: 36, marginBottom: 10 }}>🌤️</div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
-                На сегодня заданий нет. Отдыхай!
-              </p>
+              {(allTasks ?? []).length === 0 ? (
+                <>
+                  <div style={{ fontSize: 36, marginBottom: 10 }}>🌱</div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+                    Родитель ещё не добавил задания.<br />Скоро появятся!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 36, marginBottom: 10 }}>🌤️</div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+                    На сегодня заданий нет. Отдыхай!
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

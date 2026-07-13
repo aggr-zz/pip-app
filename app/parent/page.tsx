@@ -113,6 +113,7 @@ export default async function ParentDashboardPage() {
     { data: allTasks = [] },
     { data: todayCompletions = [] },
     { data: pendingCompletions = [] },
+    { count: rewardsCount },
   ] = await Promise.all([
     supabase
       .from('tasks')
@@ -133,7 +134,16 @@ export default async function ParentDashboardPage() {
       .eq('status', 'pending')
       .order('completed_at', { ascending: true })
       .returns<PendingCompletion[]>(),
+    supabase
+      .from('rewards')
+      .select('id', { count: 'exact', head: true })
+      .eq('family_id', me.family_id)
+      .is('archived_at', null),
   ]);
+
+  // Петля мотивации не замкнётся без наград: есть задания, но наград нет →
+  // подскажем создать первую (иначе ребёнку некуда тратить PIP).
+  const needsFirstReward = (allTasks ?? []).length > 0 && (rewardsCount ?? 0) === 0;
 
   // Названия/иконки/цена задач для pending — из активных задач, а для уже
   // архивированных дозапрашиваем отдельно (чтобы карточка всё равно отрисовалась).
@@ -264,6 +274,37 @@ export default async function ParentDashboardPage() {
 
       {/* ── Content ─────────────────────────────────────────────────── */}
       <div style={{ padding: '20px 16px 32px', maxWidth: 600, margin: '0 auto' }}>
+
+        {/* Мостик к первой награде: есть задания, но наград нет */}
+        {needsFirstReward && (
+          <a
+            href="/parent/rewards/new"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              background: 'var(--color-gold-soft)',
+              border: '1px solid var(--color-gold)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '12px 14px',
+              marginBottom: 16,
+              textDecoration: 'none',
+            }}
+          >
+            <div style={{ fontSize: 24, flexShrink: 0 }}>🎁</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-gold-deep)' }}>
+                Добавь первую награду
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-soft)', marginTop: 2 }}>
+                Чтобы ребёнку было ради чего копить PIP
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold-deep)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </a>
+        )}
 
         {/* Section header */}
         <div

@@ -22,6 +22,7 @@ type Profile = {
   balance: number;
   current_streak: number;
   longest_streak: number;
+  pin: string;
 };
 
 type Task = {
@@ -224,8 +225,13 @@ export default async function ChildDetailPage({
           </div>
         </section>
 
-        {/* Enter child mode (client component с PIN) */}
-        <EnterChildMode childId={child.id} childName={child.name} />
+        {/* Подключить ребёнка: ссылка/QR + PIN (личный телефон ребёнка) */}
+        <JoinLinkCard joinUrl={joinUrl} childName={child.name} pin={child.pin} />
+
+        {/* Или вход на этом (родительском) телефоне — общее устройство */}
+        <div style={{ marginTop: 10 }}>
+          <EnterChildMode childId={child.id} childName={child.name} />
+        </div>
 
         {/* Управление профилем: имя/возраст, сброс PIN, архивация */}
         <ManageChild childId={child.id} name={child.name} age={age} />
@@ -494,8 +500,6 @@ export default async function ChildDetailPage({
           )}
         </section>
 
-        {/* Join link + QR code */}
-        <JoinLinkCard joinUrl={joinUrl} childName={child.name} />
       </div>
     </main>
   );

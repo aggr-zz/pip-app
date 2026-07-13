@@ -41,7 +41,7 @@ export function EnterChildMode({ childId, childName }: { childId: string; childN
         fullWidth
         onClick={() => setOpen(true)}
       >
-        Войти в режим {childName} →
+        Открыть режим {childName} на этом телефоне →
       </Button>
     );
   }
