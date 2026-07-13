@@ -195,6 +195,7 @@ function Landing() {
               <span className="lp-footer-h">Продукт</span>
               <a href="#how">Как работает</a>
               <a href="#why">Почему pip</a>
+              <a href="/guide">Как начать</a>
               <a href={REGISTER}>Создать аккаунт</a>
             </div>
             <div className="lp-footer-col">
