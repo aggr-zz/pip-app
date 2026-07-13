@@ -77,6 +77,39 @@ export async function addChild(input: {
     return { ok: false, error: 'Не получилось добавить ребёнка' };
   }
 
+  // Первому ребёнку назначаем стартовые задания — те, что seed_starter_content
+  // создал при регистрации с assigned_to = '{}' (иначе они «висят» неназначенными
+  // и ребёнок их не видит → аккаунт кажется пустым). Так у ребёнка сразу есть что
+  // делать, а родитель видит живой пример, который можно отредактировать/удалить.
+  // Только для ПЕРВОГО ребёнка; ошибки здесь не должны ломать создание ребёнка.
+  try {
+    const admin = createAdminClient();
+    const { count: childCount } = await admin
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('family_id', parent.family_id)
+      .eq('role', 'child')
+      .is('archived_at', null);
+    if ((childCount ?? 0) === 1) {
+      const { data: familyTasks } = await admin
+        .from('tasks')
+        .select('id, assigned_to')
+        .eq('family_id', parent.family_id)
+        .is('archived_at', null);
+      const unassignedIds = (familyTasks ?? [])
+        .filter((t) => !t.assigned_to || t.assigned_to.length === 0)
+        .map((t) => t.id);
+      if (unassignedIds.length > 0) {
+        await admin
+          .from('tasks')
+          .update({ assigned_to: [newChild.id] })
+          .in('id', unassignedIds);
+      }
+    }
+  } catch (e) {
+    console.warn('[addChild] starter-task assign failed:', e);
+  }
+
   revalidatePath('/parent');
   return { ok: true, id: newChild.id };
 }
