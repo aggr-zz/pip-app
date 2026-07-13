@@ -23,23 +23,35 @@ type FamilyRow = {
   last_activity: string | null;
 };
 
+type FunnelRow = {
+  registered: number;
+  added_child: number;
+  has_task: number;
+  child_completed: number;
+  approved: number;
+  ordered_reward: number;
+};
+
 export default async function AdminStatsPage() {
   const { supabase } = await requireAdmin('/admin/stats');
 
   const [
     { data: statsRows },
     { data: familyRows },
+    { data: funnelRows },
     { count: pendingApprovals },
     { count: pendingOrders },
   ] = await Promise.all([
     supabase.rpc('admin_stats_overview').returns<StatsRow[]>(),
     supabase.rpc('admin_families_overview').returns<FamilyRow[]>(),
+    supabase.rpc('admin_activation_funnel').returns<FunnelRow[]>(),
     supabase.from('task_completions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('reward_orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
 
   const stats = (statsRows && statsRows[0]) || null;
   const families = familyRows ?? [];
+  const funnel = (funnelRows && funnelRows[0]) || null;
 
   const totalUsers = (stats?.total_parents ?? 0) + (stats?.total_children ?? 0);
   const avgChildrenPerFamily =
@@ -105,6 +117,48 @@ export default async function AdminStatsPage() {
             />
           )}
         </div>
+      )}
+
+      {/* Воронка активации */}
+      {funnel && (
+        <section style={{ marginBottom: 32 }}>
+          <SectionTitle>Воронка активации</SectionTitle>
+          <div
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-soft)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '18px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            {[
+              { label: 'Зарегистрировались', value: funnel.registered },
+              { label: 'Добавили ребёнка', value: funnel.added_child },
+              { label: 'Есть задание у ребёнка', value: funnel.has_task },
+              { label: 'Ребёнок выполнил', value: funnel.child_completed },
+              { label: 'Одобрено / начислено', value: funnel.approved },
+              { label: 'Заказал награду', value: funnel.ordered_reward },
+            ].map((s, i, arr) => {
+              const base = arr[0].value || 1;
+              const pct = Math.round((Number(s.value) / base) * 100);
+              const prev = i > 0 ? Number(arr[i - 1].value) : null;
+              const drop = prev !== null && prev > Number(s.value) ? prev - Number(s.value) : 0;
+              return (
+                <FunnelStage
+                  key={s.label}
+                  label={s.label}
+                  value={Number(s.value)}
+                  pct={pct}
+                  drop={drop}
+                  isFirst={i === 0}
+                />
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Top stats */}
@@ -329,6 +383,43 @@ function StatCard({
       {sub && (
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{sub}</div>
       )}
+    </div>
+  );
+}
+
+function FunnelStage({
+  label,
+  value,
+  pct,
+  drop,
+  isFirst,
+}: {
+  label: string;
+  value: number;
+  pct: number;
+  drop: number;
+  isFirst: boolean;
+}) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+        <span style={{ fontSize: 13.5, fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 12.5, color: 'var(--text-soft)' }}>
+          <b style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--text-primary)' }}>{value}</b>
+          {' · '}{pct}%
+          {drop > 0 && <span style={{ color: 'var(--color-coral)', fontWeight: 600, marginLeft: 6 }}>−{drop}</span>}
+        </span>
+      </div>
+      <div style={{ height: 8, background: 'var(--bg-surface-2)', borderRadius: 100, overflow: 'hidden' }}>
+        <div
+          style={{
+            height: '100%',
+            width: `${Math.max(pct, 2)}%`,
+            background: isFirst ? 'var(--color-ink)' : 'linear-gradient(90deg, var(--color-coral), var(--color-gold))',
+            borderRadius: 100,
+          }}
+        />
+      </div>
     </div>
   );
 }
