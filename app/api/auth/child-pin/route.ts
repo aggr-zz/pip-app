@@ -29,6 +29,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Считаем попытку СРАЗУ, до сверки PIN («пессимистичный» счёт).
+    // Если считать только неудачи ПОСЛЕ сравнения, между isPinLocked и записью
+    // фейла возникает окно: волна параллельных запросов успевает пройти проверку
+    // лимита раньше, чем запишется первая неудача, и обходит оба лимита сразу —
+    // и per-IP, и глобальный. При успешном входе счётчик обнуляется ниже.
+    await recordPinFailure(childId, ip);
+
     const supabase = createAdminClient();
     const { data: child, error } = await supabase
       .from('profiles')
@@ -40,10 +47,11 @@ export async function POST(req: NextRequest) {
     if (child.role !== 'child') return NextResponse.json({ error: 'Это не детский профиль' }, { status: 403 });
     if (child.archived_at)    return NextResponse.json({ error: 'Профиль удалён' }, { status: 403 });
     if (child.pin !== pin) {
-      await recordPinFailure(childId, ip);
+      // Попытка уже посчитана выше (пессимистичный счёт) — второй раз не пишем.
       return NextResponse.json({ error: 'Неверный PIN' }, { status: 401 });
     }
 
+    // Успех — обнуляем счётчики (в т.ч. только что записанную попытку).
     await clearPinAttempts(childId, ip);
     const token = signChildSession(child.id, child.family_id);
 

@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyChildSession } from '@/lib/childSession';
 import { resolveChildAuth } from '@/lib/childAuth';
 import { sniffImageType } from '@/lib/imageSniff';
-import { isPinLocked, recordPinFailure, clearPinAttempts } from '@/lib/pinRateLimit';
+import { isPinLocked, recordPinFailure, clearPinAttempts, clearAllPinLocks } from '@/lib/pinRateLimit';
 import { clientIpFromHeaders } from '@/lib/pinRateLimit';
 import type { AvatarColor } from './constants';
 
@@ -152,6 +152,11 @@ export async function enterChildMode(input: {
     return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
   }
 
+  // Пессимистичный счёт: попытку фиксируем ДО сверки PIN (см. child-pin/route.ts).
+  // Иначе окно между isPinLocked и записью фейла позволяет волне параллельных
+  // запросов обойти лимит. При успехе счётчик обнуляется ниже.
+  await recordPinFailure(input.childId, ip);
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Не авторизован' };
@@ -177,10 +182,11 @@ export async function enterChildMode(input: {
   }
 
   if (child.pin !== input.pin) {
-    await recordPinFailure(input.childId, ip);
+    // Попытка уже посчитана выше (пессимистичный счёт) — второй раз не пишем.
     return { ok: false, error: 'Неверный PIN' };
   }
 
+  // Успех — обнуляем счётчики (в т.ч. только что записанную попытку).
   await clearPinAttempts(input.childId, ip);
 
   const cookieStore = await cookies();
@@ -441,6 +447,12 @@ export async function resetChildPin(input: { childId: string; pin: string }): Pr
     console.error('[resetChildPin]', error);
     return { ok: false, error: 'Не получилось сменить PIN' };
   }
+
+  // Снимаем ВСЕ локи перебора этого ребёнка (глобальный + все per-IP).
+  // Комментарий в lib/pinRateLimit обосновывает глобальный лок тем, что «родитель
+  // может сбросить PIN» — но сброс лок не снимал, и ребёнок не входил даже с новым
+  // PIN. Именно все: ребёнка залочило по ЕГО IP, а сбрасывает родитель со своего.
+  await clearAllPinLocks(input.childId);
 
   revalidatePath(`/parent/children/${input.childId}`);
   return { ok: true };

@@ -104,6 +104,28 @@ export async function recordPinFailure(childId: string, ip: string): Promise<voi
   }
 }
 
+/**
+ * Снять ВСЕ локи перебора для ребёнка — и глобальный, и все per-IP.
+ *
+ * Нужно при сбросе PIN родителем: ребёнка залочило по ЕГО IP, а родитель
+ * сбрасывает со своего — clearPinAttempts(childId, ipРодителя) персональный лок
+ * ребёнка не снимет. Без этого обещание «родитель может сбросить PIN» (которым
+ * обоснован глобальный лок ниже) не работает: ребёнок не войдёт и с новым PIN.
+ *
+ * childId — UUID, поэтому подстановка в LIKE безопасна (ни %, ни _).
+ */
+export async function clearAllPinLocks(childId: string): Promise<void> {
+  try {
+    const db = createAdminClient();
+    await Promise.all([
+      db.from('auth_rate_limits').delete().eq('key', globalKey(childId)),
+      db.from('auth_rate_limits').delete().like('key', `pin:${childId}:%`),
+    ]);
+  } catch (e) {
+    console.warn('[pinRateLimit.clearAllPinLocks]', e);
+  }
+}
+
 /** Сбросить счётчики (после успешного входа) — оба ключа. */
 export async function clearPinAttempts(childId: string, ip: string): Promise<void> {
   try {
