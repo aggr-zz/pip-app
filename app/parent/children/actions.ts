@@ -152,11 +152,6 @@ export async function enterChildMode(input: {
     return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
   }
 
-  // Пессимистичный счёт: попытку фиксируем ДО сверки PIN (см. child-pin/route.ts).
-  // Иначе окно между isPinLocked и записью фейла позволяет волне параллельных
-  // запросов обойти лимит. При успехе счётчик обнуляется ниже.
-  await recordPinFailure(input.childId, ip);
-
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Не авторизован' };
@@ -181,8 +176,15 @@ export async function enterChildMode(input: {
     return { ok: false, error: 'Профиль не найден' };
   }
 
+  // Пессимистичный счёт: фиксируем попытку ДО сравнения PIN — иначе между
+  // isPinLocked и записью неудачи остаётся окно, в котором волна параллельных
+  // запросов проходит целиком и обходит лимит. Ставим здесь, а не в начале
+  // функции: иначе родитель с истёкшей сессией залочил бы вход ребёнку, ни разу
+  // не ошибившись PIN-ом. Окно TOCTOU при этом всё равно закрыто — запись идёт
+  // раньше сравнения. При успехе счётчик обнуляется ниже.
+  await recordPinFailure(input.childId, ip);
+
   if (child.pin !== input.pin) {
-    // Попытка уже посчитана выше (пессимистичный счёт) — второй раз не пишем.
     return { ok: false, error: 'Неверный PIN' };
   }
 
@@ -436,22 +438,35 @@ export async function resetChildPin(input: { childId: string; pin: string }): Pr
   if (!auth.ok) return auth;
 
   const supabase = await createClient();
-  const { error } = await supabase
+  // .select().maybeSingle() — ОБЯЗАТЕЛЬНО: при 0 обновлённых строк (чужой childId)
+  // PostgREST возвращает 204 и error === null. Без проверки факта обновления
+  // снятие локов ниже выполнялось бы и для ЧУЖОГО ребёнка: атакующий с любым
+  // родительским аккаунтом брал бы публичный childId из /join-ссылки, перебирал
+  // PIN, а по достижении лока сбрасывал его этим вызовом — лимитер превращался
+  // в отключаемый по запросу.
+  const { data: updated, error } = await supabase
     .from('profiles')
     .update({ pin: input.pin })
     .eq('id', input.childId)
     .eq('family_id', auth.familyId)
-    .eq('role', 'child');
+    .eq('role', 'child')
+    .select('id')
+    .maybeSingle();
 
   if (error) {
     console.error('[resetChildPin]', error);
     return { ok: false, error: 'Не получилось сменить PIN' };
   }
+  if (!updated) {
+    // Ребёнок не найден в семье этого родителя — молча «успехом» не отвечаем.
+    return { ok: false, error: 'Профиль не найден' };
+  }
 
-  // Снимаем ВСЕ локи перебора этого ребёнка (глобальный + все per-IP).
-  // Комментарий в lib/pinRateLimit обосновывает глобальный лок тем, что «родитель
-  // может сбросить PIN» — но сброс лок не снимал, и ребёнок не входил даже с новым
-  // PIN. Именно все: ребёнка залочило по ЕГО IP, а сбрасывает родитель со своего.
+  // PIN действительно сменён для СВОЕГО ребёнка — снимаем все его локи перебора
+  // (глобальный + все per-IP). Комментарий в lib/pinRateLimit обосновывает
+  // глобальный лок тем, что «родитель может сбросить PIN» — но сброс лок не
+  // снимал, и ребёнок не входил даже с новым PIN. Именно все: ребёнка лочит ЕГО
+  // IP, а сбрасывает родитель со своего.
   await clearAllPinLocks(input.childId);
 
   revalidatePath(`/parent/children/${input.childId}`);

@@ -60,6 +60,14 @@ begin
     update public.family_invites set created_by = v_other_parent where created_by = v_profile_id;
     update public.invite_codes   set created_by = v_other_parent where created_by = v_profile_id;
 
+    -- Согласие на данные детей переходит к оставшемуся законному представителю.
+    -- Без этого FK (on delete set null) молча обнулил бы parental_consent_by, и
+    -- осталось бы «когда» без «кто» — та самая половина, которую миграция 026
+    -- объявила недостаточной для доказательства согласия (App Store 5.1.4).
+    update public.profiles
+      set parental_consent_by = v_other_parent
+      where parental_consent_by = v_profile_id and family_id = v_family_id;
+
     delete from public.push_subscriptions where profile_id = v_profile_id;
     delete from public.profiles where id = v_profile_id;
 

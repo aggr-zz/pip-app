@@ -112,9 +112,18 @@ export async function recordPinFailure(childId: string, ip: string): Promise<voi
  * ребёнка не снимет. Без этого обещание «родитель может сбросить PIN» (которым
  * обоснован глобальный лок ниже) не работает: ребёнок не войдёт и с новым PIN.
  *
- * childId — UUID, поэтому подстановка в LIKE безопасна (ни %, ни _).
+ * childId валидируем ЗДЕСЬ, а не полагаемся на вызывающего: строка уходит в LIKE
+ * под service_role (в обход RLS), и `pin:%:%` вычистил бы локи всех детей всех
+ * семей. Раньше это спасал лишь побочный эффект — соседний .eq() по uuid-колонке
+ * падал на касте. Такую защиту нельзя оставлять неявной.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function clearAllPinLocks(childId: string): Promise<void> {
+  if (!UUID_RE.test(childId)) {
+    console.warn('[pinRateLimit.clearAllPinLocks] отклонён невалидный childId');
+    return;
+  }
   try {
     const db = createAdminClient();
     await Promise.all([
