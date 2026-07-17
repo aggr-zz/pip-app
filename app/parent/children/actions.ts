@@ -11,6 +11,7 @@ import { sniffImageType } from '@/lib/imageSniff';
 import { isPinLocked, recordPinFailure, clearPinAttempts, clearAllPinLocks } from '@/lib/pinRateLimit';
 import { clientIpFromHeaders } from '@/lib/pinRateLimit';
 import type { AvatarColor } from './constants';
+import type { Result } from '@/lib/result';
 
 // ─── Константы ────────────────────────────────────────────────────────
 const COOKIE_NAME = 'pip_active_child';
@@ -18,9 +19,6 @@ const COOKIE_TTL_SEC = 60 * 60; // 1 час, потом снова PIN
 
 const AVATAR_COLORS_VALID = ['coral', 'mint', 'ink', 'gold', 'rose', 'sky'] as const;
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 
 // ─── ADD CHILD ────────────────────────────────────────────────────────

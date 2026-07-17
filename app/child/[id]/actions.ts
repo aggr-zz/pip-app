@@ -4,10 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { todayInTimezone } from '@/lib/schedule';
 import { resolveChildAuth } from '@/lib/childAuth';
+import type { Result } from '@/lib/result';
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 export type MarkTaskCompleteResult = Result<{
   status: string;

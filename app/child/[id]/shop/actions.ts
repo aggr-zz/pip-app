@@ -4,10 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { resolveChildAuth } from '@/lib/childAuth';
 import { sendPushToProfile } from '@/lib/webpush';
 import { friendlyDbError } from '@/lib/friendlyError';
+import type { Result } from '@/lib/result';
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 /**
  * Ребёнок заказывает награду.

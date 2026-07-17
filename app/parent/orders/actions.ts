@@ -4,10 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { sendPushToProfile } from '@/lib/webpush';
 import { friendlyDbError } from '@/lib/friendlyError';
+import type { Result } from '@/lib/result';
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 /**
  * Родитель отметил, что выдал награду в реальной жизни.

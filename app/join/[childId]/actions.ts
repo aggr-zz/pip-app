@@ -4,10 +4,8 @@ import { cookies, headers } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signChildSession } from '@/lib/childSession';
 import { isPinLocked, recordPinFailure, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
+import type { Result } from '@/lib/result';
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 /**
  * Верифицирует PIN ребёнка и выдаёт прямую детскую сессию.

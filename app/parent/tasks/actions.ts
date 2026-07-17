@@ -4,10 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { getParentContext } from '@/lib/getParentContext';
 import type { ScheduleType } from '@/lib/schedule';
 import type { TaskIconName } from '@/components/ui/TaskIcon';
+import type { Result } from '@/lib/result';
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 export interface TaskInput {
   title: string;

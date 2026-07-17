@@ -2,10 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import type { Result } from '@/lib/result';
 
-type Result<T = Record<string, never>> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string };
 
 export type LimitType = 'unlimited' | 'once';
 // 'weekly' и 'monthly' пока не поддерживаем в UI — отложено на Sprint 7.
