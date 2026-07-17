@@ -39,7 +39,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Защита роутов: если не залогинен и пытается зайти на /parent или /child — редирект на /login
-  const protectedPaths = ['/parent', '/child'];
+  // /admin здесь — defense-in-depth поверх requireAdmin() на самих страницах:
+  // если будущая admin-страница забудет вызвать requireAdmin, неавторизованный
+  // всё равно уедет на /login, а не увидит агрегаты по всем семьям.
+  const protectedPaths = ['/parent', '/child', '/admin'];
   const isProtected = protectedPaths.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   );

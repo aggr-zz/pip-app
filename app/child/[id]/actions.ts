@@ -1,11 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 import { todayInTimezone } from '@/lib/schedule';
-import { verifyChildSession } from '@/lib/childSession';
+import { resolveChildAuth } from '@/lib/childAuth';
 
 type Result<T = Record<string, never>> =
   | ({ ok: true } & T)
@@ -42,53 +40,13 @@ export async function markTaskComplete(input: {
   childId: string;
   photoPath?: string | null;
 }): Promise<MarkTaskCompleteResult> {
-  const cookieStore = await cookies();
-
-  // ── Auth mode 1: parent session + pip_active_child cookie ────────────────
-  // ── Auth mode 2: direct child session via pip_child_direct cookie ────────
-  let supabase: Awaited<ReturnType<typeof createClient>>;
-  let familyId: string;
-
-  // Прямая детская сессия — только если токен ВАЛИДНЫЙ. Если cookie нет или он
-  // устарел/невалиден (напр. подписан старым секретом) — не падаем, а переходим
-  // к родительскому режиму, иначе залогиненный родитель не сможет отметить задачу.
-  const directToken = cookieStore.get('pip_child_direct')?.value;
-  const directSession = directToken ? verifyChildSession(directToken) : null;
-  if (directSession && directSession.childId === input.childId) {
-    // Use admin client (bypasses RLS for direct child sessions)
-    supabase = createAdminClient() as unknown as Awaited<ReturnType<typeof createClient>>;
-    familyId = directSession.familyId;
-  } else {
-    // Mode 1: parent Supabase session
-    supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { ok: false, error: 'Не авторизован' };
-
-    const activeChildId = cookieStore.get(ACTIVE_CHILD_COOKIE)?.value;
-    if (!activeChildId || activeChildId !== input.childId) {
-      return { ok: false, error: 'Сначала зайди в режим ребёнка по PIN' };
-    }
-
-    const { data: me } = await supabase
-      .from('profiles')
-      .select('family_id')
-      .eq('user_id', user.id)
-      .single();
-    if (!me) return { ok: false, error: 'Профиль не найден' };
-    familyId = me.family_id;
-  }
-
-  // Verify child belongs to the resolved family
-  {
-    const { data: childProfile } = await (supabase as ReturnType<typeof createAdminClient>)
-      .from('profiles')
-      .select('family_id')
-      .eq('id', input.childId)
-      .single();
-    if (!childProfile || childProfile.family_id !== familyId) {
-      return { ok: false, error: 'Доступ запрещён' };
-    }
-  }
+  // Единая авторизация (lib/childAuth): проверяет и подпись токена, и живой ли
+  // профиль в БД (не архивирован, role='child', та же семья). Раньше этот блок
+  // был скопирован здесь и ещё в 3 файлах, и все копии верили токену без сверки.
+  const auth = await resolveChildAuth(input.childId);
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.adminDb;
+  const familyId = auth.familyId;
 
   const { data: family } = await (supabase as ReturnType<typeof createAdminClient>)
     .from('families')

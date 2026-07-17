@@ -133,7 +133,9 @@ API:
 | `family_invites` | family_id, created_by, token (unique), expires_at, used_at, used_by |
 | `push_subscriptions` | profile_id, endpoint, p256dh, auth |
 | `achievements` | profile_id, type |
-| `coin_transactions` | profile_id, amount, reason (аудит-лог) |
+| `transactions` | profile_id, amount, reason, created_by (аудит-лог). ⚠️ Таблица называется `transactions`, НЕ `coin_transactions` |
+| `invite_codes` | family_id, created_by, pre_filled_profile_id |
+| `auth_rate_limits` | key (`pin:<childId>:<ip>`, `pin-global:<childId>`, `email:<адрес>`), лимиты PIN и писем |
 
 ### Ключевые RPC-функции
 

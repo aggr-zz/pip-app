@@ -41,12 +41,30 @@ function verifySignature(
   });
 }
 
+/** Допуск по свежести вебхука (Standard Webhooks рекомендует ±5 мин). */
+const TIMESTAMP_TOLERANCE_SEC = 5 * 60;
+
+function isFresh(ts: string | null): boolean {
+  if (!ts) return false;
+  const sent = Number(ts);
+  if (!Number.isFinite(sent)) return false;
+  return Math.abs(Date.now() / 1000 - sent) <= TIMESTAMP_TOLERANCE_SEC;
+}
+
 export async function POST(req: NextRequest) {
   const raw = await req.text();
+  const ts = req.headers.get('webhook-timestamp');
+
+  // Свежесть — обязательная половина Standard Webhooks: без неё подпись
+  // превращается в «вечный пропуск», и перехваченный запрос можно бесконечно
+  // реплеить (повторная рассылка писем, в т.ч. со ссылками сброса).
+  if (!isFresh(ts)) {
+    return NextResponse.json({ error: 'stale timestamp' }, { status: 401 });
+  }
 
   if (!verifySignature(
     req.headers.get('webhook-id'),
-    req.headers.get('webhook-timestamp'),
+    ts,
     req.headers.get('webhook-signature'),
     raw,
   )) {

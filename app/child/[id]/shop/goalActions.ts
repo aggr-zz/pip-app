@@ -1,58 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { verifyChildSession } from '@/lib/childSession';
+import { resolveChildAuth as resolveAuth } from '@/lib/childAuth';
 
 type Result = { ok: true } | { ok: false; error: string };
-
-/** Авторизация — два режима (аналог markTaskComplete). Возвращает и familyId. */
-async function resolveAuth(childId: string): Promise<
-  { ok: true; adminDb: ReturnType<typeof createAdminClient>; familyId: string } | { ok: false; error: string }
-> {
-  const cookieStore = await cookies();
-  const adminDb = createAdminClient();
-
-  // Режим 1: pip_child_direct (только если токен ВАЛИДНЫЙ; иначе — не падаем,
-  // а пробуем родительский режим — устаревший/чужой cookie не должен блокировать
-  // залогиненного родителя в режиме ребёнка).
-  const directToken = cookieStore.get('pip_child_direct')?.value;
-  const directSession = directToken ? verifyChildSession(directToken) : null;
-  if (directSession && directSession.childId === childId) {
-    return { ok: true, adminDb, familyId: directSession.familyId };
-  }
-
-  // Режим 2: родитель + pip_active_child
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Не авторизован' };
-
-  const activeChild = cookieStore.get('pip_active_child')?.value;
-  if (!activeChild || activeChild !== childId) {
-    return { ok: false, error: 'Сначала зайди в режим ребёнка по PIN' };
-  }
-
-  // Семья родителя + проверка, что ребёнок из этой же семьи (а не из чужой).
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('family_id')
-    .eq('user_id', user.id)
-    .single();
-  if (!me?.family_id) return { ok: false, error: 'Профиль родителя не найден' };
-
-  const { data: child } = await adminDb
-    .from('profiles')
-    .select('family_id, role')
-    .eq('id', childId)
-    .single();
-  if (child?.role !== 'child' || child.family_id !== me.family_id) {
-    return { ok: false, error: 'Ребёнок не из вашей семьи' };
-  }
-
-  return { ok: true, adminDb, familyId: me.family_id };
-}
 
 /** Установить / сменить цель-копилку */
 export async function setGoal(input: {

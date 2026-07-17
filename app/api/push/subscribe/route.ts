@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyChildSession } from '@/lib/childSession';
+import { resolveChildAuth } from '@/lib/childAuth';
 
 const DIRECT_SESSION_COOKIE = 'pip_child_direct';
 
@@ -34,12 +35,18 @@ async function authorizeProfile(profileId: string): Promise<boolean> {
     }
   }
 
-  // Режим 2: ребёнок (прямая сессия pip_child_direct)
+  // Режим 2: ребёнок (прямая сессия pip_child_direct).
+  // Подписи токена НЕДОСТАТОЧНО: он живёт 30 дней, поэтому архивированный
+  // ребёнок иначе продолжал бы управлять push-подписками. resolveChildAuth
+  // сверяет профиль с БД (жив, role='child', не архивирован).
   const cookieStore = await cookies();
   const token = cookieStore.get(DIRECT_SESSION_COOKIE)?.value;
   if (token) {
     const session = verifyChildSession(token);
-    if (session && session.childId === profileId) return true;
+    if (session && session.childId === profileId) {
+      const auth = await resolveChildAuth(profileId);
+      return auth.ok && auth.mode === 'direct';
+    }
   }
 
   return false;

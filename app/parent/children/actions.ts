@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyChildSession } from '@/lib/childSession';
+import { resolveChildAuth } from '@/lib/childAuth';
+import { sniffImageType } from '@/lib/imageSniff';
 import { isPinLocked, recordPinFailure, clearPinAttempts } from '@/lib/pinRateLimit';
 import { clientIpFromHeaders } from '@/lib/pinRateLimit';
 import type { AvatarColor } from './constants';
@@ -210,12 +212,17 @@ export async function updateChildAvatar(input: {
 
   const cookieStore = await cookies();
 
-  // ── Режим 2: прямая сессия ребёнка (только если токен валиден; иначе — в родительский режим) ──
+  // ── Режим 2: прямая сессия ребёнка ──────────────────────────────────────
+  // Через resolveChildAuth: подписи токена мало (живёт 30 дней) — профиль
+  // сверяется с БД, иначе архивированный ребёнок продолжал бы менять аватар.
   const directToken = cookieStore.get('pip_child_direct')?.value;
   const directSession = directToken ? verifyChildSession(directToken) : null;
   if (directSession && directSession.childId === input.profileId) {
-    const admin = createAdminClient();
-    const { error } = await admin
+    const auth = await resolveChildAuth(input.profileId);
+    if (!auth.ok || auth.mode !== 'direct') {
+      return { ok: false, error: auth.ok ? 'Доступ запрещён' : auth.error };
+    }
+    const { error } = await auth.adminDb
       .from('profiles')
       .update({
         avatar_url:   input.avatarUrl,
@@ -300,7 +307,12 @@ export async function uploadChildAvatar(formData: FormData): Promise<Result<{ ur
   const directToken = cookieStore.get('pip_child_direct')?.value;
   const directSession = directToken ? verifyChildSession(directToken) : null;
   if (directSession && directSession.childId === profileId) {
-    familyId = directSession.familyId;
+    // Сверяем профиль с БД (жив, не архивирован) — подписи токена мало.
+    const auth = await resolveChildAuth(profileId);
+    if (!auth.ok || auth.mode !== 'direct') {
+      return { ok: false, error: auth.ok ? 'Доступ запрещён' : auth.error };
+    }
+    familyId = auth.familyId;
   } else {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -316,13 +328,19 @@ export async function uploadChildAvatar(formData: FormData): Promise<Result<{ ur
     familyId = me.family_id;
   }
 
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const path = `${familyId}/${profileId}.${ext}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
+  // Тип определяем по СОДЕРЖИМОМУ (magic bytes), а не по клиентским file.type/file.name:
+  // и то и другое подделывается, а файл потом лежит в публичном бакете и отдаётся
+  // с заявленным content-type.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const sniffed = sniffImageType(bytes);
+  if (!sniffed) {
+    return { ok: false, error: 'Файл не похож на изображение (jpg, png или webp)' };
+  }
+  const path = `${familyId}/${profileId}.${sniffed.ext}`;
 
   const { error } = await admin.storage
     .from('avatars')
-    .upload(path, bytes, { upsert: true, contentType: file.type });
+    .upload(path, bytes, { upsert: true, contentType: sniffed.mime });
   if (error) {
     console.error('[uploadChildAvatar]', error);
     return { ok: false, error: 'Не получилось загрузить фото. Попробуй ещё раз.' };

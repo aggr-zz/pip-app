@@ -60,7 +60,25 @@ export async function getChildContext(childId: string): Promise<ChildContext> {
     const session = verifyChildSession(directToken);
     if (session && session.childId === childId) {
       const admin = createAdminClient();
-      return { db: admin, familyId: session.familyId, mode: 'direct' };
+      // Токен самодостаточен и живёт 30 дней, поэтому одной подписи мало:
+      // без перепроверки профиля «удалённый» (archived) ребёнок продолжал бы
+      // пользоваться приложением до истечения токена, а родитель был бы уверен,
+      // что закрыл доступ. Один SELECT на запрос — цена отзываемости доступа.
+      const { data: child } = await admin
+        .from('profiles')
+        .select('family_id, role, archived_at')
+        .eq('id', session.childId)
+        .maybeSingle();
+
+      if (
+        child &&
+        child.role === 'child' &&
+        !child.archived_at &&
+        child.family_id === session.familyId
+      ) {
+        return { db: admin, familyId: child.family_id, mode: 'direct' };
+      }
+      // Профиль удалён/архивирован/сменил семью → сессия недействительна.
     }
   }
 
