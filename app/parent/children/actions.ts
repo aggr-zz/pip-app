@@ -32,7 +32,14 @@ export async function addChild(input: {
   color: AvatarColor;
   emoji?: string;
   pin: string;
+  /** Согласие родителя на обработку данных ребёнка (App Store 5.1.4). */
+  parentalConsent?: boolean;
 }): Promise<Result<{ id: string }>> {
+  // Проверяем на сервере: клиентский чекбокс сам по себе ничего не гарантирует.
+  if (!input.parentalConsent) {
+    return { ok: false, error: 'Нужно согласие родителя на обработку данных ребёнка' };
+  }
+
   const name = (input.name ?? '').trim();
   if (!name) return { ok: false, error: 'Введи имя' };
   if (name.length > 50) return { ok: false, error: 'Имя слишком длинное (макс 50 символов)' };
@@ -59,6 +66,13 @@ export async function addChild(input: {
 
   const birthYear = input.age !== null ? new Date().getFullYear() - input.age : null;
 
+  // Профиль родителя нужен, чтобы зафиксировать, КТО дал согласие (5.1.4).
+  const { data: parentProfile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
   const { data: newChild, error } = await supabase
     .from('profiles')
     .insert({
@@ -70,6 +84,10 @@ export async function addChild(input: {
       avatar_color: input.color,
       avatar_emoji: input.emoji ?? null,
       pin: input.pin,
+      // Фиксируем факт согласия: кто и когда. Не «галочка», а доказуемая запись.
+      parental_consent_at: new Date().toISOString(),
+      parental_consent_by: parentProfile?.id ?? null,
+      parental_consent_source: 'explicit_checkbox',
     })
     .select('id')
     .single();

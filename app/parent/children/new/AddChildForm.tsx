@@ -18,6 +18,7 @@ export function AddChildForm() {
   const [avatarTab, setAvatarTab] = useState<'emoji' | 'color'>('emoji');
   const [pin, setPin] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -28,6 +29,7 @@ export function AddChildForm() {
     if (!name.trim()) return setError('Введи имя');
     if (!/^\d{4}$/.test(pin)) return setError('PIN должен быть из 4 цифр');
     if (pin !== pinConfirm) return setError('PIN-коды не совпадают');
+    if (!consent) return setError('Нужно согласие родителя на обработку данных ребёнка');
 
     startTransition(async () => {
       const ageNum = age ? parseInt(age, 10) : null;
@@ -37,6 +39,7 @@ export function AddChildForm() {
         color,
         emoji: emoji ?? undefined,
         pin,
+        parentalConsent: consent,
       });
 
       if (!result.ok) {
@@ -213,6 +216,37 @@ export function AddChildForm() {
         />
       </Field>
 
+      {/* Согласие родителя на обработку данных ребёнка.
+          App Store 5.1.4: для сбора данных несовершеннолетнего нужно согласие
+          родителя, и Apple прямо пишет, что «parental gate» (проверка «ты
+          взрослый?») согласием НЕ является. Ставим здесь — это момент, когда
+          данные ребёнка собираются впервые. Факт согласия фиксируем на сервере. */}
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
+          margin: '4px 0 16px',
+          cursor: 'pointer',
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => { setConsent(e.target.checked); setError(null); }}
+          disabled={isPending}
+          style={{ marginTop: 2, width: 18, height: 18, flexShrink: 0, cursor: 'pointer' }}
+        />
+        <span style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-soft)' }}>
+          Я родитель или законный представитель этого ребёнка и даю согласие на
+          обработку его данных (имя, возраст, аватар, фото выполненных заданий) —{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-coral)', fontWeight: 600 }}>
+            политика конфиденциальности
+          </a>
+          . Данные можно удалить в любой момент в профиле.
+        </span>
+      </label>
+
       {error && (
         <div
           role="alert"
@@ -229,7 +263,7 @@ export function AddChildForm() {
         </div>
       )}
 
-      <Button type="submit" variant="ink" size="lg" fullWidth disabled={isPending}>
+      <Button type="submit" variant="ink" size="lg" fullWidth disabled={isPending || !consent}>
         {isPending ? 'Создаём…' : 'Создать профиль'}
       </Button>
     </form>

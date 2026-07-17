@@ -5,6 +5,7 @@ import { PipLogo } from '@/components/ui/PipLogo';
 import { SignOutButton } from '../SignOutButton';
 import { PushToggle } from '@/components/ui/PushToggle';
 import { InviteLinkCard } from '../invite/InviteLinkCard';
+import { DeleteAccountButton } from './DeleteAccountButton';
 
 type Profile = {
   id: string;
@@ -311,6 +312,11 @@ export default async function ParentProfilePage() {
 
         {/* ── Sign out ─────────────────────────────────────────────── */}
         <SignOutButton fullWidth />
+
+        {/* ── Удаление аккаунта (App Store 5.1.1(v): должно быть в приложении) ── */}
+        <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid var(--border-soft)' }}>
+          <DeleteAccountButton />
+        </div>
       </div>
     </main>
   );
