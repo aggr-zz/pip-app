@@ -1,7 +1,9 @@
 'use server';
 
 import { randomUUID } from 'crypto';
+import { Buffer } from 'node:buffer';
 import { resolveChildAuth } from '@/lib/childAuth';
+import { sniffImageType } from '@/lib/imageSniff';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -36,16 +38,23 @@ export async function uploadTaskPhoto(formData: FormData): Promise<UploadResult>
   if (!auth.ok) return auth;
   const { adminDb, familyId } = auth;
 
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const path = `${familyId}/${randomUUID()}.${ext}`;
+  // Тип — по СОДЕРЖИМОМУ, а не по клиентским file.type/file.name: и то и другое
+  // подделывается. Проверка ALLOWED_TYPES выше — лишь дешёвый ранний отсев.
+  // Тот же подход, что в uploadChildAvatar (lib/imageSniff).
   const bytes = Buffer.from(await file.arrayBuffer());
+  const sniffed = sniffImageType(new Uint8Array(bytes));
+  if (!sniffed) {
+    return { ok: false, error: 'Файл не похож на изображение (JPEG, PNG или WebP)' };
+  }
+
+  const path = `${familyId}/${randomUUID()}.${sniffed.ext}`;
 
   const { error } = await adminDb.storage
     .from('task-photos')
     .upload(path, bytes, {
       cacheControl: '3600',
       upsert: false,
-      contentType: file.type,
+      contentType: sniffed.mime,
     });
 
   if (error) {

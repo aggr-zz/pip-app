@@ -43,12 +43,15 @@ export async function getChildContext(childId: string): Promise<ChildContext> {
     if (me?.family_id) {
       // Перепроверяем на чтении, что childId действительно ребёнок этой семьи,
       // а не доверяем cookie pip_active_child (он мог устареть/быть подменён).
+      // archived_at — обязательно: без него родитель открывал экран «удалённого»
+      // ребёнка, но каждое действие падало бы с «Ребёнок не из вашей семьи»
+      // (resolveChildAuth архивных отсекает). Проверки должны совпадать.
       const { data: child } = await supabase
         .from('profiles')
-        .select('family_id, role')
+        .select('family_id, role, archived_at')
         .eq('id', childId)
-        .single();
-      if (child?.role === 'child' && child.family_id === me.family_id) {
+        .maybeSingle();
+      if (child?.role === 'child' && !child.archived_at && child.family_id === me.family_id) {
         return { db: supabase, familyId: me.family_id, mode: 'parent' };
       }
     }
