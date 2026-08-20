@@ -571,6 +571,9 @@ const styles = `
 .lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: #E7DAC0; }
 .lg-yandex { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 16px; background: #fff; border: 1.5px solid #E7D6B6; color: #3B2C1A; font-family: var(--font-display); font-weight: 700; font-size: 15.5px; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .lg-yandex:active { background: #F6ECD8; }
+/* Внутри iOS-оболочки (App Store) вход через Яндекс скрыт — Guideline 4.8.
+   Прячем вместе с разделителем «или»: иначе он повиснет впустую. */
+html.pip-ios-app .lg-or, html.pip-ios-app .lg-yandex { display: none; }
 .lg-ya { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #FC3F1D; color: #fff; font-weight: 800; font-size: 15px; font-family: Arial, sans-serif; }
 .lg-switch { text-align: center; font-family: var(--font-body, inherit); font-weight: 500; font-size: 14.5px; color: #6E5836; margin: 2px 0 0; }
 .lg-link { border: none; background: transparent; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14.5px; color: #A66C12; padding: 0; text-decoration: underline; text-underline-offset: 2px; }

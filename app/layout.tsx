@@ -63,6 +63,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "try{if(location.pathname==='/'&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||navigator.standalone))location.replace('/app')}catch(e){}",
           }}
         />
+        {/* Метка «открыто внутри iOS-оболочки из App Store» — её добавляет
+            Capacitor (ios.appendUserAgent). Ставим класс здесь, в <head>, до
+            отрисовки: иначе кнопка Яндекса успела бы мигнуть, а условие прямо
+            в JSX дало бы расхождение при гидрации (на сервере navigator нет). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(navigator.userAgent.indexOf('PIPiOSApp')>-1)document.documentElement.classList.add('pip-ios-app')}catch(e){}",
+          }}
+        />
       </head>
       <body>
         <Splash />
