@@ -29,6 +29,28 @@ type AuthView = 'login' | 'register';
 
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
+/** Достаёт id ребёнка из ссылки входа: сегмент после /join/, иначе голый UUID. */
+function childIdFromLink(text: string): string | null {
+  const pathMatch = text.match(/\/join\/([0-9a-f-]{36})/i);
+  return pathMatch ? pathMatch[1] : (text.match(UUID_RE)?.[0] ?? null);
+}
+
+type NativeScanResult = { value?: string; cancelled?: boolean; denied?: boolean };
+
+/**
+ * Нативный сканер QR из iOS-оболочки (плагин QrScanner на AVFoundation).
+ *
+ * Обращаемся через уже внедрённый мост Capacitor, а не через npm-пакет: так на
+ * сайте нет ни одной новой зависимости и бандл для веба и RuStore не тяжелеет.
+ * Возвращает null везде, кроме оболочки, — там остаётся вход по ссылке.
+ */
+function getNativeScanner(): { scan: () => Promise<NativeScanResult> } | null {
+  if (typeof window === 'undefined') return null;
+  const cap = (window as unknown as { Capacitor?: { Plugins?: Record<string, unknown> } }).Capacitor;
+  const plugin = cap?.Plugins?.QrScanner as { scan?: () => Promise<NativeScanResult> } | undefined;
+  return typeof plugin?.scan === 'function' ? (plugin as { scan: () => Promise<NativeScanResult> }) : null;
+}
+
 /** Текст ошибки по коду из ?error= (после редиректов колбэков). */
 function mapErrorParam(code: string | null): string | null {
   if (!code) return null;
@@ -87,6 +109,8 @@ function LoginEntry() {
   const [childOpen, setChildOpen] = useState(false); // оверлей входа по QR/ссылке
   const [childLink, setChildLink] = useState('');
   const [childError, setChildError] = useState<string | null>(null);
+  const [hasNativeScanner, setHasNativeScanner] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const lastFocusRef = useRef<HTMLElement | null>(null);
@@ -202,14 +226,50 @@ function LoginEntry() {
   function handleChildSubmit(e: React.FormEvent) {
     e.preventDefault();
     setChildError(null);
-    // Берём именно сегмент после /join/, с фолбэком на голый UUID.
-    const pathMatch = childLink.match(/\/join\/([0-9a-f-]{36})/i);
-    const id = pathMatch ? pathMatch[1] : childLink.match(UUID_RE)?.[0];
+    const id = childIdFromLink(childLink);
     if (!id) {
       setChildError('Не похоже на ссылку входа. Скопируй её целиком из приложения родителя.');
       return;
     }
     router.push(`/join/${id}`);
+  }
+
+  // Нативный сканер есть только внутри iOS-оболочки. Проверяем в эффекте, а не
+  // при рендере: на сервере window нет, и прямая проверка расходилась бы с
+  // клиентом при гидрации.
+  useEffect(() => { setHasNativeScanner(!!getNativeScanner()); }, []);
+
+  async function handleScanTap() {
+    const scanner = getNativeScanner();
+    // В браузере и в RuStore-версии камеры у нас нет — открываем прежнее окно
+    // с инструкцией и полем для ссылки.
+    if (!scanner) { setChildError(null); setChildOpen(true); return; }
+
+    setChildError(null);
+    setScanning(true);
+    try {
+      const res = await scanner.scan();
+      if (res?.denied) {
+        setChildOpen(true);
+        setChildError('Нет доступа к камере. Разреши его в Настройках телефона или вставь ссылку вручную.');
+        return;
+      }
+      // Пользователь закрыл сканер — это не ошибка, молча возвращаемся.
+      if (res?.cancelled || !res?.value) return;
+
+      const id = childIdFromLink(res.value);
+      if (!id) {
+        setChildOpen(true);
+        setChildError('Это не QR-код для входа в PIP. Попроси родителя показать код из его приложения.');
+        return;
+      }
+      router.push(`/join/${id}`);
+    } catch {
+      setChildOpen(true);
+      setChildError('Не удалось открыть камеру. Можно войти по ссылке.');
+    } finally {
+      setScanning(false);
+    }
   }
 
   // ── Панель «Проверь почту» (после регистрации с подтверждением) ──────────────
@@ -415,12 +475,12 @@ function LoginEntry() {
                 </div>
               </div>
 
-              <button type="button" className="lg-cta lg-cta--icon" onClick={() => { setChildError(null); setChildOpen(true); }}>
+              <button type="button" className="lg-cta lg-cta--icon" onClick={handleScanTap} disabled={scanning}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5A3D0E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
                   <rect x="3" y="14" width="7" height="7" rx="1.5" /><path d="M14 14h3v3M21 14v.01M14 21h.01M21 21v-4M17.5 21H18" />
                 </svg>
-                Сканировать QR-код
+                {scanning ? 'Открываем камеру…' : 'Сканировать QR-код'}
               </button>
 
               <button type="button" className="lg-secondary" onClick={() => { setChildError(null); setChildOpen(true); }}>
@@ -436,7 +496,11 @@ function LoginEntry() {
         <div className="lg-ovl" role="dialog" aria-modal="true" aria-label="Вход по QR-коду" onKeyDown={trapTab} onClick={(e) => { if (e.target === e.currentTarget) setChildOpen(false); }}>
           <div className="lg-ovl-inner" ref={overlayRef} tabIndex={-1}>
             <h2 className="lg-ovl-title">Вход по QR-коду</h2>
-            <p className="lg-ovl-sub">Открой приложение «Камера» на телефоне и наведи на QR-код, который показывает родитель — ссылка откроется сама.</p>
+            <p className="lg-ovl-sub">
+              {hasNativeScanner
+                ? 'Вставь ссылку для входа, которую прислал родитель.'
+                : 'Открой приложение «Камера» на телефоне и наведи на QR-код, который показывает родитель — ссылка откроется сама.'}
+            </p>
 
             <div className="lg-viewfinder" aria-hidden="true">
               <span className="lg-corner lg-corner--tl" /><span className="lg-corner lg-corner--tr" />
