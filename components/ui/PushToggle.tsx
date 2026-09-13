@@ -12,6 +12,56 @@ function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 }
 
+type NativePush = {
+  checkPermissions: () => Promise<{ receive?: string }>;
+  requestPermissions: () => Promise<{ receive?: string }>;
+  register: () => Promise<void>;
+  addListener: (event: string, cb: (data: { value?: string }) => void) => void;
+  removeAllListeners: () => Promise<void>;
+};
+
+/**
+ * Нативные пуши доступны только внутри iOS-оболочки.
+ *
+ * Внутри WKWebView Apple закрывает и Web Push, и Service Worker, поэтому весь
+ * блок ниже (подписка через pushManager) там не работает вовсе — единственный
+ * канал уведомлений в приложении это APNs. Обращаемся через уже внедрённый мост
+ * Capacitor: он сам добавляет каждому плагину addListener/requestPermissions,
+ * так что npm-пакет на стороне сайта не нужен и бандл не тяжелеет.
+ */
+function getNativePush(): NativePush | null {
+  if (typeof window === 'undefined') return null;
+  const cap = (window as unknown as { Capacitor?: { Plugins?: Record<string, unknown> } }).Capacitor;
+  const pn = cap?.Plugins?.PushNotifications as NativePush | undefined;
+  return typeof pn?.register === 'function' ? pn : null;
+}
+
+/**
+ * Просит систему выдать токен устройства и дожидается его.
+ *
+ * Токен приходит не ответом на register(), а отдельным событием, поэтому нужен
+ * промис вокруг подписки. Таймаут обязателен: если система не ответит ни
+ * успехом, ни ошибкой, без него интерфейс завис бы в «включаем» навсегда.
+ */
+async function registerForNativeToken(pn: NativePush): Promise<string | null> {
+  // Слушатели не снимаются сами, а включить уведомления можно несколько раз за
+  // сессию — без очистки они копились бы с каждой попыткой.
+  await pn.removeAllListeners().catch(() => {});
+  return new Promise<string | null>((resolve) => {
+    let settled = false;
+    const finish = (value: string | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish(null), 15000);
+    pn.addListener('registration', (data) => finish(data?.value ?? null));
+    pn.addListener('registrationError', () => finish(null));
+    pn.register().catch(() => finish(null));
+  });
+}
+
 function isInStandaloneMode() {
   return window.matchMedia('(display-mode: standalone)').matches
     || (window.navigator as any).standalone === true;
@@ -20,8 +70,41 @@ function isInStandaloneMode() {
 export function PushToggle({ profileId }: Props) {
   const [status, setStatus] = useState<Status>('loading');
   const [isPending, setIsPending] = useState(false);
+  const [isNative, setIsNative] = useState(false);
+  const [nativeToken, setNativeToken] = useState<string | null>(null);
 
   useEffect(() => {
+    // Нативный канал проверяем первым: иначе в iOS-приложении сработала бы
+    // ветка ниже и мы бы предложили «установить PWA» внутри уже установленного
+    // приложения.
+    const pn = getNativePush();
+    if (pn) {
+      setIsNative(true);
+      (async () => {
+        try {
+          const perm = await pn.checkPermissions();
+          if (perm?.receive === 'denied') { setStatus('denied'); return; }
+          if (perm?.receive !== 'granted') { setStatus('unsubscribed'); return; }
+
+          const token = await registerForNativeToken(pn);
+          if (!token) { setStatus('unsubscribed'); return; }
+
+          setNativeToken(token);
+          setStatus('subscribed');
+          // Самовосстановление: разрешение выдано, но токена в базе могло не
+          // оказаться (прошлый запрос не дошёл). Досылаем идемпотентно.
+          fetch('/api/push/apns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileId, token }),
+          }).catch(() => {});
+        } catch {
+          setStatus('unsubscribed');
+        }
+      })();
+      return;
+    }
+
     // На iOS уведомления работают только из установленного PWA
     if (isIOS() && !isInStandaloneMode()) {
       setStatus('needs-pwa');
@@ -65,6 +148,21 @@ export function PushToggle({ profileId }: Props) {
   async function handleEnable() {
     setIsPending(true);
     try {
+      const pn = getNativePush();
+      if (pn) {
+        const perm = await pn.requestPermissions();
+        if (perm?.receive !== 'granted') { setStatus('denied'); return; }
+        const token = await registerForNativeToken(pn);
+        if (!token) return;
+        const res = await fetch('/api/push/apns', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileId, token }),
+        });
+        if (res.ok) { setNativeToken(token); setStatus('subscribed'); }
+        return;
+      }
+
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setStatus('denied');
@@ -98,6 +196,22 @@ export function PushToggle({ profileId }: Props) {
   async function handleDisable() {
     setIsPending(true);
     try {
+      if (getNativePush()) {
+        // Отозвать системное разрешение из приложения нельзя — это делает сам
+        // пользователь в Настройках. Поэтому просто убираем токен из базы,
+        // и сервер перестаёт слать на это устройство.
+        if (nativeToken) {
+          await fetch('/api/push/apns', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileId, token: nativeToken }),
+          }).catch(() => {});
+        }
+        setNativeToken(null);
+        setStatus('unsubscribed');
+        return;
+      }
+
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
@@ -163,7 +277,9 @@ export function PushToggle({ profileId }: Props) {
         border: '1px solid var(--border-soft)',
         borderRadius: 'var(--radius-lg)', lineHeight: 1.5,
       }}>
-        🔕 Уведомления заблокированы в настройках браузера
+        🔕 {isNative
+          ? 'Уведомления выключены. Включить можно в Настройках телефона → PIP → Уведомления.'
+          : 'Уведомления заблокированы в настройках браузера'}
       </div>
     </section>
   );

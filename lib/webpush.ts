@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { sendApns, apnsConfigured } from '@/lib/apns';
 
 export interface PushPayload {
   title: string;
@@ -317,5 +318,50 @@ export async function sendPushToProfile(profileId: string, payload: PushPayload)
     }
   } catch (err) {
     console.error('[webpush] sendPushToProfile error:', err);
+  }
+
+  // Параллельно — нативные пуши в iOS-приложение. Отдельным блоком с своим
+  // try/catch: падение одного канала не должно лишать пуша другой.
+  await sendApnsToProfile(profileId, payload);
+}
+
+/**
+ * Пуш в iOS-оболочку через APNs.
+ *
+ * Внутри WKWebView Apple закрывает Web Push, поэтому у пользователей приложения
+ * блок выше не срабатывает вовсе — уведомления доходят только этим путём.
+ * У остальных (браузер, RuStore) наоборот: токенов APNs нет, и функция тихо
+ * выходит, не делая ни одного запроса.
+ */
+async function sendApnsToProfile(profileId: string, payload: PushPayload): Promise<void> {
+  if (!apnsConfigured()) return;
+  try {
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const adminClient = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: devices } = await adminClient
+      .from('apns_devices')
+      .select('token')
+      .eq('profile_id', profileId);
+
+    const tokens = (devices ?? []).map((d: { token: string }) => d.token);
+    if (tokens.length === 0) return;
+
+    const { deadTokens } = await sendApns(tokens, {
+      title: payload.title,
+      body: payload.body,
+      url: payload.url,
+    });
+
+    // Мёртвые токены удаляем, иначе они копятся навсегда и каждый пуш тратит
+    // время на заведомо провальные отправки.
+    if (deadTokens.length > 0) {
+      await adminClient.from('apns_devices').delete().in('token', deadTokens);
+    }
+  } catch (err) {
+    console.error('[apns] sendApnsToProfile error:', err);
   }
 }
