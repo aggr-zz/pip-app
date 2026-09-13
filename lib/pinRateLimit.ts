@@ -60,49 +60,64 @@ function globalKey(childId: string): string {
   return `pin-global:${childId}`;
 }
 
-/** Заблокирован ли вход (по per-IP ИЛИ глобальному лимиту childId). */
-export async function isPinLocked(
+/**
+ * Регистрирует попытку входа и сразу говорит, заблокирован ли вход.
+ *
+ * Заменяет пару isPinLocked + recordPinFailure. Раньше между проверкой и
+ * записью оставалось окно: пачка параллельных запросов целиком проходила
+ * проверку (лока ещё нет) и только потом увеличивала счётчик — за один заход
+ * атакующий получал столько попыток, какова его параллельность. RPC
+ * rate_limit_hit делает обе операции под блокировкой строки, поэтому
+ * параллельные попытки по одному ключу выстраиваются в очередь.
+ *
+ * Вызывать ДО сравнения PIN. При успешном входе счётчики снимает
+ * clearPinAttempts.
+ *
+ * Fail-open: если БД недоступна — пропускаем. Лучше пустить, чем закрыть вход
+ * всем; перебор всё равно ограничен, когда база вернётся.
+ */
+export async function registerPinAttempt(
   childId: string,
   ip: string,
 ): Promise<{ locked: boolean; retryAfterSec: number }> {
   try {
     const db = createAdminClient();
+    // Два независимых бюджета: по паре (ребёнок+IP) и глобальный по ребёнку.
+    // Каждый атомарен сам по себе; блокирует тот, который сработал раньше.
     const [perIp, global] = await Promise.all([
-      db.rpc('rate_limit_check', { p_key: key(childId, ip) }),
-      db.rpc('rate_limit_check', { p_key: globalKey(childId) }),
-    ]);
-    const a = typeof perIp.data === 'number' ? perIp.data : 0;
-    const b = typeof global.data === 'number' ? global.data : 0;
-    const sec = Math.max(a, b);
-    return { locked: sec > 0, retryAfterSec: sec };
-  } catch (e) {
-    console.warn('[pinRateLimit.isPinLocked] fail-open:', e);
-    return { locked: false, retryAfterSec: 0 };
-  }
-}
-
-/** Зафиксировать неудачную попытку на обоих ключах; при лимите БД выставит лок. */
-export async function recordPinFailure(childId: string, ip: string): Promise<void> {
-  try {
-    const db = createAdminClient();
-    await Promise.all([
-      db.rpc('rate_limit_fail', {
+      db.rpc('rate_limit_hit', {
         p_key: key(childId, ip),
         p_max: MAX_ATTEMPTS,
         p_lock_seconds: LOCK_SECONDS,
         p_window_seconds: WINDOW_SECONDS,
       }),
-      db.rpc('rate_limit_fail', {
+      db.rpc('rate_limit_hit', {
         p_key: globalKey(childId),
         p_max: MAX_GLOBAL,
         p_lock_seconds: GLOBAL_LOCK_SECONDS,
         p_window_seconds: GLOBAL_WINDOW_SECONDS,
       }),
     ]);
+    const a = typeof perIp.data === 'number' ? perIp.data : 0;
+    const b = typeof global.data === 'number' ? global.data : 0;
+    const sec = Math.max(a, b);
+    return { locked: sec > 0, retryAfterSec: sec };
   } catch (e) {
-    console.warn('[pinRateLimit.recordPinFailure]', e);
+    console.warn('[pinRateLimit.registerPinAttempt] fail-open:', e);
+    return { locked: false, retryAfterSec: 0 };
   }
 }
+
+/*
+ * isPinLocked и recordPinFailure удалены намеренно.
+ *
+ * Это была пара «сначала проверить, потом записать», и между двумя вызовами
+ * оставалось окно: пачка параллельных запросов проходила проверку целиком,
+ * пока ни одна неудача ещё не записана. Их заменил один атомарный
+ * registerPinAttempt (RPC rate_limit_hit, проверка и инкремент под блокировкой
+ * строки). Оставлять старые экспорты опасно — из них легко снова собрать ту же
+ * небезопасную пару.
+ */
 
 /**
  * Снять ВСЕ локи перебора для ребёнка — и глобальный, и все per-IP.

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signChildSession } from '@/lib/childSession';
-import { isPinLocked, recordPinFailure, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
+import { registerPinAttempt, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
 
 /**
  * POST /api/auth/child-pin
@@ -21,20 +21,16 @@ export async function POST(req: NextRequest) {
 
     // Защита от перебора PIN — лимит по (childId + IP), переживает рестарт.
     const ip = clientIpFromHeaders(req.headers);
-    const lock = await isPinLocked(childId, ip);
+    // Фиксируем попытку и проверяем лок одним атомарным вызовом: раньше это
+    // были две операции, и между ними волна параллельных запросов успевала
+    // пройти проверку раньше, чем запишется первая неудача.
+    const lock = await registerPinAttempt(childId, ip);
     if (lock.locked) {
       return NextResponse.json(
         { error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` },
         { status: 429 }
       );
     }
-
-    // Считаем попытку СРАЗУ, до сверки PIN («пессимистичный» счёт).
-    // Если считать только неудачи ПОСЛЕ сравнения, между isPinLocked и записью
-    // фейла возникает окно: волна параллельных запросов успевает пройти проверку
-    // лимита раньше, чем запишется первая неудача, и обходит оба лимита сразу —
-    // и per-IP, и глобальный. При успешном входе счётчик обнуляется ниже.
-    await recordPinFailure(childId, ip);
 
     const supabase = createAdminClient();
     const { data: child, error } = await supabase

@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyChildSession } from '@/lib/childSession';
 import { resolveChildAuth } from '@/lib/childAuth';
 import { sniffImageType } from '@/lib/imageSniff';
-import { isPinLocked, recordPinFailure, clearPinAttempts, clearAllPinLocks } from '@/lib/pinRateLimit';
+import { registerPinAttempt, clearPinAttempts, clearAllPinLocks } from '@/lib/pinRateLimit';
 import { clientIpFromHeaders } from '@/lib/pinRateLimit';
 import type { AvatarColor } from './constants';
 import type { Result } from '@/lib/result';
@@ -145,7 +145,10 @@ export async function enterChildMode(input: {
   }
 
   const ip = clientIpFromHeaders(await headers());
-  const lock = await isPinLocked(input.childId, ip);
+  // Фиксируем попытку и проверяем лок одним атомарным вызовом (RPC
+  // rate_limit_hit): обе операции под блокировкой строки, поэтому параллельные
+  // попытки по одному ключу выстраиваются в очередь, а не проходят пачкой.
+  const lock = await registerPinAttempt(input.childId, ip);
   if (lock.locked) {
     return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
   }
@@ -173,14 +176,6 @@ export async function enterChildMode(input: {
   if (!child || child.family_id !== parent.family_id) {
     return { ok: false, error: 'Профиль не найден' };
   }
-
-  // Пессимистичный счёт: фиксируем попытку ДО сравнения PIN — иначе между
-  // isPinLocked и записью неудачи остаётся окно, в котором волна параллельных
-  // запросов проходит целиком и обходит лимит. Ставим здесь, а не в начале
-  // функции: иначе родитель с истёкшей сессией залочил бы вход ребёнку, ни разу
-  // не ошибившись PIN-ом. Окно TOCTOU при этом всё равно закрыто — запись идёт
-  // раньше сравнения. При успехе счётчик обнуляется ниже.
-  await recordPinFailure(input.childId, ip);
 
   if (child.pin !== input.pin) {
     return { ok: false, error: 'Неверный PIN' };

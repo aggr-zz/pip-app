@@ -3,7 +3,7 @@
 import { cookies, headers } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signChildSession } from '@/lib/childSession';
-import { isPinLocked, recordPinFailure, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
+import { registerPinAttempt, clearPinAttempts, clientIpFromHeaders } from '@/lib/pinRateLimit';
 import type { Result } from '@/lib/result';
 
 
@@ -20,7 +20,11 @@ export async function joinAsChild(input: {
   }
 
   const ip = clientIpFromHeaders(await headers());
-  const lock = await isPinLocked(input.childId, ip);
+  // Одним атомарным вызовом: фиксируем попытку и узнаём, не заблокирован ли
+  // вход. Раньше здесь были две операции — проверка, а запись неудачи вообще
+  // после сравнения PIN, — и между ними параллельная пачка запросов проходила
+  // целиком. При успешном входе счётчик обнуляется ниже.
+  const lock = await registerPinAttempt(input.childId, ip);
   if (lock.locked) {
     return { ok: false, error: `Слишком много попыток. Попробуй через ${Math.ceil(lock.retryAfterSec / 60)} мин.` };
   }
@@ -37,7 +41,7 @@ export async function joinAsChild(input: {
   if (child.role !== 'child') return { ok: false, error: 'Это не детский профиль' };
   if (child.archived_at) return { ok: false, error: 'Профиль удалён' };
   if (child.pin !== input.pin) {
-    await recordPinFailure(input.childId, ip);
+    // Попытка уже посчитана выше — второй раз не пишем.
     return { ok: false, error: 'Неверный PIN' };
   }
 
