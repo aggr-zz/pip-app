@@ -132,7 +132,7 @@ export default function PrivacyPage() {
           </ul>
           <p>
             Для реализации прав напишите на{' '}
-            <a href="mailto:hi@pipup.ru" style={{ color: 'var(--color-coral)' }}>hi@pipup.ru</a>.
+            <a href="mailto:saymien1@gmail.com" style={{ color: 'var(--color-coral)' }}>saymien1@gmail.com</a>.
           </p>
         </DocSection>
 
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
         <DocSection title="10. Контакты">
           <p>
             Вопросы по конфиденциальности:{' '}
-            <a href="mailto:hi@pipup.ru" style={{ color: 'var(--color-coral)' }}>hi@pipup.ru</a>
+            <a href="mailto:saymien1@gmail.com" style={{ color: 'var(--color-coral)' }}>saymien1@gmail.com</a>
           </p>
         </DocSection>
 

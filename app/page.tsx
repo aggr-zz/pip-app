@@ -200,7 +200,7 @@ function Landing() {
             </div>
             <div className="lp-footer-col">
               <span className="lp-footer-h">Контакты</span>
-              <a href="mailto:hello@pipup.ru">hello@pipup.ru</a>
+              <a href="mailto:saymien1@gmail.com">saymien1@gmail.com</a>
               <a href="/privacy">Политика конфиденциальности</a>
               <a href="/terms">Условия использования</a>
             </div>

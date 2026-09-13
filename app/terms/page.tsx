@@ -88,7 +88,7 @@ export default function TermsPage() {
         <DocSection title="6. Изменение и удаление аккаунта">
           <p>
             Вы можете в любой момент запросить удаление своего аккаунта и всех связанных данных,
-            написав на <a href="mailto:hi@pipup.ru" style={{ color: 'var(--color-coral)' }}>hi@pipup.ru</a>.
+            написав на <a href="mailto:saymien1@gmail.com" style={{ color: 'var(--color-coral)' }}>saymien1@gmail.com</a>.
             Мы удалим данные в течение 30 дней.
           </p>
           <p>
@@ -133,7 +133,7 @@ export default function TermsPage() {
 
         <DocSection title="11. Контакты">
           <p>
-            Вопросы по соглашению: <a href="mailto:hi@pipup.ru" style={{ color: 'var(--color-coral)' }}>hi@pipup.ru</a>
+            Вопросы по соглашению: <a href="mailto:saymien1@gmail.com" style={{ color: 'var(--color-coral)' }}>saymien1@gmail.com</a>
           </p>
         </DocSection>
 
