@@ -12,7 +12,25 @@ import http2 from 'node:http2';
  * Ключ (.p8), Key ID и Team ID берутся из окружения и в репозиторий не попадают.
  */
 
-const HOST = 'api.push.apple.com';
+/**
+ * Адрес APNs зависит от среды, в которой зарегистрировано устройство, и перепутать
+ * их нельзя: токен из сборки с `aps-environment: development` живёт только в
+ * песочнице, а из сборки для App Store — только в боевой. Обращение не в ту
+ * среду Apple отклоняет (`BadDeviceToken` либо `BadEnvironmentKeyInToken`).
+ *
+ * Пока приложение собирается для отладки — APNS_ENV=sandbox. Перед выпуском в
+ * App Store переключить на production И убедиться, что ключ не ограничен
+ * песочницей: ключ вида «APNs Sandbox» в бою даёт 403 BadEnvironmentKeyInToken,
+ * обычный ключ APNs работает в обеих средах.
+ *
+ * Ограничение: среда задана одним ключом на весь сервер, поэтому одновременно
+ * отладочные и App Store-сборки обслуживаться не смогут. Когда дойдёт до
+ * TestFlight рядом с локальными сборками — хранить среду рядом с токеном
+ * в apns_devices.
+ */
+const HOST = process.env.APNS_ENV === 'production'
+  ? 'api.push.apple.com'
+  : 'api.sandbox.push.apple.com';
 
 function config() {
   const key = process.env.APNS_PRIVATE_KEY;
