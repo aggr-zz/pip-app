@@ -502,6 +502,9 @@ function LoginEntry() {
                 : 'Открой приложение «Камера» на телефоне и наведи на QR-код, который показывает родитель — ссылка откроется сама.'}
             </p>
 
+            {!hasNativeScanner && (
+
+
             <div className="lg-viewfinder" aria-hidden="true">
               <span className="lg-corner lg-corner--tl" /><span className="lg-corner lg-corner--tr" />
               <span className="lg-corner lg-corner--bl" /><span className="lg-corner lg-corner--br" />
@@ -511,8 +514,10 @@ function LoginEntry() {
               </svg>
             </div>
 
+            )}
+
             <form onSubmit={handleChildSubmit} style={{ width: '100%' }}>
-              <div className="lg-ovl-or"><span>или вставь ссылку</span></div>
+              {!hasNativeScanner && <div className="lg-ovl-or"><span>или вставь ссылку</span></div>}
               <input
                 className="lg-ovl-input" type="text" inputMode="url" autoComplete="off"
                 placeholder="https://pipup.ru/join/…" value={childLink}
