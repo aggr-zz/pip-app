@@ -6,7 +6,7 @@
 
 | Поле | Значение |
 |---|---|
-| **Name** (30) | `PIP: копилка хороших привычек` — 29 |
+| **Name** (30) | `PIP — копилка хороших привычек` — принято ASC (варианты «PIP» и с двоеточием заняты) |
 | **Subtitle** (30) | `Задания, монеты и награды` — 25 |
 | **Bundle ID** | `ru.pipup.app` |
 | **SKU** | `pip-ios-001` |
@@ -14,7 +14,7 @@
 | **Primary category** | Lifestyle |
 | **Secondary category** | Education |
 | **Price** | Free (бесплатно; платежей в приложении нет) |
-| **Copyright** | ⚠️ `2026 <название юрлица>` |
+| **Copyright** | `2026 Creative LLC` (имя команды в ASC) |
 | **Support URL** | https://pipup.ru/guide |
 | **Marketing URL** | https://pipup.ru |
 | **Privacy Policy URL** | https://pipup.ru/privacy |
